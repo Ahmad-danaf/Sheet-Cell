@@ -1,11 +1,11 @@
 package com.sheetcell.engine;
 
 public class Coordinate {
-    private int row;
-    private char column;
+    private final int row;
+    private final int column;
 
     // Constructor
-    public Coordinate(int row, char column) {
+    public Coordinate(int row, int column) {
         this.row = row;
         this.column = column;
     }
@@ -15,16 +15,8 @@ public class Coordinate {
         return row;
     }
 
-    public void setRow(int row) {
-        this.row = row;
-    }
-
-    public char getColumn() {
+    public int getColumn() {
         return column;
-    }
-
-    public void setColumn(char column) {
-        this.column = column;
     }
 
     @Override
@@ -40,9 +32,7 @@ public class Coordinate {
 
     @Override
     public int hashCode() {
-        int result = row;
-        result = 31 * result + (int) column;
-        return result;
+        return 31 * row + column;
     }
 
     @Override

@@ -6,7 +6,7 @@ import java.util.Set;
 public class Cell {
     private Coordinate coordinate;
     private String originalValue;
-    private Object effectiveValue;
+    private EffectiveValue effectiveValue;
     private int version;
     Set<Cell> dependencies;
     Set<Cell> influencedCells;
@@ -14,33 +14,27 @@ public class Cell {
     //    private boolean isDirty;
     //    private int row;
 
-    // Constructor with Coordinate
-    public Cell(Coordinate coordinate, String originalValue) {
-        this.coordinate = coordinate;
+    public Cell(int row, int column, String originalValue) {
+        this.coordinate =CoordinateFactory.createCoordinate(row, column);
         this.originalValue = originalValue;
-        this.effectiveValue  = evaluateEffectiveValue(originalValue);
+        this.effectiveValue = evaluateEffectiveValue(originalValue);
         this.version = 1;
         this.dependencies = new HashSet<>();
         this.influencedCells = new HashSet<>();
     }
 
-    // Default Constructor
-    public Cell() {
-        //this.coordinate = new Coordinate(1, 'A'); // Default to A1
-        this.originalValue = "";
-        this.effectiveValue  = "";
-        this.version = 1;
-        this.dependencies = new HashSet<>();
-        this.influencedCells = new HashSet<>();
+    public Cell(int row, int column, String originalValue, EffectiveValue effectiveValue, int version, Set<Cell> dependencies, Set<Cell> influencedCells) {
+        this.coordinate = CoordinateFactory.createCoordinate(row, column);
+        this.originalValue = originalValue;
+        this.effectiveValue = effectiveValue;
+        this.version = version;
+        this.dependencies = dependencies;
+        this.influencedCells = influencedCells;
     }
 
     // Getters and Setters
     public Coordinate getCoordinate() {
         return coordinate;
-    }
-
-    public void setCoordinate(Coordinate coordinate) {
-        this.coordinate = coordinate;
     }
 
     public String getOriginalValue() {
@@ -53,7 +47,7 @@ public class Cell {
         incrementVersion();
     }
 
-    public Object  getEvaluatedValue() {
+    public EffectiveValue  getEvaluatedValue() {
         return effectiveValue;
     }
 
@@ -65,11 +59,25 @@ public class Cell {
         this.version++;
     }
 
-    public Object evaluateEffectiveValue(Object value) {
-        // evaluate the effective value
-        // set the evaluatedValue
-        // For now, return the original value
-        return value;
+    public EffectiveValue evaluateEffectiveValue(String originalValue) {
+        // Placeholder for evaluation logic.
+        if (originalValue == null || originalValue.isEmpty()) {
+            return new EffectiveValue(CellType.STRING, "");
+        }
+
+        try {
+            Double numberValue = Double.parseDouble(originalValue);
+            return new EffectiveValue(CellType.NUMBER, numberValue);
+        } catch (NumberFormatException e) {
+            // If it's not a number, check if it's a boolean
+            if (originalValue.equalsIgnoreCase("true") || originalValue.equalsIgnoreCase("false")) {
+                Boolean booleanValue = Boolean.parseBoolean(originalValue);
+                return new EffectiveValue(CellType.BOOLEAN, booleanValue);
+            }
+        }
+
+        // Default to treating it as a string
+        return new EffectiveValue(CellType.STRING, originalValue);
     }
 
     // Compare (equals) based on original values
@@ -116,7 +124,7 @@ public class Cell {
         return "Cell{" +
                 "coordinate=" + coordinate +
                 ", originalValue='" + originalValue + '\'' +
-                ", evaluatedValue='" + effectiveValue + '\'' +
+                ", effectiveValue='" + effectiveValue.getValue() + '\'' +
                 ", version=" + version +
                 ", dependencies=" + dependencies.size() +
                 ", influencedCells=" + influencedCells.size() +
@@ -134,7 +142,7 @@ public class Cell {
 
     @Override
     public int hashCode() {
-        return effectiveValue .hashCode();
+        return effectiveValue.hashCode();
     }
 }
 

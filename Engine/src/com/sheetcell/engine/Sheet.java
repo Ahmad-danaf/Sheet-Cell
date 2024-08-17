@@ -36,15 +36,16 @@ public class Sheet {
         return columns;
     }
 
-    public Cell getCell(Coordinate coordinate) {
-        return cells.get(coordinate);
+    public Cell getCell(int row, int column) {
+        return cells.get(CoordinateFactory.createCoordinate(row, column));
     }
 
     // Set or Update a Cell
-    public void setCell(Coordinate coordinate, String originalValue) {
+    public void setCell(int row, int column, String originalValue) {
+        Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
         Cell cell = cells.get(coordinate);
         if (cell == null) {
-            cell = new Cell(coordinate, originalValue);
+            cell = new Cell(row, column, originalValue);
             cells.put(coordinate, cell);
         } else {
             cell.setOriginalValue(originalValue);
@@ -96,8 +97,9 @@ public class Sheet {
     }
 
     // print a specific cell's details
-    public void displayCellDetails(Coordinate coordinate) {
-        Cell cell = getCell(coordinate);
+    public void displayCellDetails(int row, int column) {
+        Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
+        Cell cell = getCell(row, column);
         if (cell != null) {
             System.out.println("Cell " + coordinate + ":");
             System.out.println("Original Value: " + cell.getOriginalValue());
