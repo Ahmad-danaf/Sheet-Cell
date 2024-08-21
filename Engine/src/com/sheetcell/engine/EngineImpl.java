@@ -1,5 +1,8 @@
 package com.sheetcell.engine;
 
+import com.sheetcell.engine.cell.Cell;
+import com.sheetcell.engine.sheet.Sheet;
+
 public class EngineImpl implements Engine {
     private Sheet sheet;
 

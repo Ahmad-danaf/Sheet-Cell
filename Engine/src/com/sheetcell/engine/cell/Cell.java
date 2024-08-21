@@ -1,4 +1,10 @@
-package com.sheetcell.engine;
+package com.sheetcell.engine.cell;
+
+import com.sheetcell.engine.coordinate.Coordinate;
+import com.sheetcell.engine.coordinate.CoordinateFactory;
+import com.sheetcell.engine.expression.api.Expression;
+import com.sheetcell.engine.expression.parser.FunctionParser;
+import com.sheetcell.engine.sheet.api.SheetReadActions;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -10,26 +16,19 @@ public class Cell {
     private int version;
     Set<Cell> dependencies;
     Set<Cell> influencedCells;
+    private final SheetReadActions sheet;
     //    private boolean isEvaluated;
     //    private boolean isDirty;
     //    private int row;
 
-    public Cell(int row, int column, String originalValue) {
-        this.coordinate =CoordinateFactory.createCoordinate(row, column);
-        this.originalValue = originalValue;
-        this.effectiveValue = evaluateEffectiveValue(originalValue);
-        this.version = 1;
-        this.dependencies = new HashSet<>();
-        this.influencedCells = new HashSet<>();
-    }
 
-    public Cell(int row, int column, String originalValue, EffectiveValue effectiveValue, int version, Set<Cell> dependencies, Set<Cell> influencedCells) {
+    public Cell(int row, int column, String originalValue, int version, SheetReadActions sheet)  {
+        this.sheet = sheet;
         this.coordinate = CoordinateFactory.createCoordinate(row, column);
         this.originalValue = originalValue;
-        this.effectiveValue = effectiveValue;
         this.version = version;
-        this.dependencies = dependencies;
-        this.influencedCells = influencedCells;
+        this.dependencies = new HashSet<>();
+        this.influencedCells = new HashSet<>();
     }
 
     // Getters and Setters
@@ -41,43 +40,31 @@ public class Cell {
         return originalValue;
     }
 
-    public void setOriginalValue(String originalValue) {
-        this.originalValue = originalValue;
-        this.effectiveValue = evaluateEffectiveValue(originalValue);
-        incrementVersion();
-    }
-
-    public EffectiveValue  getEvaluatedValue() {
-        return effectiveValue;
-    }
+    public EffectiveValue getEffectiveValue() { return effectiveValue; }
 
     public int getVersion() {
         return version;
+    }
+
+    public void setOriginalValue(String originalValue) {
+        this.originalValue = originalValue;
     }
 
     private void incrementVersion() {
         this.version++;
     }
 
-    public EffectiveValue evaluateEffectiveValue(String originalValue) {
-        // Placeholder for evaluation logic.
-        if (originalValue == null || originalValue.isEmpty()) {
-            return new EffectiveValue(CellType.STRING, "");
-        }
+    public boolean calculateEffectiveValue() {
+        Expression expression = FunctionParser.parseExpression(originalValue);
 
-        try {
-            Double numberValue = Double.parseDouble(originalValue);
-            return new EffectiveValue(CellType.NUMBER, numberValue);
-        } catch (NumberFormatException e) {
-            // If it's not a number, check if it's a boolean
-            if (originalValue.equalsIgnoreCase("true") || originalValue.equalsIgnoreCase("false")) {
-                Boolean booleanValue = Boolean.parseBoolean(originalValue);
-                return new EffectiveValue(CellType.BOOLEAN, booleanValue);
-            }
-        }
+        EffectiveValue newEffectiveValue = expression.eval(sheet);
 
-        // Default to treating it as a string
-        return new EffectiveValue(CellType.STRING, originalValue);
+        if (newEffectiveValue.equals(effectiveValue)) {
+            return false;
+        } else {
+            effectiveValue = newEffectiveValue;
+            return true;
+        }
     }
 
     // Compare (equals) based on original values

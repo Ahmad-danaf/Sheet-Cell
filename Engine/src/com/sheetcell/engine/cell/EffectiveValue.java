@@ -1,4 +1,6 @@
-package com.sheetcell.engine;
+package com.sheetcell.engine.cell;
+
+import java.util.Objects;
 
 public class EffectiveValue {
 
@@ -18,7 +20,7 @@ public class EffectiveValue {
         return value;
     }
 
-    public <T> T extractValueWithExpectation(Class<T> type) {
+    public <T> T castValueTo(Class<T> type) {
         if (cellType.isAssignableFrom(type)) {
             return type.cast(value);
         }
@@ -38,7 +40,7 @@ public class EffectiveValue {
         EffectiveValue that = (EffectiveValue) obj;
 
         if (cellType != that.cellType) return false;
-        return value != null ? value.equals(that.value) : that.value == null;
+        return Objects.equals(value, that.value);
     }
 
     @Override

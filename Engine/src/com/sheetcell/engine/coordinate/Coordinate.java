@@ -1,4 +1,4 @@
-package com.sheetcell.engine;
+package com.sheetcell.engine.coordinate;
 
 public class Coordinate {
     private final int row;
