@@ -356,7 +356,7 @@ public enum FunctionParser {
 
 
     public static void main(String[] args) {
-        String input = "{concat, hello, world}";
+        String input = "{concat, hello,         world}";
         Expression expression = FunctionParser.parseExpression(input);
         EffectiveValue result = expression.eval(null);
         System.out.println("value: " + result.getValue() + " of type " + result.getCellType());

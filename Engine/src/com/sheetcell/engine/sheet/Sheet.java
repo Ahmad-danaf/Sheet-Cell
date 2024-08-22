@@ -18,17 +18,21 @@ import java.util.stream.Collectors;
 public class Sheet implements SheetReadActions, SheetUpdateActions {
     private String name;
     private int version;
-    private int rows;
-    private int columns;
+    private int maxRows;
+    private int MaxColumns;
     private Map<Coordinate, Cell> activeCells;
+    private int rowHeight;
+    private int columnWidth;
 
     // Constructor
-    public Sheet(String name, int rows, int columns) {
+    public Sheet(String name, int MaxRows, int MaxColumns,int rowHeight, int columnWidth) {
         this.name = name;
-        this.rows = rows;
-        this.columns = columns;
+        this.maxRows = MaxRows;
+        this.MaxColumns = MaxColumns;
         this.version = 1; // Start at version 1
         this.activeCells = new HashMap<>();
+        this.rowHeight = rowHeight;
+        this.columnWidth = columnWidth;
     }
 
     // Getters
@@ -39,17 +43,36 @@ public class Sheet implements SheetReadActions, SheetUpdateActions {
     @Override
     public int getVersion() { return version; }
 
-    public int getRows() {
-        return rows;
+    public int getMaxRows() {
+        return maxRows;
     }
 
-    public int getColumns() {
-        return columns;
+    public int getMaxColumns() {
+        return MaxColumns;
+    }
+
+    public int getRowHeight() {
+        return rowHeight;
+    }
+
+    public int getColumnWidth() {
+        return columnWidth;
     }
 
     @Override
     public Cell getCell(int row, int column) {
         return activeCells.get(CoordinateFactory.createCoordinate(row, column));
+    }
+
+    @Override
+    public String getOriginalValue(int row, int column) {
+        Cell cell = activeCells.get(CoordinateFactory.createCoordinate(row, column));
+        if (cell == null) {
+            return "";
+        }
+        else {
+            return cell.getOriginalValue();
+        }
     }
 
     @Override
