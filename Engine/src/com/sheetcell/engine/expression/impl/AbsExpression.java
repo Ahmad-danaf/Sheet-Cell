@@ -1,11 +1,13 @@
 package com.sheetcell.engine.expression.impl;
 
+import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.cell.CellType;
 import com.sheetcell.engine.cell.EffectiveValue;
 import com.sheetcell.engine.expression.api.Expression;
+import com.sheetcell.engine.expression.api.UnaryExpression;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 
-public class AbsExpression implements Expression {
+public class AbsExpression implements UnaryExpression {
     private final Expression argument;
 
     public AbsExpression(Expression argument) {
@@ -13,9 +15,14 @@ public class AbsExpression implements Expression {
     }
 
     @Override
-    public EffectiveValue eval(SheetReadActions sheet) {
+    public Expression getArgument() {
+        return argument;
+    }
+
+    @Override
+    public EffectiveValue eval(SheetReadActions sheet, Cell callingCell) {
         // Evaluate the expression
-        EffectiveValue value = argument.eval(sheet);
+        EffectiveValue value = argument.eval(sheet, callingCell);
 
         // Check if the value can be cast to Double (i.e., it is numeric)
         Double numericValue = value.castValueTo(Double.class);

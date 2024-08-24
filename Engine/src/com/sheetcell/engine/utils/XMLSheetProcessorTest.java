@@ -1,5 +1,6 @@
 package com.sheetcell.engine.utils;
 
+import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.expression.parser.FunctionParser;
 import com.sheetcell.engine.sheet.Sheet;
 
@@ -8,7 +9,8 @@ public class XMLSheetProcessorTest {
     public static void main(String[] args) {
         XMLSheetProcessorTest test = new XMLSheetProcessorTest();
 //        test.testProcessAdvancedXMLFile();
-        test.errortestProcessAdvancedXMLFile();
+     //   test.advancedtestProcessAdvancedXMLFile();
+        test.testProcessError4XMLFile();
     }
 
     public void testProcessAdvancedXMLFile() {
@@ -82,46 +84,110 @@ public class XMLSheetProcessorTest {
         }
     }
 
-    public void errortestProcessAdvancedXMLFile() {
+    public static void advancedtestProcessAdvancedXMLFile() {
         XMLSheetProcessor processor = new XMLSheetProcessor();
-        String filePath = "C:/Users/ahmad/Downloads/error-4.xml"; // Assuming you save the error-xml as basic.xml in this location
+        String filePath = "C:/Users/ahmad/Downloads/advanced.xml"; // Ensure this is the correct path
 
         try {
+            // Process the XML file
             processor.processSheetFile(filePath);
             Sheet sheet = processor.getCurrentSheet();
 
-            // Verify sheet name
-            assertCondition("beginner".equals(sheet.getName()), "Sheet name should be 'beginner'");
+            // Validate the sheet name
+            assertEqual("Advanced Sheet", sheet.getName());
 
-            // Verify sheet dimensions
-            assertCondition(sheet.getMaxRows() == 3, "Sheet should have 3 rows");
-            assertCondition(sheet.getMaxColumns() == 5, "Sheet should have 5 columns");
+            // Validate some specific cells
+            assertEqual("Test", sheet.getCell(0, 0).getEffectiveValue());
+            assertEqual("Value", sheet.getCell(1, 0).getEffectiveValue());
+            assertEqual(100.0, sheet.getCell(0, 1).getEffectiveValue());
+            assertEqual(200.0, sheet.getCell(1, 1).getEffectiveValue());
 
-            // Verify cell contents
-            assertCondition("Hello".equals(sheet.getOriginalValue(1, 1)), "Cell B2 should contain 'Hello'");
-            assertCondition("Menash".equals(sheet.getOriginalValue(1, 2)), "Cell C2 should contain 'Menash'");
-            assertCondition("5".equals(sheet.getOriginalValue(0, 0)), "Cell A1 should contain '5'");
-            assertCondition("{CONCAT,{REF,A1},{REF,C2}}".equals(sheet.getOriginalValue(1, 3)), "Cell D2 should contain '{CONCAT,{REF,A1},{REF,C2}}'");
+            // Validate formula results
+            assertEqual(300.0, sheet.getCell(2, 1).getEffectiveValue()); // {PLUS,{REF,B1},{REF,B2}} = 100 + 200 = 300
+            assertEqual("TestValue", sheet.getCell(2, 0).getEffectiveValue()); // {CONCAT,{REF,A1},{REF,A2}} = "Test" + "Value" = "TestValue"
+            assertEqual(600.0, sheet.getCell(3, 1).getEffectiveValue()); // {times,{REF,B3},2} = 300 * 2 = 600
+            assertEqual(4.0, sheet.getCell(1, 2).getEffectiveValue()); // {DIVIDE,{REF,B2},{REF,C1}} = 200 / 50 = 4
 
-            // Calculate effective values for cells
-            sheet.getCell(1, 1).calculateEffectiveValue();
-            sheet.getCell(1, 2).calculateEffectiveValue();
-            sheet.getCell(0, 0).calculateEffectiveValue();
-            //sheet.getCell(1, 3).calculateEffectiveValue();
+            System.out.println("All assertions passed!");
+
+            // print the effective values of the cells
+            System.out.println("Cell A1 effective value: " + sheet.getCell(0, 0).getEffectiveValue());
+            System.out.println("Cell A2 effective value: " + sheet.getCell(1, 0).getEffectiveValue());
+            System.out.println("Cell A3 effective value: " + sheet.getCell(2, 0).getEffectiveValue());
+            System.out.println("Cell B1 effective value: " + sheet.getCell(0, 1).getEffectiveValue());
+            System.out.println("Cell B2 effective value: " + sheet.getCell(1, 1).getEffectiveValue());
+            System.out.println("Cell B3 effective value: " + sheet.getCell(2, 1).getEffectiveValue());
+            System.out.println("Cell B4 effective value: " + sheet.getCell(3, 1).getEffectiveValue());
+            System.out.println("Cell C1 effective value: " + sheet.getCell(0, 2).getEffectiveValue());
+            System.out.println("Cell C2 effective value: " + sheet.getCell(1, 2).getEffectiveValue());
 
 
-            // Calculate and verify the effective value of cell D2
-            System.out.println("Cell D2 effective value: " + sheet.getCell(1, 3).calculateEffectiveValue());
-
-            System.out.println("All tests passed successfully.");
 
         } catch (Exception e) {
-            System.out.println("Test failed: " + e.getMessage());
+            e.printStackTrace();
+            System.err.println("Processing XML file failed with exception: " + e.getMessage());
+        }
+    }
+
+    public static void testProcessError4XMLFile() {
+        XMLSheetProcessor processor = new XMLSheetProcessor();
+        String filePath = "C:/Users/ahmad/Downloads/error-4.xml"; // Update this with the actual path to your XML file
+
+        try {
+            // Process the XML file
+            processor.processSheetFile(filePath);
+            Sheet sheet = processor.getCurrentSheet();
+
+            // Assert the sheet name
+            assertEqual("beginner", sheet.getName());
+
+            // Check the value of cell B2 (should be "Hello")
+            Cell cellB2 = sheet.getCell(1, 1); // Row 2, Column B (1-based to 0-based index)
+            assertEqual("Hello", cellB2.getEffectiveValue().getValue());
+
+            // Check the value of cell C2 (should be NaN due to division by zero)
+            Cell cellC2 = sheet.getCell(1, 2); // Row 2, Column C (1-based to 0-based index)
+            assertEqual(Double.NaN, cellC2.getEffectiveValue().getValue());
+
+            // Check the value of cell A1 (should be 5)
+            Cell cellA1 = sheet.getCell(0, 0); // Row 1, Column A (1-based to 0-based index)
+            assertEqual(5.0, cellA1.getEffectiveValue().getValue());
+
+            // Check the value of cell D2 (should be NaN due to reference to NaN in C2)
+            Cell cellD2 = sheet.getCell(1, 3); // Row 2, Column D (1-based to 0-based index)
+            assertEqual(Double.NaN, cellD2.getEffectiveValue().getValue());
+
+            System.out.println("All tests passed successfully.");
+        } catch (Exception e) {
+            System.out.println("Processing XML file failed with exception: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
 
+    private static void assertEqual(Object expected, Object actual) {
+        String expectedStr = expected != null ? expected.toString() : null;
+        String actualStr = actual != null ? actual.toString() : null;
+
+        if (expectedStr == null) {
+            if (actualStr != null) {
+                fail("Expected: null but got: '" + actualStr + "'");
+            }
+        } else if (!expectedStr.equals(actualStr)) {
+            System.out.println("Character-by-character comparison:");
+            for (int i = 0; i < Math.min(expectedStr.length(), actualStr.length()); i++) {
+                System.out.println("Expected char " + i + ": " + (int) expectedStr.charAt(i));
+                System.out.println("Actual char " + i + ": " + (int) actualStr.charAt(i));
+            }
+            fail("Expected: '" + expectedStr + "' but got: '" + actualStr + "'");
+        }
+    }
+
+    // Helper method to fail with a custom message
+    private static void fail(String message) {
+        System.err.println("Assertion failed: " + message);
+        throw new AssertionError(message);
+    }
 
     private void assertCondition(boolean condition, String errorMessage) {
         if (!condition) {

@@ -59,6 +59,10 @@ public class Sheet implements SheetReadActions, SheetUpdateActions {
         return columnWidth;
     }
 
+    public Map<Coordinate, Cell> getActiveCells() {
+        return activeCells;
+    }
+
     @Override
     public Cell getCell(int row, int column) {
         return activeCells.get(CoordinateFactory.createCoordinate(row, column));
@@ -80,7 +84,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions {
         Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
 
         Sheet newSheetVersion = copySheet();
-        Cell newCell = new Cell(row, column, value, newSheetVersion.getVersion() + 1, newSheetVersion);
+        Cell newCell = new Cell(row, column, value, newSheetVersion.getVersion(), newSheetVersion);
         newSheetVersion.activeCells.put(coordinate, newCell);
 
         try {
@@ -102,6 +106,18 @@ public class Sheet implements SheetReadActions, SheetUpdateActions {
         }
     }
 
+    // Sets the original value of a cell during the XML loading process without calculating effective values.
+    public void setOriginalValueDuringLoad(int row, int column, String originalValue) {
+        Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
+        Cell newCell = new Cell(row, column, originalValue, this.version, this);
+        this.activeCells.put(coordinate, newCell);
+    }
+
+    // Calculates effective values for all cells after the sheet is fully loaded.
+    public void calculateAllEffectiveValues() {
+        this.activeCells.values().forEach(Cell::calculateEffectiveValue);
+    }
+
     // Increment the version of the sheet
     private void incrementVersion() {
         this.version++;
@@ -117,9 +133,8 @@ public class Sheet implements SheetReadActions, SheetUpdateActions {
     private Sheet copySheet() {
         // lots of options here:
         // 1. implement clone all the way (yac... !)
-        // 2. implement copy constructor for CellImpl and SheetImpl
-
-        // 3. how about serialization ?
+        // 2. implement copy constructor for CellImpl and SheetImp
+        // how about serialization:
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);

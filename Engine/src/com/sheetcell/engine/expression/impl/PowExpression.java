@@ -1,11 +1,13 @@
 package com.sheetcell.engine.expression.impl;
 
+import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.cell.CellType;
 import com.sheetcell.engine.cell.EffectiveValue;
+import com.sheetcell.engine.expression.api.BinaryExpression;
 import com.sheetcell.engine.expression.api.Expression;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 
-public class PowExpression implements Expression {
+public class PowExpression implements BinaryExpression {
     private final Expression base;
     private final Expression exponent;
 
@@ -15,10 +17,20 @@ public class PowExpression implements Expression {
     }
 
     @Override
-    public EffectiveValue eval(SheetReadActions sheet) {
+    public Expression getLeft() {
+        return base;
+    }
+
+    @Override
+    public Expression getRight() {
+        return exponent;
+    }
+
+    @Override
+    public EffectiveValue eval(SheetReadActions sheet, Cell callingCell) {
         // Evaluate the expressions
-        EffectiveValue baseValue = base.eval(sheet);
-        EffectiveValue exponentValue = exponent.eval(sheet);
+        EffectiveValue baseValue = base.eval(sheet, callingCell);
+        EffectiveValue exponentValue = exponent.eval(sheet, callingCell);
 
         // Attempt to cast the base and exponent to Double
         Double baseNumeric = baseValue.castValueTo(Double.class);

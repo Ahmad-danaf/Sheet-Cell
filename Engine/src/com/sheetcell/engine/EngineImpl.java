@@ -1,34 +1,33 @@
 package com.sheetcell.engine;
 
 import com.sheetcell.engine.cell.Cell;
-import com.sheetcell.engine.cell.CellType;
-import com.sheetcell.engine.cell.EffectiveValue;
-import com.sheetcell.engine.coordinate.Coordinate;
-import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.sheet.Sheet;
-import com.sheetcell.engine.expression.parser.FunctionParser;
-import jakarta.xml.bind.JAXBContext;
-import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.Unmarshaller;
-import jaxb.schema.generatedFiles.STLCell;
-import jaxb.schema.generatedFiles.STLCells;
-import jaxb.schema.generatedFiles.STLLayout;
-import jaxb.schema.generatedFiles.STLSheet;
+import com.sheetcell.engine.sheet.api.SheetReadActions;
+import com.sheetcell.engine.utils.XMLSheetProcessor;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 public class EngineImpl implements Engine {
     private Sheet currentSheet;
+    private Map<Integer, Sheet> sheetVersions;
+    private XMLSheetProcessor xmlSheetProcessor;
+
+
+    public EngineImpl() {
+        this.sheetVersions = new HashMap<>();
+        this.xmlSheetProcessor = new XMLSheetProcessor();
+        currentSheet= null;
+    }
 
     @Override
-    public void loadSheet(String filePath) {
+    public void loadSheet(String filePath) throws Exception {
+        xmlSheetProcessor.processSheetFile(filePath);
+        this.currentSheet = xmlSheetProcessor.getCurrentSheet();
+        this.sheetVersions.clear();
+        this.sheetVersions.put(currentSheet.getVersion(), currentSheet);
     }
 
-    private void updateCurrentSheet(Sheet tempSheet) {
-        this.currentSheet = tempSheet;
-    }
 
     @Override
     public void saveSheet(String filePath) {
@@ -41,9 +40,11 @@ public class EngineImpl implements Engine {
     }
 
     @Override
-    public void displaySheet() {
-        // Displays the current sheet
+    public SheetReadActions displaySheet() {
+        return currentSheet;
     }
+
+
 
     @Override
     public Cell getCell(String cellId) {

@@ -1,5 +1,6 @@
 package com.sheetcell.engine.expression.impl;
 
+import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.cell.CellType;
 import com.sheetcell.engine.cell.EffectiveValue;
 import com.sheetcell.engine.expression.api.Expression;
@@ -16,7 +17,7 @@ public class IdentityExpression implements Expression {
     }
 
     @Override
-    public EffectiveValue eval(SheetReadActions sheet) {
+    public EffectiveValue eval(SheetReadActions sheet, Cell callingCell) {
         return new EffectiveValue(type, value);
     }
 

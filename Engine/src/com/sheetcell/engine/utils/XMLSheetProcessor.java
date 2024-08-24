@@ -1,8 +1,13 @@
 package com.sheetcell.engine.utils;
 
 
+import com.sheetcell.engine.cell.Cell;
+import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.coordinate.CoordinateFactory;
+import com.sheetcell.engine.expression.api.*;
 import com.sheetcell.engine.sheet.Sheet;
+import com.sheetcell.engine.expression.impl.*;
+import com.sheetcell.engine.expression.parser.FunctionParser;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
@@ -10,6 +15,8 @@ import jaxb.schema.generatedFiles.*;
 
 
 import java.io.File;
+import java.util.List;
+import java.util.Map;
 
 
 public class XMLSheetProcessor {
@@ -72,9 +79,71 @@ public class XMLSheetProcessor {
             validateCellPosition(cellRow, cellColumn, sheetRows, sheetColumns);
 
             String value = stlCell.getSTLOriginalValue();
-            currentSheet.updateCellValueAndCalculate(cellRow, cellColumn, value);
+            currentSheet.setOriginalValueDuringLoad(cellRow, cellColumn, value);
+        }
+
+        // Establish dependencies without calculating EffectiveValues
+        Map<Coordinate, Cell> activeCells = currentSheet.getActiveCells();
+        for (Cell cell : activeCells.values()) {
+            updateDependencies(cell, activeCells);
+        }
+
+        // Topologically sort cells and calculate EffectiveValues
+        List<Cell> sortedCells = CellGraphManager.topologicalSort(activeCells);
+
+        for (Cell cell : sortedCells) {
+            cell.calculateEffectiveValue();
         }
     }
+
+    private void updateDependencies(Cell cell, Map<Coordinate, Cell> activeCells) {
+        // Clear existing dependencies and influenced cells
+        for (Cell dependency : cell.getDependencies()) {
+            dependency.removeInfluencedCell(cell);
+        }
+        cell.getDependencies().clear();
+
+        // Parse the cell's formula to detect dependencies
+        Expression expression = FunctionParser.parseExpression(cell.getOriginalValue());
+
+        // Recursively evaluate expressions to detect all dependencies
+        findAndRegisterDependencies(expression, cell, activeCells);
+
+        // Update influenced cells
+        for (Cell dependency : cell.getDependencies()) {
+            dependency.addInfluencedCell(cell);
+        }
+    }
+
+    private void findAndRegisterDependencies(Expression expression, Cell callingCell, Map<Coordinate, Cell> activeCells) {
+        if (expression instanceof ReferenceExpression) {
+            ReferenceExpression refExpr = (ReferenceExpression) expression;
+            Coordinate refCoord = refExpr.getCoordinate();
+            Cell referencedCell = activeCells.get(refCoord);
+
+            if (referencedCell != null) {
+                callingCell.addDependency(referencedCell);
+                referencedCell.addInfluencedCell(callingCell);
+            }
+        } else if (expression instanceof UnaryExpression) {
+            UnaryExpression unaryExpr = (UnaryExpression) expression;
+            findAndRegisterDependencies(unaryExpr.getArgument(), callingCell, activeCells);
+        } else if (expression instanceof BinaryExpression) {
+            BinaryExpression binaryExpr = (BinaryExpression) expression;
+            findAndRegisterDependencies(binaryExpr.getLeft(), callingCell, activeCells);
+            findAndRegisterDependencies(binaryExpr.getRight(), callingCell, activeCells);
+        } else if (expression instanceof TernaryExpression) {
+            TernaryExpression ternaryExpr = (TernaryExpression) expression;
+            findAndRegisterDependencies(ternaryExpr.getFirst(), callingCell, activeCells);
+            findAndRegisterDependencies(ternaryExpr.getSecond(), callingCell, activeCells);
+            findAndRegisterDependencies(ternaryExpr.getThird(), callingCell, activeCells);
+        }
+        // NOTE: DONT FORGET other expression types if necessary,
+        // or leave them as is if they don't need special handling.
+        // No need to handle IdentityExpression or literals since they don't have dependencies
+
+    }
+
 
     private void validateCellPosition(int cellRow, int cellColumn, int totalRows, int totalColumns) {
         boolean isRowInvalid = cellRow < (MIN_SHEET_ROWS - 1) || cellRow >= totalRows;

@@ -1,11 +1,13 @@
 package com.sheetcell.engine.expression.impl;
 
+import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.cell.CellType;
 import com.sheetcell.engine.cell.EffectiveValue;
 import com.sheetcell.engine.expression.api.Expression;
+import com.sheetcell.engine.expression.api.TernaryExpression;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 
-public class SubExpression implements Expression {
+public class SubExpression implements TernaryExpression {
     private final Expression source;
     private final Expression startIndex;
     private final Expression endIndex;
@@ -17,11 +19,26 @@ public class SubExpression implements Expression {
     }
 
     @Override
-    public EffectiveValue eval(SheetReadActions sheet) {
+    public Expression getFirst() {
+        return source;
+    }
+
+    @Override
+    public Expression getSecond() {
+        return startIndex;
+    }
+
+    @Override
+    public Expression getThird() {
+        return endIndex;
+    }
+
+    @Override
+    public EffectiveValue eval(SheetReadActions sheet, Cell callingCell) {
         // Evaluate the expressions
-        EffectiveValue sourceValue = source.eval(sheet);
-        EffectiveValue startIndexValue = startIndex.eval(sheet);
-        EffectiveValue endIndexValue = endIndex.eval(sheet);
+        EffectiveValue sourceValue = source.eval(sheet, callingCell);
+        EffectiveValue startIndexValue = startIndex.eval(sheet, callingCell);
+        EffectiveValue endIndexValue = endIndex.eval(sheet, callingCell);
 
         // Convert the values to appropriate types
         String sourceStr = sourceValue.castValueTo(String.class);

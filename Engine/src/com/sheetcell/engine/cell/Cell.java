@@ -7,6 +7,8 @@ import com.sheetcell.engine.expression.parser.FunctionParser;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 public class Cell {
@@ -14,8 +16,8 @@ public class Cell {
     private String originalValue;
     private EffectiveValue effectiveValue;
     private int version;
-    Set<Cell> dependencies;
-    Set<Cell> influencedCells;
+    List<Cell> dependencies; // Cells that this cell depends on
+    List<Cell> influencedCells; // Cells that depend on this cell
     private final SheetReadActions sheet;
     //    private boolean isEvaluated;
     //    private boolean isDirty;
@@ -27,8 +29,8 @@ public class Cell {
         this.coordinate = CoordinateFactory.createCoordinate(row, column);
         this.originalValue = originalValue;
         this.version = version;
-        this.dependencies = new HashSet<>();
-        this.influencedCells = new HashSet<>();
+        this.dependencies = new LinkedList<>();
+        this.influencedCells = new LinkedList<>();
     }
 
     // Getters and Setters
@@ -46,6 +48,10 @@ public class Cell {
         return version;
     }
 
+    public void setVersion(int version) {
+        this.version = version;
+    }
+
     public void setOriginalValue(String originalValue) {
         this.originalValue = originalValue;
     }
@@ -57,7 +63,7 @@ public class Cell {
     public boolean calculateEffectiveValue() {
         Expression expression = FunctionParser.parseExpression(originalValue);
 
-        EffectiveValue newEffectiveValue = expression.eval(sheet);
+        EffectiveValue newEffectiveValue = expression.eval(sheet, this);
 
         if (newEffectiveValue.equals(effectiveValue)) {
             return false;
@@ -77,19 +83,22 @@ public class Cell {
         return originalValue.equals(cell.originalValue);
     }
 
-    // Add a cell to the dependencies list
     public void addDependency(Cell dependency) {
-        dependencies.add(dependency);
+        if (!dependencies.contains(dependency)) {
+            dependencies.add(dependency);
+        }
     }
+
+    public void addInfluencedCell(Cell influencedCell) {
+        if (!influencedCells.contains(influencedCell)) {
+            influencedCells.add(influencedCell);
+        }
+    }
+
 
     // Remove a cell from the dependencies list
     public void removeDependency(Cell dependency) {
         dependencies.remove(dependency);
-    }
-
-    // Add a cell to the influencedCells list
-    public void addInfluencedCell(Cell influencedCell) {
-        influencedCells.add(influencedCell);
     }
 
     // Remove a cell from the influencedCells list
@@ -98,11 +107,11 @@ public class Cell {
     }
 
     // Getters for dependencies and influencedCells
-    public Set<Cell> getDependencies() {
+    public List<Cell> getDependencies() {
         return dependencies;
     }
 
-    public Set<Cell> getInfluencedCells() {
+    public List<Cell> getInfluencedCells() {
         return influencedCells;
     }
 
@@ -118,18 +127,18 @@ public class Cell {
                 '}';
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-
-        Cell cell = (Cell) obj;
-        return effectiveValue .equals(cell.effectiveValue );
-    }
-
-    @Override
-    public int hashCode() {
-        return effectiveValue.hashCode();
-    }
+//    @Override
+//    public boolean equals(Object obj) {
+//        if (this == obj) return true;
+//        if (obj == null || getClass() != obj.getClass()) return false;
+//
+//        Cell cell = (Cell) obj;
+//        return effectiveValue .equals(cell.effectiveValue );
+//    }
+//
+//    @Override
+//    public int hashCode() {
+//        return effectiveValue.hashCode();
+//    }
 }
 

@@ -1,12 +1,14 @@
 package com.sheetcell.engine.expression.impl;
 
-import com.sheetcell.engine.expression.api.Expression;
+import com.sheetcell.engine.cell.Cell;
+import com.sheetcell.engine.expression.api.BinaryExpression;
 import com.sheetcell.engine.cell.CellType;
 import com.sheetcell.engine.cell.EffectiveValue;
+import com.sheetcell.engine.expression.api.Expression;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 
 
-public class PlusExpression implements Expression {
+public class PlusExpression implements BinaryExpression {
 
     private final Expression left;
     private final Expression right;
@@ -17,10 +19,20 @@ public class PlusExpression implements Expression {
     }
 
     @Override
-    public EffectiveValue eval(SheetReadActions sheet) {
+    public Expression getLeft() {
+        return left;
+    }
+
+    @Override
+    public Expression getRight() {
+        return right;
+    }
+
+    @Override
+    public EffectiveValue eval(SheetReadActions sheet, Cell callingCell) {
         // Evaluate the expressions
-        EffectiveValue leftValue = left.eval(sheet);
-        EffectiveValue rightValue = right.eval(sheet);
+        EffectiveValue leftValue = left.eval(sheet, callingCell);
+        EffectiveValue rightValue = right.eval(sheet, callingCell);
 
         // Check if the values can be cast to Double (i.e., they are numeric)
         Double leftNumeric = leftValue.castValueTo(Double.class);
