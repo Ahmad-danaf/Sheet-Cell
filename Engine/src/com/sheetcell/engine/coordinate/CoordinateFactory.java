@@ -19,9 +19,10 @@ public class CoordinateFactory {
         return coordinate;
     }
 
-    public static Coordinate from(String trim) {
+    public static Coordinate from(String cellId) {
         try {
-            int[] parts = convertCellIdToIndex(trim);
+            cellId = cellId.toUpperCase();
+            int[] parts = convertCellIdToIndex(cellId);
             return createCoordinate(parts[0], parts[1]);
         } catch (NumberFormatException e) {
             return null;
@@ -30,7 +31,7 @@ public class CoordinateFactory {
 
     // Converts a column label (for example: "A") to a 0-based column index(for example: 0)
     public static int convertColumnLabelToIndex(String colLabel) {
-
+        colLabel = colLabel.toUpperCase(); // Ensure the column label is uppercase
         int colIndex = 0;
 
         // Process each character in the column label
@@ -68,6 +69,7 @@ public class CoordinateFactory {
 
     // Converts a cell ID (for example:, "AD7") into a 0-based row and column index
     public static int[] convertCellIdToIndex(String cellId) {
+        cellId = cellId.toUpperCase(); // Convert the cell ID to uppercase to ensure consistency
         validateCellIdFormat(cellId);
 
         String columnLabel = extractColumnLabel(cellId);
@@ -106,6 +108,7 @@ public class CoordinateFactory {
 
     //*******************************tests**********************************//
     public static void main(String[] args) {
+        testFromCaseInsensitiveCellId();
         testCreateCoordinate();
         testFromValidCellId();
         testFromInvalidCellId();
@@ -113,6 +116,16 @@ public class CoordinateFactory {
         testConvertIndexToColumnLabel();
         testConvertIndexToCellCord();
         testConvertCellIdToIndex();
+    }
+
+    private static void testFromCaseInsensitiveCellId() {
+        Coordinate coordUpper = CoordinateFactory.from("A13");
+        Coordinate coordLower = CoordinateFactory.from("a13");
+        if (coordUpper.equals(coordLower)) {
+            System.out.println("testFromCaseInsensitiveCellId PASSED");
+        } else {
+            System.out.println("testFromCaseInsensitiveCellId FAILED");
+        }
     }
 
     private static void testCreateCoordinate() {

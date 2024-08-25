@@ -257,10 +257,10 @@ public enum FunctionParser {
             CellType sourceCellType = source.getFunctionResultType();
             CellType startIndexCellType = startIndex.getFunctionResultType();
             CellType endIndexCellType = endIndex.getFunctionResultType();
-            if (!sourceCellType.equals(CellType.STRING) ||
+            if ((!sourceCellType.equals(CellType.STRING) && !sourceCellType.equals(CellType.UNKNOWN)) ||
                     (!startIndexCellType.equals(CellType.NUMERIC) && !startIndexCellType.equals(CellType.UNKNOWN)) ||
                     (!endIndexCellType.equals(CellType.NUMERIC) && !endIndexCellType.equals(CellType.UNKNOWN))) {
-                throw new IllegalArgumentException("Invalid argument types for SUB function. Expected STRING and NUMERIC, but got " +
+                throw new IllegalArgumentException("Invalid argument types for SUB function. Expected STRING, NUMERIC, NUMERIC, but got " +
                         sourceCellType + ", " + startIndexCellType + ", and " + endIndexCellType);
             }
 

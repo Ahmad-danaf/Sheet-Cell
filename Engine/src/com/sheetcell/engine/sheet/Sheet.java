@@ -3,19 +3,22 @@ package com.sheetcell.engine.sheet;
 import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.cell.Cell;
+import com.sheetcell.engine.expression.api.*;
+import com.sheetcell.engine.expression.parser.FunctionParser;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.sheet.api.SheetUpdateActions;
+import com.sheetcell.engine.utils.CellGraphManager;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class Sheet implements SheetReadActions, SheetUpdateActions {
+public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable {
+    private static final long serialVersionUID = 1L;
+
+
     private String name;
     private int version;
     private int maxRows;
@@ -23,6 +26,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions {
     private Map<Coordinate, Cell> activeCells;
     private int rowHeight;
     private int columnWidth;
+    private int CellChangeCount;
 
     // Constructor
     public Sheet(String name, int MaxRows, int MaxColumns,int rowHeight, int columnWidth) {
@@ -33,28 +37,34 @@ public class Sheet implements SheetReadActions, SheetUpdateActions {
         this.activeCells = new HashMap<>();
         this.rowHeight = rowHeight;
         this.columnWidth = columnWidth;
+        this.CellChangeCount = 0;
     }
 
     // Getters
-    public String getName() {
+    @Override
+    public String getSheetName() {
         return name;
     }
 
     @Override
     public int getVersion() { return version; }
 
+    @Override
     public int getMaxRows() {
         return maxRows;
     }
 
+    @Override
     public int getMaxColumns() {
         return MaxColumns;
     }
 
+    @Override
     public int getRowHeight() {
         return rowHeight;
     }
 
+    @Override
     public int getColumnWidth() {
         return columnWidth;
     }
@@ -79,12 +89,95 @@ public class Sheet implements SheetReadActions, SheetUpdateActions {
         }
     }
 
+
+    public Sheet setCell(int row, int column, String value) {
+        Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
+
+        Sheet newSheetVersion = copySheet();
+        Cell newCell = new Cell(row, column, value, newSheetVersion.getVersion() +1 , newSheetVersion);
+        newSheetVersion.activeCells.put(coordinate, newCell);
+        Map<Coordinate, Cell> newActiveSheetVersion=newSheetVersion.getActiveCells();
+        try{
+            newCell.setOriginalValue(value);
+            for (Cell cell : newActiveSheetVersion.values()) {
+                newSheetVersion.updateDependencies(cell, newActiveSheetVersion);
+            }
+
+            // Step 2: Topologically sort cells and recalculate effective values
+            List<Cell> sortedCells = CellGraphManager.topologicalSort(newActiveSheetVersion);
+
+            for (Cell cell : sortedCells) {
+                boolean updated = cell.calculateEffectiveValue();
+                if (updated) {
+                    cell.setVersion(newSheetVersion.getVersion());
+                    newSheetVersion.incrementCellChangeCount();
+
+                }
+            }
+            newSheetVersion.incrementVersion();
+            return newSheetVersion;
+        }
+        catch (Exception e) {
+            // deal with the runtime error that was discovered as part of invocation
+            return this;
+        }
+    }
+
+
+    private void updateDependencies(Cell cell, Map<Coordinate, Cell> activeCells) {
+        // Clear existing dependencies and influenced cells
+        for (Cell dependency : cell.getDependencies()) {
+            dependency.removeInfluencedCell(cell);
+        }
+        cell.getDependencies().clear();
+
+        // Parse the cell's formula to detect dependencies
+        Expression expression = FunctionParser.parseExpression(cell.getOriginalValue());
+
+        // Recursively evaluate expressions to detect all dependencies
+        findAndRegisterDependencies(expression, cell, activeCells);
+
+        // Update influenced cells
+        for (Cell dependency : cell.getDependencies()) {
+            dependency.addInfluencedCell(cell);
+        }
+    }
+
+    private void findAndRegisterDependencies(Expression expression, Cell callingCell, Map<Coordinate, Cell> activeCells) {
+        if (expression instanceof ReferenceExpression) {
+            ReferenceExpression refExpr = (ReferenceExpression) expression;
+            Coordinate refCoord = refExpr.getCoordinate();
+            Cell referencedCell = activeCells.get(refCoord);
+
+            if (referencedCell != null) {
+                callingCell.addDependency(referencedCell);
+                referencedCell.addInfluencedCell(callingCell);
+            }
+        } else if (expression instanceof UnaryExpression) {
+            UnaryExpression unaryExpr = (UnaryExpression) expression;
+            findAndRegisterDependencies(unaryExpr.getArgument(), callingCell, activeCells);
+        } else if (expression instanceof BinaryExpression) {
+            BinaryExpression binaryExpr = (BinaryExpression) expression;
+            findAndRegisterDependencies(binaryExpr.getLeft(), callingCell, activeCells);
+            findAndRegisterDependencies(binaryExpr.getRight(), callingCell, activeCells);
+        } else if (expression instanceof TernaryExpression) {
+            TernaryExpression ternaryExpr = (TernaryExpression) expression;
+            findAndRegisterDependencies(ternaryExpr.getFirst(), callingCell, activeCells);
+            findAndRegisterDependencies(ternaryExpr.getSecond(), callingCell, activeCells);
+            findAndRegisterDependencies(ternaryExpr.getThird(), callingCell, activeCells);
+        }
+        // NOTE: DONT FORGET other expression types if necessary,
+        // or leave them as is if they don't need special handling.
+        // No need to handle IdentityExpression or literals since they don't have dependencies
+
+    }
+
     @Override
     public Sheet updateCellValueAndCalculate(int row, int column, String value) {
         Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
 
         Sheet newSheetVersion = copySheet();
-        Cell newCell = new Cell(row, column, value, newSheetVersion.getVersion(), newSheetVersion);
+        Cell newCell = new Cell(row, column, value, newSheetVersion.getVersion() +1 , newSheetVersion);
         newSheetVersion.activeCells.put(coordinate, newCell);
 
         try {
@@ -113,11 +206,9 @@ public class Sheet implements SheetReadActions, SheetUpdateActions {
         this.activeCells.put(coordinate, newCell);
     }
 
-    // Calculates effective values for all cells after the sheet is fully loaded.
-    public void calculateAllEffectiveValues() {
-        this.activeCells.values().forEach(Cell::calculateEffectiveValue);
+    public void incrementCellChangeCount() {
+        this.CellChangeCount++;
     }
-
     // Increment the version of the sheet
     private void incrementVersion() {
         this.version++;

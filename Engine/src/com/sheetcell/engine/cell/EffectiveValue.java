@@ -1,8 +1,10 @@
 package com.sheetcell.engine.cell;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class EffectiveValue {
+public class EffectiveValue implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     private CellType cellType;
     private Object value;

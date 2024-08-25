@@ -1,6 +1,7 @@
 package com.sheetcell.engine;
 
 import com.sheetcell.engine.cell.Cell;
+import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.sheet.Sheet;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.utils.XMLSheetProcessor;
@@ -36,11 +37,27 @@ public class EngineImpl implements Engine {
 
     @Override
     public void setCellValue(String cellId, String value) {
-        // Sets the value of a cell
+        // vlaidate cellId...(later)
+
+        int[] coords= CoordinateFactory.convertCellIdToIndex(cellId);
+        int row= coords[0];
+        int col= coords[1];
+
+        Sheet tempSheet=currentSheet.setCell(row, col, value);
+
+
+        // if(tempSheet != currentSheet){
+        if(tempSheet.getVersion() != currentSheet.getVersion()){
+            this.sheetVersions.put(tempSheet.getVersion(), tempSheet);
+            currentSheet= tempSheet;
+        }
+        else {
+            throw new IllegalArgumentException("Cell not updated");
+        }
     }
 
     @Override
-    public SheetReadActions displaySheet() {
+    public SheetReadActions getReadOnlySheet() {
         return currentSheet;
     }
 

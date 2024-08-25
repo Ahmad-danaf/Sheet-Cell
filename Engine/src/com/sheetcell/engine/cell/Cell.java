@@ -6,12 +6,16 @@ import com.sheetcell.engine.expression.api.Expression;
 import com.sheetcell.engine.expression.parser.FunctionParser;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-public class Cell {
+public class Cell implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+
     private Coordinate coordinate;
     private String originalValue;
     private EffectiveValue effectiveValue;
