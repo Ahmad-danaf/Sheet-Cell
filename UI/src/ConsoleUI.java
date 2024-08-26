@@ -6,17 +6,22 @@ import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.cell.Cell;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.Scanner;
+
 public class ConsoleUI {
-    private final Engine engine;
-    SheetReadActions sheet;
+    private Engine engine;
 
     public ConsoleUI() {
         this.engine = new EngineImpl();
-       this.sheet = engine.getReadOnlySheet();
     }
 
-    void displaySheet() {
-        this.sheet = engine.getReadOnlySheet(); // Refresh to the latest sheet version
+    public void setNewEngine(Engine engine){
+        this.engine= engine;
+    }
+
+    void displaySheet(SheetReadActions sheet) {
 
         // Display the sheet version
         System.out.println("Sheet Version: " + sheet.getVersion());
@@ -28,7 +33,7 @@ public class ConsoleUI {
         }
 
         // Display column headers
-        printColumnHeaders();
+        printColumnHeaders(sheet);
 
         // Display the sheet content row by row
         for (int row = 0; row < sheet.getMaxRows(); row++) {
@@ -44,7 +49,7 @@ public class ConsoleUI {
         }
     }
 
-    private void printColumnHeaders() {
+    private void printColumnHeaders(SheetReadActions sheet) {
         System.out.print("   "); // Adjust for row number column
 
         for (int col = 0; col < sheet.getMaxColumns(); col++) {
@@ -81,7 +86,7 @@ public class ConsoleUI {
 
     // **************************************method2******************************************
 
-    public void displaySingleCellDetails(int row, int column) {
+    public void displaySingleCellDetails(SheetReadActions sheet,int row, int column) {
         // Validate the row and column
         if (row < 0 || row >= sheet.getMaxRows() || column < 0 || column >= sheet.getMaxColumns()) {
             System.out.println("Invalid cell coordinates.");
@@ -153,27 +158,69 @@ public class ConsoleUI {
             // Optionally, retry or ask for input again
         }
         finally {
-            displaySheet();
+            displaySheet(engine.getReadOnlySheet());
         }
     }
 
     public static void main(String[] args) {
+        test();
+    }
+    //**************************************tests******************************************
+    public static void test() {
         ConsoleUI consoleUI = new ConsoleUI();
         try {
             String filePath = "C:/Users/ahmad/Downloads/Advanced.xml"; // Update this with the actual path to your XML file
             consoleUI.engine.loadSheet(filePath);
-            consoleUI.displaySheet();
+            consoleUI.displaySheet(consoleUI.engine.getReadOnlySheet());
             int initialVersion = consoleUI.engine.getReadOnlySheet().getVersion();
             consoleUI.updateCell("A1", "Updated Value");
             consoleUI.updateCell("D2", "123.45");
             int newVersion = consoleUI.engine.getReadOnlySheet().getVersion();
             System.out.println("Initial Version: " + initialVersion + ", New Version: " + newVersion);
             consoleUI.updateCell("E4", "true");
-            consoleUI.updateCell("D5","{plus,{ref,d4},-4}");
-
+            consoleUI.updateCell("D5","{plus,10,-4}");
+            Map<Integer, Integer> versions = consoleUI.engine.getSheetVersions();
+            System.out.println("Available Sheet Versions:");
+            System.out.println("Version | Cells Changed");
+            System.out.println("--------|--------------");
+            for (Map.Entry<Integer, Integer> entry : versions.entrySet()) {
+                System.out.printf("%7d | %13d\n", entry.getKey(), entry.getValue());
+            }
+            // Prompt user to select a version to view
+            System.out.print("Enter version number to view (or press Enter to cancel): ");
+            String input = new Scanner(System.in).nextLine().trim();
+            if (!input.isEmpty()) {
+                try {
+                    int version = Integer.parseInt(input);
+                    SheetReadActions versionSheet = consoleUI.engine.getSheetVersion(version);
+                    consoleUI.displaySheet(versionSheet);
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid input. Please enter a valid number.");
+                } catch (IllegalArgumentException e) {
+                    System.out.println(e.getMessage());
+                }
+            }
 
         } catch (Exception e) {
             System.out.println("Failed to load sheet: " + e.getMessage());
+        }
+        try {
+            consoleUI.engine.saveSheet("C:\\Users\\ahmad\\OneDrive\\Desktop\\CS_Degree\\mySheet.dat");
+            EngineImpl loadedEngine = EngineImpl.loadState("C:\\Users\\ahmad\\OneDrive\\Desktop\\CS_Degree\\mySheet.dat");
+            if (loadedEngine != null){
+                System.out.println("Sheet saved and loaded successfully.");
+                consoleUI.setNewEngine(loadedEngine);
+                consoleUI.displaySheet(consoleUI.engine.getReadOnlySheet());
+                consoleUI.updateCell("D5","{plus,10,-4}");
+                consoleUI.updateCell("c5","{plus,{ref,d5},-4}");
+            }
+            else {
+                System.out.println("Failed to load the saved sheet.");
+            }
+
+        } catch (IOException e) {
+            System.out.println("An error occurred while saving the sheet: " + e.getMessage());
+            // Additional handling can be done here, such as notifying the user or logging the error
         }
     }
 }

@@ -7,13 +7,14 @@ import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.utils.SheetUpdateResult;
 import com.sheetcell.engine.utils.XMLSheetProcessor;
 
+import java.io.*;
 import java.util.Map;
 import java.util.HashMap;
 
-public class EngineImpl implements Engine {
+public class EngineImpl implements Engine, Serializable {
     private Sheet currentSheet;
     private Map<Integer, Sheet> sheetVersions;
-    private XMLSheetProcessor xmlSheetProcessor;
+    private transient XMLSheetProcessor xmlSheetProcessor; // Not serialized
 
 
     public EngineImpl() {
@@ -32,8 +33,24 @@ public class EngineImpl implements Engine {
 
 
     @Override
-    public void saveSheet(String filePath) {
-        // Save the current sheet to a file
+    public void saveSheet(String filePath) throws IOException {
+        try (FileOutputStream fileOut = new FileOutputStream(filePath);
+             ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+            out.writeObject(this); // Serialize the entire EngineImpl object
+        } catch (Exception e) {
+            throw new IOException("Failed to save the sheet to the specified path: " + filePath, e);
+        }
+    }
+
+    public static EngineImpl loadState(String filePath) {
+        try (FileInputStream fileIn = new FileInputStream(filePath);
+             ObjectInputStream in = new ObjectInputStream(fileIn)) {
+            EngineImpl engine = (EngineImpl) in.readObject(); // Deserialize the EngineImpl object
+            engine.xmlSheetProcessor = new XMLSheetProcessor(); // Re-initialize the transient field
+            return engine;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
@@ -61,7 +78,25 @@ public class EngineImpl implements Engine {
         return currentSheet;
     }
 
+    @Override
+    public Map<Integer, Integer> getSheetVersions() {
+        Map<Integer, Integer> versionDetails = new HashMap<>();
+        for (Map.Entry<Integer, Sheet> entry : sheetVersions.entrySet()) {
+            int version = entry.getKey();
+            int changedCells = entry.getValue().getCellChangeCount();
+            versionDetails.put(version, changedCells);
+        }
+        return versionDetails;
+    }
 
+    @Override
+    public SheetReadActions getSheetVersion(int version) {
+        if (!sheetVersions.containsKey(version)) {
+            throw new IllegalArgumentException("Invalid version number: " + version + ". Please enter a valid version.");
+        }
+        return sheetVersions.get(version);
+
+    }
 
     @Override
     public Cell getCell(String cellId) {

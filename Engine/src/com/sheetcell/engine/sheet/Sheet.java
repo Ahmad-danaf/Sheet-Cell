@@ -75,6 +75,11 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
     }
 
     @Override
+    public int getCellChangeCount() {
+        return CellChangeCount;
+    }
+
+    @Override
     public Cell getCell(int row, int column) {
         return activeCells.get(CoordinateFactory.createCoordinate(row, column));
     }
@@ -95,6 +100,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
 
         Sheet newSheetVersion = copySheet();
+        newSheetVersion.resetCellChangeCount();
         Cell newCell = new Cell(row, column, value, newSheetVersion.getVersion() +1 , newSheetVersion);
         newSheetVersion.activeCells.put(coordinate, newCell);
         Map<Coordinate, Cell> newActiveSheetVersion=newSheetVersion.getActiveCells();
@@ -210,6 +216,11 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
     public void incrementCellChangeCount() {
         this.CellChangeCount++;
     }
+
+    public void resetCellChangeCount() {
+        this.CellChangeCount = 0;
+    }
+
     // Increment the version of the sheet
     private void incrementVersion() {
         this.version++;
