@@ -4,6 +4,7 @@ import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.sheet.Sheet;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
+import com.sheetcell.engine.utils.SheetUpdateResult;
 import com.sheetcell.engine.utils.XMLSheetProcessor;
 
 import java.util.Map;
@@ -42,17 +43,16 @@ public class EngineImpl implements Engine {
         int[] coords= CoordinateFactory.convertCellIdToIndex(cellId);
         int row= coords[0];
         int col= coords[1];
-
-        Sheet tempSheet=currentSheet.setCell(row, col, value);
-
+        SheetUpdateResult result = currentSheet.setCell(row, col, value);
 
         // if(tempSheet != currentSheet){
-        if(tempSheet.getVersion() != currentSheet.getVersion()){
+        if(!result.hasError()){
+            Sheet tempSheet= result.getSheet();
             this.sheetVersions.put(tempSheet.getVersion(), tempSheet);
             currentSheet= tempSheet;
         }
         else {
-            throw new IllegalArgumentException("Cell not updated");
+            throw new IllegalArgumentException(result.getErrorMessage());
         }
     }
 

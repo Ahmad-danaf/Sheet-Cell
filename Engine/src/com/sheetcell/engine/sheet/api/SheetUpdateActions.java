@@ -1,7 +1,8 @@
 package com.sheetcell.engine.sheet.api;
 
 import com.sheetcell.engine.sheet.Sheet;
+import com.sheetcell.engine.utils.SheetUpdateResult;
 
 public interface SheetUpdateActions {
-    Sheet updateCellValueAndCalculate(int row, int column, String value);
+    SheetUpdateResult setCell(int row, int column, String value);
 }

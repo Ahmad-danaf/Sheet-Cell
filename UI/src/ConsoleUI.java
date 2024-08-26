@@ -149,7 +149,7 @@ public class ConsoleUI {
 
 
         } catch (IllegalArgumentException e) {
-            System.out.println("Error: " + e.getMessage());
+            System.out.println(e.getMessage());
             // Optionally, retry or ask for input again
         }
         finally {
@@ -169,7 +169,7 @@ public class ConsoleUI {
             int newVersion = consoleUI.engine.getReadOnlySheet().getVersion();
             System.out.println("Initial Version: " + initialVersion + ", New Version: " + newVersion);
             consoleUI.updateCell("E4", "true");
-            consoleUI.updateCell("D5","{plus,{REF,B2},{PLUS,5,5}}");
+            consoleUI.updateCell("D5","{plus,{ref,d4},-4}");
 
 
         } catch (Exception e) {

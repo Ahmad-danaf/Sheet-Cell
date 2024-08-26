@@ -8,6 +8,7 @@ import com.sheetcell.engine.expression.parser.FunctionParser;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.sheet.api.SheetUpdateActions;
 import com.sheetcell.engine.utils.CellGraphManager;
+import com.sheetcell.engine.utils.SheetUpdateResult;
 
 import java.io.*;
 import java.util.HashMap;
@@ -89,8 +90,8 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         }
     }
 
-
-    public Sheet setCell(int row, int column, String value) {
+    @Override
+    public SheetUpdateResult setCell(int row, int column, String value) {
         Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
 
         Sheet newSheetVersion = copySheet();
@@ -103,7 +104,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
                 newSheetVersion.updateDependencies(cell, newActiveSheetVersion);
             }
 
-            // Step 2: Topologically sort cells and recalculate effective values
+            // Topologically sort cells and recalculate effective values
             List<Cell> sortedCells = CellGraphManager.topologicalSort(newActiveSheetVersion);
 
             for (Cell cell : sortedCells) {
@@ -115,11 +116,11 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
                 }
             }
             newSheetVersion.incrementVersion();
-            return newSheetVersion;
+            return new SheetUpdateResult(newSheetVersion, null);
         }
         catch (Exception e) {
-            // deal with the runtime error that was discovered as part of invocation
-            return this;
+            // Return the current sheet with the error message
+            return new SheetUpdateResult(this, e.getMessage());
         }
     }
 
@@ -172,32 +173,32 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
 
     }
 
-    @Override
-    public Sheet updateCellValueAndCalculate(int row, int column, String value) {
-        Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
-
-        Sheet newSheetVersion = copySheet();
-        Cell newCell = new Cell(row, column, value, newSheetVersion.getVersion() +1 , newSheetVersion);
-        newSheetVersion.activeCells.put(coordinate, newCell);
-
-        try {
-            List<Cell> cellsThatHaveChanged =
-                    newSheetVersion
-                            .orderCellsForCalculation()
-                            .stream()
-                            .filter(Cell::calculateEffectiveValue)
-                            .collect(Collectors.toList());
-
-            // successful calculation. update sheet and relevant cells version
-            // int newVersion = newSheetVersion.increaseVersion();
-            // cellsThatHaveChanged.forEach(cell -> cell.updateVersion(newVersion));
-
-            return newSheetVersion;
-        } catch (Exception e) {
-            // deal with the runtime error that was discovered as part of invocation
-            return this;
-        }
-    }
+//    @Override
+//    public Sheet updateCellValueAndCalculate(int row, int column, String value) {
+//        Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
+//
+//        Sheet newSheetVersion = copySheet();
+//        Cell newCell = new Cell(row, column, value, newSheetVersion.getVersion() +1 , newSheetVersion);
+//        newSheetVersion.activeCells.put(coordinate, newCell);
+//
+//        try {
+//            List<Cell> cellsThatHaveChanged =
+//                    newSheetVersion
+//                            .orderCellsForCalculation()
+//                            .stream()
+//                            .filter(Cell::calculateEffectiveValue)
+//                            .collect(Collectors.toList());
+//
+//            // successful calculation. update sheet and relevant cells version
+//            // int newVersion = newSheetVersion.increaseVersion();
+//            // cellsThatHaveChanged.forEach(cell -> cell.updateVersion(newVersion));
+//
+//            return newSheetVersion;
+//        } catch (Exception e) {
+//            // deal with the runtime error that was discovered as part of invocation
+//            return this;
+//        }
+//    }
 
     // Sets the original value of a cell during the XML loading process without calculating effective values.
     public void setOriginalValueDuringLoad(int row, int column, String originalValue) {
