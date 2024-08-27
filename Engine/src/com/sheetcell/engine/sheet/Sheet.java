@@ -95,6 +95,10 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         }
     }
 
+    public void setCellChangeCount(int cellChangeCount) {
+        this.CellChangeCount = cellChangeCount;
+    }
+
     @Override
     public SheetUpdateResult setCell(int row, int column, String value) {
         Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
@@ -129,6 +133,50 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
             return new SheetUpdateResult(this, e.getMessage());
         }
     }
+
+    @Override
+    public SheetUpdateResult deleteCell(int row, int column) {
+        Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
+
+        // Create a new version of the sheet
+        Sheet newSheetVersion = copySheet();
+        newSheetVersion.resetCellChangeCount();
+        newSheetVersion.setCellChangeCount(1);
+        Cell cellToDelete = newSheetVersion.activeCells.remove(coordinate);
+        if (cellToDelete == null) {
+            return new SheetUpdateResult(this, "The cell at " + CoordinateFactory.convertIndexToCellCord(row, column) + " is already empty or does not exist. No action was taken.", true);
+        }
+        Map<Coordinate, Cell> newActiveSheetVersion = newSheetVersion.getActiveCells();
+        // Remove the deleted cell from the dependencies of other cells
+        for (Cell cell : newActiveSheetVersion.values()) {
+            cell.removeDependency(cellToDelete);
+            cell.getInfluencedCells().remove(cellToDelete);
+        }
+        try {
+            // Recalculate dependencies and effective values
+            for (Cell cell : newActiveSheetVersion.values()) {
+                newSheetVersion.updateDependencies(cell, newActiveSheetVersion);
+            }
+
+            // Topologically sort cells and recalculate effective values
+            List<Cell> sortedCells = CellGraphManager.topologicalSort(newActiveSheetVersion);
+
+            for (Cell cell : sortedCells) {
+                boolean updated = cell.calculateEffectiveValue();
+                if (updated) {
+                    cell.setVersion(newSheetVersion.getVersion());
+                    newSheetVersion.incrementCellChangeCount();
+                }
+            }
+
+            newSheetVersion.incrementVersion();
+            return new SheetUpdateResult(newSheetVersion, null);
+        } catch (Exception e) {
+            // Return the current sheet with the error message
+            return new SheetUpdateResult(this, e.getMessage());
+        }
+    }
+
 
 
     private void updateDependencies(Cell cell, Map<Coordinate, Cell> activeCells) {

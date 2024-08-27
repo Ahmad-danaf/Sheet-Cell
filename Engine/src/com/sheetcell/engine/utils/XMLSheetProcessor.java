@@ -94,6 +94,7 @@ public class XMLSheetProcessor {
         for (Cell cell : sortedCells) {
             cell.calculateEffectiveValue();
         }
+        currentSheet.setCellChangeCount(activeCells.size());
     }
 
     private void updateDependencies(Cell cell, Map<Coordinate, Cell> activeCells) {

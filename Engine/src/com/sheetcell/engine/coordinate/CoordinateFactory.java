@@ -48,7 +48,7 @@ public class CoordinateFactory {
     }
 
     // Converts a 0-based column index to a column label (for example: 30 -> "AD")
-    private static String convertIndexToColumnLabel(int colIndex) {
+    public static String convertIndexToColumnLabel(int colIndex) {
         StringBuilder colLabel = new StringBuilder();
 
         while (colIndex >= 0) {
@@ -82,14 +82,16 @@ public class CoordinateFactory {
     }
 
     // Validates that the cell ID is in the correct format (for example: "AD7")
-    private static void validateCellIdFormat(String cellId) {
+    public static void validateCellIdFormat(String cellId) {
+        cellId=cellId.toUpperCase();
         if (!cellId.matches("^[A-Z]+\\d+$")) {
             throw new IllegalArgumentException("Invalid cell ID format: " + cellId);
         }
     }
 
     // Extracts the column label from a cell ID (for example: "AD7" -> "AA")
-    private static String extractColumnLabel(String cellId) {
+    public static String extractColumnLabel(String cellId) {
+        cellId=cellId.toUpperCase();
         int i = 0;
         while (i < cellId.length() && Character.isLetter(cellId.charAt(i))) {
             i++;
@@ -98,7 +100,8 @@ public class CoordinateFactory {
     }
 
     // Extracts the row label from a cell ID (for example: "AD7" -> "7")
-    private static String extractRowLabel(String cellId) {
+    public static String extractRowLabel(String cellId) {
+        cellId=cellId.toUpperCase();
         int i = 0;
         while (i < cellId.length() && Character.isLetter(cellId.charAt(i))) {
             i++;

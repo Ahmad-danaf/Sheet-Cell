@@ -54,6 +54,11 @@ public class ModExpression implements BinaryExpression {
         // Perform the modulo operation
         double result = dividend % divisor;
 
+        // Adjust the result to have the same sign as the divisor
+        if (result != 0 && ((result < 0 && divisor > 0) || (result > 0 && divisor < 0))) {
+            result += divisor;
+        }
+
         // Return the result as a new EffectiveValue
         return new EffectiveValue(CellType.NUMERIC, result);
     }
@@ -62,6 +67,17 @@ public class ModExpression implements BinaryExpression {
     @Override
     public CellType getFunctionResultType() {
         return CellType.NUMERIC;
+    }
+
+    private void test() {
+        System.out.println("ModExpression test");
+        System.out.println("Test 1: 5 % 2 = " + new ModExpression(new IdentityExpression(5.0,CellType.NUMERIC), new IdentityExpression(2.0,CellType.NUMERIC)).eval(null, null).getValue());
+        System.out.println("Test 2: 5 % 0 = " + new ModExpression(new IdentityExpression(5.0,CellType.NUMERIC), new IdentityExpression(0.0,CellType.NUMERIC)).eval(null, null).getValue());
+        System.out.println("Test 3: 5 % 2.5 = " + new ModExpression(new IdentityExpression(5.0,CellType.NUMERIC), new IdentityExpression(2.5,CellType.NUMERIC)).eval(null, null).getValue());
+        System.out.println("Test 4: 5 % (-2) = " + new ModExpression(new IdentityExpression(5.0,CellType.NUMERIC), new IdentityExpression(-2.0,CellType.NUMERIC)).eval(null, null).getValue());
+        System.out.println("Test 5: 10 % (-3)= " + new ModExpression(new IdentityExpression(10.0,CellType.NUMERIC), new IdentityExpression(-3.0,CellType.NUMERIC)).eval(null, null).getValue());
+        System.out.println("Test 6: 10 % (-5) = " + new ModExpression(new IdentityExpression(10.0,CellType.NUMERIC), new IdentityExpression((-5.0),CellType.NUMERIC)).eval(null, null).getValue());
+        System.out.println("Test 7: -10 % 3 = " + new ModExpression(new IdentityExpression(-10.0,CellType.NUMERIC), new IdentityExpression(3.0,CellType.NUMERIC)).eval(null, null).getValue());
     }
 }
 

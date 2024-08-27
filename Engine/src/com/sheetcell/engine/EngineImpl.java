@@ -11,7 +11,11 @@ import java.io.*;
 import java.util.Map;
 import java.util.HashMap;
 
+
 public class EngineImpl implements Engine, Serializable {
+    private static final long serialVersionUID = 3556326708908783837L;
+
+
     private Sheet currentSheet;
     private Map<Integer, Sheet> sheetVersions;
     private transient XMLSheetProcessor xmlSheetProcessor; // Not serialized
@@ -49,29 +53,37 @@ public class EngineImpl implements Engine, Serializable {
             engine.xmlSheetProcessor = new XMLSheetProcessor(); // Re-initialize the transient field
             return engine;
         } catch (Exception e) {
+            //e.printStackTrace();
             return null;
         }
     }
 
     @Override
-    public void setCellValue(String cellId, String value) {
-        // vlaidate cellId...(later)
+    public SheetUpdateResult setCellValue(String cellId, String value) {
+        doesCellIdVaild(cellId);
 
-        int[] coords= CoordinateFactory.convertCellIdToIndex(cellId);
-        int row= coords[0];
-        int col= coords[1];
-        SheetUpdateResult result = currentSheet.setCell(row, col, value);
+        int[] coords = CoordinateFactory.convertCellIdToIndex(cellId);
+        int row = coords[0];
+        int col = coords[1];
 
-        // if(tempSheet != currentSheet){
-        if(!result.hasError()){
-            Sheet tempSheet= result.getSheet();
+        SheetUpdateResult result;
+
+        if (value.isEmpty()) {
+            // Delete the cell if the value is an empty string
+            result = currentSheet.deleteCell(row, col);
+        } else {
+            // Set the cell value if it's not empty
+            result = currentSheet.setCell(row, col, value);
+        }
+
+        if (!result.hasError()) {
+            Sheet tempSheet = result.getSheet();
             this.sheetVersions.put(tempSheet.getVersion(), tempSheet);
-            currentSheet= tempSheet;
+            currentSheet = tempSheet;
         }
-        else {
-            throw new IllegalArgumentException(result.getErrorMessage());
-        }
+        return result;
     }
+
 
     @Override
     public SheetReadActions getReadOnlySheet() {
@@ -102,5 +114,49 @@ public class EngineImpl implements Engine, Serializable {
     public Cell getCell(String cellId) {
         // Retrieves a cell by its ID
         return null;
+    }
+
+    @Override
+    public void doesCellIdVaildAndExist(String cellId) {
+        try {
+            CoordinateFactory.validateCellIdFormat(cellId);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid cell identifier format: '" + cellId + "'. Please ensure you are using the correct format (e.g., 'A1').");
+        }
+
+        int[] coords = CoordinateFactory.convertCellIdToIndex(cellId);
+        int row = coords[0];
+        int col = coords[1];
+
+        if (row >= currentSheet.getMaxRows() || col >= currentSheet.getMaxColumns()) {
+            throw new IllegalArgumentException("The cell '" + cellId + "' is out of bounds. The sheet has a maximum of "
+                    + currentSheet.getMaxRows() + " rows and " + currentSheet.getMaxColumns() + " columns.");
+        }
+        if(row < 0 || col < 0){
+            throw new IllegalArgumentException("Invalid cell identifier format: '" + cellId + "'. Please ensure you are using the correct format (e.g., 'A1').");
+        }
+
+        Cell cell = currentSheet.getCell(row, col);
+        if (cell == null) {
+            throw new IllegalArgumentException("The cell '" + cellId + "' does not exist or is empty. Please check the cell identifier and try again.");
+        }
+    }
+
+    @Override
+    public void doesCellIdVaild(String cellId) {
+        try {
+            CoordinateFactory.validateCellIdFormat(cellId);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid cell identifier format: '" + cellId + "'. Please ensure you are using the correct format (e.g., 'A1').");
+        }
+        int row = CoordinateFactory.convertCellIdToIndex(cellId)[0];
+        int col = CoordinateFactory.convertCellIdToIndex(cellId)[1];
+        if(row < 0 || col < 0){
+            throw new IllegalArgumentException("Invalid cell identifier format: '" + cellId + "'. Please ensure you are using the correct format (e.g., 'A1').");
+        }
+        if (row >= currentSheet.getMaxRows() || col >= currentSheet.getMaxColumns()) {
+            throw new IllegalArgumentException("The cell '" + cellId + "' is out of bounds. The sheet has a maximum of "
+                    + currentSheet.getMaxRows() + " rows and " + currentSheet.getMaxColumns() + " columns.");
+        }
     }
 }
