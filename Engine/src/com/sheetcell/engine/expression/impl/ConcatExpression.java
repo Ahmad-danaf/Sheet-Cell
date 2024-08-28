@@ -40,8 +40,17 @@ public class ConcatExpression implements BinaryExpression {
 
         // If either value is null, it means the cast failed (not a string type)
         if (str1String == null || str2String == null) {
-            throw new IllegalArgumentException("Error: One of the arguments provided to the CONCAT function is not a string. " +
-                    "Please ensure that both arguments are valid string values.");
+            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
+                    ? callingCell.getCoordinate().toString()
+                    : "unknown";
+            if (cellCoordinates.equals("unknown")) {
+               throw new IllegalArgumentException("Error at '"+ cellCoordinates+"': One of the arguments provided to the CONCAT function is not a string.\n" +
+                        "Please ensure that both arguments are valid string values.");
+            }
+            else{
+                throw new IllegalArgumentException("Error: One of the arguments provided to the CONCAT function is not a string.\n" +
+                        "Please ensure that both arguments are valid string values.");
+            }
         }
 
         String result = str1String + str2String;

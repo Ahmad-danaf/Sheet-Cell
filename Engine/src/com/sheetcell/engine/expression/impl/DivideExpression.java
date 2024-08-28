@@ -36,8 +36,16 @@ public class DivideExpression implements BinaryExpression {
         // Attempt to cast the right value (divisor) to Double
         Double divisor = rightValue.castValueTo(Double.class);
         if (divisor == null) {
-            throw new IllegalArgumentException("Error: The divisor provided to the DIVIDE function is not numeric. " +
-                    "Please ensure that the divisor is a valid numeric value.");
+            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
+                    ? callingCell.getCoordinate().toString()
+                    : "unknown";
+            if ("unknown".equals(cellCoordinates)) {
+                throw new IllegalArgumentException("Error: The divisor provided to the DIVIDE function is not numeric.\n" +
+                        "Please ensure that the divisor is a valid numeric value.");
+            } else {
+                throw new IllegalArgumentException("Error: The divisor provided to the DIVIDE function is not numeric.\n" +
+                        "Please ensure that the divisor is a valid numeric value. Cell: " + cellCoordinates);
+            }
         }
 
         // Check for division by zero
@@ -48,8 +56,16 @@ public class DivideExpression implements BinaryExpression {
         // Attempt to cast the left value (dividend) to Double
         Double dividend = leftValue.castValueTo(Double.class);
         if (dividend == null) {
-            throw new IllegalArgumentException("Error: The dividend provided to the DIVIDE function is not numeric. " +
-                    "Please ensure that the dividend is a valid numeric value.");
+            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
+                    ? callingCell.getCoordinate().toString()
+                    : "unknown";
+            if ("unknown".equals(cellCoordinates)) {
+                throw new IllegalArgumentException("Error: The dividend provided to the DIVIDE function is not numeric.\n" +
+                        "Please ensure that the dividend is a valid numeric value.");
+            } else {
+                throw new IllegalArgumentException("Error: The dividend provided to the DIVIDE function is not numeric.\n" +
+                        "Please ensure that the dividend is a valid numeric value. Cell: " + cellCoordinates);
+            }
         }
 
         // Perform the division

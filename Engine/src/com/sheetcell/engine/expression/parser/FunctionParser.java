@@ -22,11 +22,11 @@ public enum FunctionParser {
                 throw new IllegalArgumentException("Invalid number of arguments for IDENTITY function. Expected 1, but got " + arguments.size());
             }
             // all is good. create the relevant function instance
-            String actualValue = arguments.get(0).trim();
+            String actualValue = arguments.get(0);
             if (isBoolean(actualValue)) {
-                return new IdentityExpression(Boolean.parseBoolean(actualValue), CellType.BOOLEAN);
+                return new IdentityExpression(Boolean.parseBoolean(actualValue.trim()), CellType.BOOLEAN);
             } else if (isNumeric(actualValue)) {
-                return new IdentityExpression(Double.parseDouble(actualValue), CellType.NUMERIC);
+                return new IdentityExpression(Double.parseDouble(actualValue.trim()), CellType.NUMERIC);
             } else {
                 return new IdentityExpression(actualValue, CellType.STRING);
             }
@@ -224,8 +224,8 @@ public enum FunctionParser {
             }
 
             // Parse the arguments
-            Expression str1 = parseExpression(arguments.get(0).trim());
-            Expression str2 = parseExpression(arguments.get(1).trim());
+            Expression str1 = parseExpression(arguments.get(0));
+            Expression str2 = parseExpression(arguments.get(1));
 
             // Validate that both arguments are strings or unknown
             CellType str1CellType = str1.getFunctionResultType();
@@ -249,7 +249,7 @@ public enum FunctionParser {
             }
 
             // Parse the arguments
-            Expression source = parseExpression(arguments.get(0).trim());
+            Expression source = parseExpression(arguments.get(0));
             Expression startIndex = parseExpression(arguments.get(1).trim());
             Expression endIndex = parseExpression(arguments.get(2).trim());
 
@@ -306,13 +306,13 @@ public enum FunctionParser {
                 return FunctionParser.valueOf(functionName).parse(topLevelParts);
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Error: The function name '" + functionName +
-                        "' in your input '" + input + "' is either unknown or incorrectly used. " +
+                        "' in your input '" + input + "' is either unknown or incorrectly used.\n" +
                         "Please ensure that you are using a valid function name and that you follow " +
-                        "the correct syntax rules: {FUNCTION_NAME, arg1, arg2, ...}. Double-check your input and try again.");            }
+                        "the correct syntax rules");            }
         }
 
         // handle identity expression
-        return FunctionParser.IDENTITY.parse(List.of(input.trim()));
+        return FunctionParser.IDENTITY.parse(List.of(input));
     }
 
     private static List<String> parseMainParts(String input) {
@@ -326,14 +326,14 @@ public enum FunctionParser {
                 stack.push(c);
             } else if (c == '}') {
                 if (stack.isEmpty()) {
-                    throw new IllegalArgumentException("Error in function definition: It looks like there's an extra closing brace '}' at position " +
-                            (i + 1) + " in your input: '" + input + "'. Please check your function and ensure that all opening '{' braces have matching closing '}' braces.");                }
+                    throw new IllegalArgumentException("Error in function definition: It looks like there's an extra closing brace '}'. " +
+                            "Please check your function and ensure that all opening '{' braces have matching closing '}' braces.");                }
                 stack.pop();
             }
 
             if (c == ',' && stack.isEmpty()) {
                 // If we are at a comma and the stack is empty, it's a separator for top-level parts
-                parts.add(buffer.toString().trim());
+                parts.add(buffer.toString());
                 buffer.setLength(0); // Clear the buffer for the next part
             } else {
                 buffer.append(c);
@@ -342,13 +342,13 @@ public enum FunctionParser {
 
         // Add the last part
         if (buffer.length() > 0) {
-            parts.add(buffer.toString().trim());
+            parts.add(buffer.toString());
         }
 
         // Check for unbalanced opening braces
         if (!stack.isEmpty()) {
-            throw new IllegalArgumentException("Error in function definition: Your input '" +
-                    input + "' has unclosed opening braces '{'. Please make sure each '{' has a corresponding '}' to close it.");
+            throw new IllegalArgumentException("Error in function definition: Your input has unclosed opening braces '{'. " +
+                    "Please make sure each '{' has a corresponding '}' to close it.");
         }
 
         return parts;

@@ -8,6 +8,7 @@ import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.utils.SheetUpdateResult;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -60,11 +61,11 @@ public class ConsoleUI {
                     }
                     break;
                 case "6":
-                    running = false;
-                    System.out.println("Exiting the system...");
+                    handleSaveLoadSystemState(isSheetLoaded);
                     break;
                 case "7":
-                    handleSaveLoadSystemState(isSheetLoaded);
+                    running = false;
+                    System.out.println("Exiting the system...");
                     break;
                 default:
                     System.out.println("Invalid option. Please try again.");
@@ -79,8 +80,8 @@ public class ConsoleUI {
         System.out.println("3. Display Single Cell Details");
         System.out.println("4. Update Cell Value");
         System.out.println("5. Display Versions");
-        System.out.println("6. Exit");
-        System.out.println("7. Save/Load System State");
+        System.out.println("6. Save/Load System State");
+        System.out.println("7. Exit");
         System.out.print("Please select an option: ");
     }
 
@@ -97,7 +98,7 @@ public class ConsoleUI {
             displaySheet(engine.getReadOnlySheet());
 
         } catch (Exception e) {
-            System.out.println("Failed to load the sheet. Error: " + e.getMessage());
+            System.out.println("Failed to load the sheet: " + e.getMessage());
         }
     }
 
@@ -120,7 +121,7 @@ public class ConsoleUI {
             displaySingleCellDetails(engine.getReadOnlySheet(), cellId);
         } catch (IllegalArgumentException e) {
             // Handle any errors that occur during cell validation or retrieval
-            System.out.println("Error: " + e.getMessage());
+            System.out.println(e.getMessage());
         } catch (Exception e) {
             // Catch any other exceptions and provide a general error message
             System.out.println("Error displaying cell details: " + e.getMessage());
@@ -129,36 +130,29 @@ public class ConsoleUI {
 
     private void handleUpdateCell() {
         Scanner scanner = new Scanner(System.in);
-        boolean updatedSuccessfully = false;
-
-        while (!updatedSuccessfully) {
-            try {
+        try {
                 System.out.print("Enter the cell identifier (e.g., A1): ");
                 String cellId = scanner.nextLine().trim();
 
-                // Step 1: Validate the cell ID using the engine method
+                // Validate the cell ID using the engine method
                 engine.doesCellIdVaild(cellId);
 
-                // Step 2: Display original and effective value
+                // Display original and effective value
                 displayCellInfo(cellId);
 
-                // Step 3: Prompt user for new value
+                // Prompt user for new value
                 System.out.print("Enter the new value for the cell (or leave empty to clear the cell): ");
                 String newValue = scanner.nextLine().trim();
-
-                // Step 4: Update the cell and process recalculations
+                // Update the cell and process recalculations
                 SheetUpdateResult result = engine.setCellValue(cellId, newValue);
                 if (result.isNoActionNeeded()) {
                     System.out.println("The cell at " + cellId + " was already empty. No action was needed.");
-                    updatedSuccessfully = true;
                     displaySheet(engine.getReadOnlySheet());
                 } else if (result.hasError()) {
                     System.out.println("Update failed: " + result.getErrorMessage());
                 } else {
                     System.out.println("Cell " + cellId + " updated successfully.");
-                    updatedSuccessfully = true;
                     displaySheet(engine.getReadOnlySheet());
-
                 }
 
             } catch (IllegalArgumentException e) {
@@ -170,7 +164,6 @@ public class ConsoleUI {
                 System.out.println("Error occurred while updating the cell" + e.getMessage());
                 System.out.println("Please try again.");
             }
-        }
     }
 
     private void handleDisplayVersions() {
@@ -210,13 +203,13 @@ public class ConsoleUI {
         }
     }
 
-    private void handleSaveLoadSystemState(boolean isSheetLoaded) {
+    private void handleSaveLoadSystemState(boolean isSheetLoadedNow) {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Would you like to save (S) or load (L) the system state?");
         String choice = scanner.nextLine().trim().toUpperCase();
 
         if (choice.equals("S")) {
-            if (!isSheetLoaded) {
+            if (!isSheetLoadedNow) {
                 System.out.println("Error: No sheet is loaded. Please load a sheet to save the system state.");
                 return;
             }
@@ -242,6 +235,7 @@ public class ConsoleUI {
                     System.out.println("System state loaded successfully from " + filePath);
                     engine = loadedEngine; // Replace the current engine with the loaded one
                     displaySheet(engine.getReadOnlySheet()); // Display the loaded sheet
+                    this.isSheetLoaded = true;
                 } else {
                     System.out.println("Failed to load the system state from the specified file.");
                 }
@@ -257,42 +251,62 @@ public class ConsoleUI {
         this.engine= engine;
     }
     //********************************************************************************************************
-    void displaySheet(SheetReadActions sheet) {
+    public void displaySheet(SheetReadActions sheet) {
+        // Print version and sheet name
+        System.out.println("Version: " + sheet.getVersion());
+        System.out.println("Sheet Name: " + sheet.getSheetName());
 
-        // Display the sheet version
-        System.out.println("Sheet Version: " + sheet.getVersion());
+        int numRows = sheet.getMaxRows();
+        int numCols = sheet.getMaxColumns();
+        int widthCol = sheet.getColumnWidth();
+        int heightRow = sheet.getRowHeight();
 
-        // Display the sheet name if available
-        String sheetName = sheet.getSheetName(); // Placeholder for getting the sheet name
-        if (sheetName != null && !sheetName.isEmpty()) {
-            System.out.println("Sheet Name: " + sheetName);
-        }
-
-        // Display column headers
-        printColumnHeaders(sheet);
-
-        // Display the sheet content row by row
-        for (int row = 0; row < sheet.getMaxRows(); row++) {
-            // Print row number
-            System.out.printf("%02d ", row + 1); // Print row number with leading zeroes
-
-            for (int col = 0; col < sheet.getMaxColumns(); col++) {
-                Cell cell = sheet.getCell(row, col);
-                String cellContent = formatCellContent(cell);
-                System.out.printf("%-" + sheet.getColumnWidth() + "s|", cellContent);
+        // Print column headers with centered letters
+        System.out.print("  "); // Initial space for row numbers
+        System.out.print("|");
+        for (int col = 0; col < numCols; col++) {
+            String header = String.valueOf((char) ('A' + col));
+            int padding = Math.max((widthCol - header.length()) / 2, 0); // Calculate padding for centering
+            System.out.print(" ".repeat(padding)); // Add left padding
+            System.out.print(header.substring(0, Math.min(header.length(), widthCol))); // Print column letter
+            System.out.print(" ".repeat(Math.max(0, widthCol - padding - header.length()))); // Add right padding
+            if (col < numCols - 1) {
+                System.out.print("|");
             }
-            System.out.println(); // Move to the next line after each row
         }
-    }
+        System.out.println("|"); // End of column headers
 
-    private void printColumnHeaders(SheetReadActions sheet) {
-        System.out.print("   "); // Adjust for row number column
+        // Print each row
+        for (int row = 1; row <= numRows; row++) {
+            System.out.printf("%02d", row); // Print row number with leading zeros
+            System.out.print("|");
 
-        for (int col = 0; col < sheet.getMaxColumns(); col++) {
-            char columnLetter = (char) ('A' + col); // Convert column number to a letter
-            System.out.printf("%-" + sheet.getColumnWidth() + "s|", columnLetter);
+            for (int col = 0; col < numCols; col++) {
+                Cell currentCell = sheet.getCell(row - 1, col); // Get cell at current row and column
+                String cellContent =formatCellContent(currentCell);
+
+                // Print cell content, truncated or padded to fit the column width
+                System.out.printf("%-" + widthCol + "s", cellContent.substring(0, Math.min(cellContent.length(), widthCol)));
+
+                if (col < numCols - 1) {
+                    System.out.print("|");
+                }
+            }
+            System.out.println("|"); // End of the row
+
+            // Print additional empty lines for row height
+            for (int h = 1; h < heightRow; h++) {
+                System.out.print("  "); // Initial space for row numbers
+                System.out.print("|");
+                for (int col = 0; col < numCols; col++) {
+                    System.out.print(" ".repeat(widthCol));
+                    if (col < numCols - 1) {
+                        System.out.print("|");
+                    }
+                }
+                System.out.println("|"); // End of the row
+            }
         }
-        System.out.println();
     }
 
     private String formatCellContent(Cell cell) {
@@ -305,13 +319,28 @@ public class ConsoleUI {
 
         // Determine how to display the value based on its type
         if (effectiveValue.getCellType() == CellType.NUMERIC) {
-            return String.format("%." + getNumericPrecision() + "f", (Double) value);
+            return formatNumericValue((Double) value);
         } else if (effectiveValue.getCellType() == CellType.STRING) {
             return value.toString();
         } else if (effectiveValue.getCellType() == CellType.BOOLEAN) {
             return value.toString().toUpperCase(); // Boolean values in uppercase
         } else {
             return ""; // For unknown or unsupported types, return an empty string
+        }
+    }
+
+    private String formatNumericValue(Double value) {
+        if (value == null) {
+            return "";
+        }
+
+        // Check if the number is an integer (e.g., 5.00 should be shown as 5)
+        if (value == value.intValue()) {
+            return String.format("%,d", value.intValue());
+        } else {
+            // Format with 2 decimal places and thousand separator
+            DecimalFormat df = new DecimalFormat("#,##0.00");
+            return df.format(value);
         }
     }
 

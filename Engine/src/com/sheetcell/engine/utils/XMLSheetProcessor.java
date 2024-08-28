@@ -78,7 +78,7 @@ public class XMLSheetProcessor {
             int cellRow = stlCell.getRow() - 1;
             validateCellPosition(cellRow, cellColumn, sheetRows, sheetColumns);
 
-            String value = stlCell.getSTLOriginalValue();
+            String value = stlCell.getSTLOriginalValue().trim();
             currentSheet.setOriginalValueDuringLoad(cellRow, cellColumn, value);
         }
 
@@ -151,7 +151,7 @@ public class XMLSheetProcessor {
         boolean isColumnInvalid = cellColumn < (MIN_SHEET_COLUMNS - 1) || cellColumn >= totalColumns;
 
         if (isRowInvalid || isColumnInvalid) {
-            throw new IllegalArgumentException("Cell at (" + cellRow + ", " + cellColumn + ") is outside the valid range. "
+            throw new IllegalArgumentException("Cell at (" + (cellRow+1) + ", " + CoordinateFactory.convertIndexToColumnLabel(cellColumn) + ") is outside the valid range. "
                     + "Valid rows: " + MIN_SHEET_ROWS  + "-" + totalRows + ", "
                     + "Valid columns: " + MIN_SHEET_COLUMNS + "-" + totalColumns);
         }

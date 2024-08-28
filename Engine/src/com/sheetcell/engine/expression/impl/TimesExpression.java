@@ -38,8 +38,16 @@ public class TimesExpression implements BinaryExpression {
 
         // If either value is null, it means the cast failed (not a numeric type)
         if (leftNumeric == null || rightNumeric == null) {
-            throw new IllegalArgumentException("Error: One of the arguments provided to the TIMES function is not numeric. " +
-                    "Please ensure that both arguments are valid numeric values.");
+            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
+                    ? callingCell.getCoordinate().toString()
+                    : "unknown";
+            if ("unknown".equals(cellCoordinates)) {
+                throw new IllegalArgumentException("Error: The arguments provided to the TIMES function are not numeric.\n" +
+                        "Please ensure that both arguments are valid numeric values.");
+            } else {
+                throw new IllegalArgumentException("Error: The arguments provided to the TIMES function are not numeric.\n" +
+                        "Please ensure that both arguments are valid numeric values. Cell: " + cellCoordinates);
+            }
         }
 
         // Perform the multiplication

@@ -120,7 +120,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
             for (Cell cell : sortedCells) {
                 boolean updated = cell.calculateEffectiveValue();
                 if (updated) {
-                    cell.setVersion(newSheetVersion.getVersion());
+                    cell.setVersion(newSheetVersion.getVersion()+1);
                     newSheetVersion.incrementCellChangeCount();
 
                 }

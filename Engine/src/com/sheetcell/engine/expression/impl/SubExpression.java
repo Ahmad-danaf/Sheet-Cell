@@ -47,12 +47,28 @@ public class SubExpression implements TernaryExpression {
 
         // Check for type conversion issues
         if (sourceStr == null) {
-            throw new IllegalArgumentException("Error: The source provided to the SUB function is not a valid string. " +
-                    "Please ensure that the source argument is a valid string value.");
+            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
+                    ? callingCell.getCoordinate().toString()
+                    : "unknown";
+            if ("unknown".equals(cellCoordinates)) {
+                throw new IllegalArgumentException("Error: The source provided to the SUB function is not a string.\n" +
+                        "Please ensure that the source is a valid string value.");
+            } else {
+                throw new IllegalArgumentException("Error: The source provided to the SUB function is not a string.\n" +
+                        "Please ensure that the source is a valid string value. Cell: " + cellCoordinates);
+            }
         }
         if (startDouble == null || endDouble == null) {
-            throw new IllegalArgumentException("Error: The start or end index provided to the SUB function is not numeric. " +
-                    "Please ensure that both indices are valid numeric values.");
+            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
+                    ? callingCell.getCoordinate().toString()
+                    : "unknown";
+            if ("unknown".equals(cellCoordinates)) {
+                throw new IllegalArgumentException("Error: The start or end index provided to the SUB function is not a number.\n" +
+                        "Please ensure that the start and end indices are valid numeric values.");
+            } else {
+                throw new IllegalArgumentException("Error: The start or end index provided to the SUB function is not a number.\n" +
+                        "Please ensure that the start and end indices are valid numeric values. Cell: " + cellCoordinates);
+            }
         }
 
         // Convert indices to int

@@ -29,8 +29,17 @@ public class AbsExpression implements UnaryExpression {
 
         // If the value is null, it means the cast failed (not a numeric type)
         if (numericValue == null) {
-            throw new IllegalArgumentException("Error: The argument provided to the ABS function is not numeric. " +
-                    "Please ensure that the argument is a valid numeric value.");
+            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
+                    ? callingCell.getCoordinate().toString()
+                    : "unknown";
+            if (cellCoordinates.equals("unknown")) {
+                throw new IllegalArgumentException("Error: The argument provided to the ABS function is not numeric.\n" +
+                        "Please ensure that the argument is a valid numeric value.");
+            }
+            else{
+                throw new IllegalArgumentException("Error: The argument provided to the ABS function is not numeric.\n" +
+                        "Please ensure that the argument is a valid numeric value. Cell: " + cellCoordinates);
+            }
         }
 
         // Compute the absolute value

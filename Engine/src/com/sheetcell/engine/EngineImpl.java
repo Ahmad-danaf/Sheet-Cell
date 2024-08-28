@@ -138,7 +138,7 @@ public class EngineImpl implements Engine, Serializable {
 
         Cell cell = currentSheet.getCell(row, col);
         if (cell == null) {
-            throw new IllegalArgumentException("The cell '" + cellId + "' does not exist or is empty. Please check the cell identifier and try again.");
+            throw new IllegalArgumentException("The cell '" + cellId + "' is empty. Please check the cell identifier and try again.");
         }
     }
 

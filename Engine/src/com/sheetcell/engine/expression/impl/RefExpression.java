@@ -28,10 +28,14 @@ public class RefExpression implements ReferenceExpression {
 
         // Check if the cell is null (i.e., not found) or has no effective value
         if (referencedCell  == null || referencedCell .getEffectiveValue() == null) {
+            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
+                    ? callingCell.getCoordinate().toString()
+                    : "unknown";
             throw new IllegalArgumentException(
-                    "Reference Error in cell " + callingCell.getCoordinate() + ": The cell at " + coordinate +
-                            " could not be found or is empty. Please check the cell reference and ensure it points to a valid cell with a value."
-            );        }
+                    "Reference Error in cell " + cellCoordinates + ": The cell at " + coordinate +
+                            " could not be found or is empty.\n Please check the cell reference and ensure it points to a valid cell with a value."
+            );
+        }
 
         // Add this cell as a dependency to the referenced cell
         if (callingCell != null) {
