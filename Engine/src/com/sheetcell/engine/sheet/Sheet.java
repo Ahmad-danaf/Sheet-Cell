@@ -11,9 +11,7 @@ import com.sheetcell.engine.utils.CellGraphManager;
 import com.sheetcell.engine.utils.SheetUpdateResult;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable {
@@ -105,6 +103,27 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
 
         Sheet newSheetVersion = copySheet();
         newSheetVersion.resetCellChangeCount();
+
+        // Get the old cell that is about to be replaced (if it exists)
+        Cell oldCell = newSheetVersion.activeCells.get(coordinate);
+
+        // Backup the old cell's dependencies and influenced cells
+        Map<Cell, Set<Cell>> oldDependenciesBackup = new HashMap<>();
+        Map<Cell, Set<Cell>> oldInfluencedCellsBackup = new HashMap<>();
+
+        if (oldCell != null) {
+            for (Cell cell : newSheetVersion.activeCells.values()) {
+                if (cell.getDependencies().contains(oldCell)) {
+                    oldDependenciesBackup.put(cell, new HashSet<>(cell.getDependencies()));
+                    cell.removeDependency(oldCell);
+                }
+                if (cell.getInfluencedCells().contains(oldCell)) {
+                    oldInfluencedCellsBackup.put(cell, new HashSet<>(cell.getInfluencedCells()));
+                    cell.getInfluencedCells().remove(oldCell);
+                }
+            }
+        }
+
         Cell newCell = new Cell(row, column, value, newSheetVersion.getVersion() +1 , newSheetVersion);
         newSheetVersion.activeCells.put(coordinate, newCell);
         Map<Coordinate, Cell> newActiveSheetVersion=newSheetVersion.getActiveCells();
@@ -129,7 +148,19 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
             return new SheetUpdateResult(newSheetVersion, null);
         }
         catch (Exception e) {
-            // Return the current sheet with the error message
+            // Restore the old cell's dependencies and influenced cells
+            if (oldCell != null) {
+                for (Map.Entry<Cell, Set<Cell>> entry : oldDependenciesBackup.entrySet()) {
+                    Cell cell = entry.getKey();
+                    cell.getDependencies().clear();
+                    cell.getDependencies().addAll(entry.getValue());
+                }
+                for (Map.Entry<Cell, Set<Cell>> entry : oldInfluencedCellsBackup.entrySet()) {
+                    Cell cell = entry.getKey();
+                    cell.getInfluencedCells().clear();
+                    cell.getInfluencedCells().addAll(entry.getValue());
+                }
+            }
             return new SheetUpdateResult(this, e.getMessage());
         }
     }
