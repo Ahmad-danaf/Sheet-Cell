@@ -39,6 +39,9 @@ public class SubExpression implements TernaryExpression {
         EffectiveValue sourceValue = source.eval(sheet, callingCell);
         EffectiveValue startIndexValue = startIndex.eval(sheet, callingCell);
         EffectiveValue endIndexValue = endIndex.eval(sheet, callingCell);
+        if (Expression.isInvalidString(sourceValue) || Expression.isInvalidNumeric(startIndexValue) || Expression.isInvalidNumeric(endIndexValue)) {
+            return new EffectiveValue(CellType.STRING, "!UNDEFINED!");
+        }
 
         // Convert the values to appropriate types
         String sourceStr = sourceValue.castValueTo(String.class);
@@ -46,30 +49,10 @@ public class SubExpression implements TernaryExpression {
         Double endDouble = endIndexValue.castValueTo(Double.class);
 
         // Check for type conversion issues
-        if (sourceStr == null) {
-            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
-                    ? callingCell.getCoordinate().toString()
-                    : "unknown";
-            if ("unknown".equals(cellCoordinates)) {
-                throw new IllegalArgumentException("Error: The source provided to the SUB function is not a string.\n" +
-                        "Please ensure that the source is a valid string value.");
-            } else {
-                throw new IllegalArgumentException("Error: The source provided to the SUB function is not a string.\n" +
-                        "Please ensure that the source is a valid string value. Cell: " + cellCoordinates);
-            }
+        if (sourceStr == null || startDouble == null || endDouble == null) {
+            return new EffectiveValue(CellType.STRING, "!UNDEFINED!"); // Return UNDEFINED if type conversion fails
         }
-        if (startDouble == null || endDouble == null) {
-            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
-                    ? callingCell.getCoordinate().toString()
-                    : "unknown";
-            if ("unknown".equals(cellCoordinates)) {
-                throw new IllegalArgumentException("Error: The start or end index provided to the SUB function is not a number.\n" +
-                        "Please ensure that the start and end indices are valid numeric values.");
-            } else {
-                throw new IllegalArgumentException("Error: The start or end index provided to the SUB function is not a number.\n" +
-                        "Please ensure that the start and end indices are valid numeric values. Cell: " + cellCoordinates);
-            }
-        }
+
 
         // Convert indices to int
         int start = startDouble.intValue();

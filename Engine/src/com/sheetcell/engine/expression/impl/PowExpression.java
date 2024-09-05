@@ -31,6 +31,9 @@ public class PowExpression implements BinaryExpression {
         // Evaluate the expressions
         EffectiveValue baseValue = base.eval(sheet, callingCell);
         EffectiveValue exponentValue = exponent.eval(sheet, callingCell);
+        if (Expression.isInvalidNumeric(baseValue) || Expression.isInvalidNumeric(exponentValue)) {
+            return new EffectiveValue(CellType.NUMERIC, Double.NaN);
+        }
 
         // Attempt to cast the base and exponent to Double
         Double baseNumeric = baseValue.castValueTo(Double.class);
@@ -38,16 +41,7 @@ public class PowExpression implements BinaryExpression {
 
         // If either value is null, it means the cast failed (not a numeric type)
         if (baseNumeric == null || exponentNumeric == null) {
-            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
-                    ? callingCell.getCoordinate().toString()
-                    : "unknown";
-            if ("unknown".equals(cellCoordinates)) {
-                throw new IllegalArgumentException("Error: The arguments provided to the POW function are not numeric.\n" +
-                        "Please ensure that both arguments are valid numeric values.");
-            } else {
-                throw new IllegalArgumentException("Error: The arguments provided to the POW function are not numeric.\n" +
-                        "Please ensure that both arguments are valid numeric values. Cell: " + cellCoordinates);
-            }
+            return new EffectiveValue(CellType.NUMERIC, Double.NaN);
         }
 
         // Perform the power operation

@@ -34,23 +34,17 @@ public class ConcatExpression implements BinaryExpression {
         EffectiveValue str1Value = str1.eval(sheet, callingCell);
         EffectiveValue str2Value = str2.eval(sheet, callingCell);
 
+        if (Expression.isInvalidString(str1Value) || Expression.isInvalidString(str2Value)) {
+            return new EffectiveValue(CellType.STRING, "!UNDEFINED!");
+        }
+
         // Check if the values can be cast to String
         String str1String = str1Value.castValueTo(String.class);
         String str2String = str2Value.castValueTo(String.class);
 
         // If either value is null, it means the cast failed (not a string type)
         if (str1String == null || str2String == null) {
-            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
-                    ? callingCell.getCoordinate().toString()
-                    : "unknown";
-            if (cellCoordinates.equals("unknown")) {
-               throw new IllegalArgumentException("Error at '"+ cellCoordinates+"': One of the arguments provided to the CONCAT function is not a string.\n" +
-                        "Please ensure that both arguments are valid string values.");
-            }
-            else{
-                throw new IllegalArgumentException("Error: One of the arguments provided to the CONCAT function is not a string.\n" +
-                        "Please ensure that both arguments are valid string values.");
-            }
+            return new EffectiveValue(CellType.STRING, "!UNDEFINED!");
         }
 
         String result = str1String + str2String;

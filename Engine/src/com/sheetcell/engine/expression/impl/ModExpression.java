@@ -32,19 +32,13 @@ public class ModExpression implements BinaryExpression {
         EffectiveValue leftValue = left.eval(sheet, callingCell);
         EffectiveValue rightValue = right.eval(sheet, callingCell);
 
+        if (Expression.isInvalidNumeric(leftValue) || Expression.isInvalidNumeric(rightValue)) {
+            return new EffectiveValue(CellType.NUMERIC, Double.NaN);
+        }
         // Attempt to cast the right value (divisor) to Double
         Double divisor = rightValue.castValueTo(Double.class);
         if (divisor == null) {
-            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
-                    ? callingCell.getCoordinate().toString()
-                    : "unknown";
-            if ("unknown".equals(cellCoordinates)) {
-                throw new IllegalArgumentException("Error: The divisor provided to the MOD function is not numeric.\n" +
-                        "Please ensure that the divisor is a valid numeric value.");
-            } else {
-                throw new IllegalArgumentException("Error: The divisor provided to the MOD function is not numeric.\n" +
-                        "Please ensure that the divisor is a valid numeric value. Cell: " + cellCoordinates);
-            }
+            return new EffectiveValue(CellType.NUMERIC, Double.NaN);
         }
 
         // Check for division by zero
@@ -55,17 +49,7 @@ public class ModExpression implements BinaryExpression {
         // Attempt to cast the left value (dividend) to Double
         Double dividend = leftValue.castValueTo(Double.class);
         if (dividend == null) {
-            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
-                    ? callingCell.getCoordinate().toString()
-                    : "unknown";
-            if ("unknown".equals(cellCoordinates)) {
-                throw new IllegalArgumentException("Error: The dividend provided to the MOD function is not numeric.\n" +
-                        "Please ensure that the dividend is a valid numeric value.");
-            }
-            else {
-                throw new IllegalArgumentException("Error: The dividend provided to the MOD function is not numeric.\n" +
-                        "Please ensure that the dividend is a valid numeric value. Cell: " + cellCoordinates);
-            }
+            return new EffectiveValue(CellType.NUMERIC, Double.NaN);
         }
 
         // Perform the modulo operation

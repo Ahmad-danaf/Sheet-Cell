@@ -34,22 +34,16 @@ public class PlusExpression implements BinaryExpression {
         EffectiveValue leftValue = left.eval(sheet, callingCell);
         EffectiveValue rightValue = right.eval(sheet, callingCell);
 
+         if (Expression.isInvalidNumeric(leftValue) || Expression.isInvalidNumeric(rightValue)) {
+             return new EffectiveValue(CellType.NUMERIC, Double.NaN);
+         }
         // Check if the values can be cast to Double (i.e., they are numeric)
         Double leftNumeric = leftValue.castValueTo(Double.class);
         Double rightNumeric = rightValue.castValueTo(Double.class);
 
         // If either value is null, it means the cast failed (not a numeric type)
         if (leftNumeric == null || rightNumeric == null) {
-            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
-                    ? callingCell.getCoordinate().toString()
-                    : "unknown";
-            if ("unknown".equals(cellCoordinates)) {
-                throw new IllegalArgumentException("Error: The arguments provided to the PLUS function are not numeric.\n" +
-                        "Please ensure that both arguments are valid numeric values.");
-            } else {
-                throw new IllegalArgumentException("Error: The arguments provided to the PLUS function are not numeric.\n" +
-                        "Please ensure that both arguments are valid numeric values. Cell: " + cellCoordinates);
-            }
+            return new EffectiveValue(CellType.NUMERIC, Double.NaN);
         }
 
         // Perform the addition

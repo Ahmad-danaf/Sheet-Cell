@@ -53,52 +53,97 @@ public class FunctionParserTest {
     }
 
     private static void testPlusFunction() {
-        String input = "{plus, 3, 4}";
+        String input = "{plus,3,4}";
         Expression expression = FunctionParser.parseExpression(input);
         EffectiveValue result = expression.eval(null, null);
-        assertResult(7.0, result.getValue(), CellType.NUMERIC, result.getCellType(), "testPlusFunction");
+        assertResult(7.0, result.getValue(), CellType.NUMERIC, result.getCellType(), "testPlusFunction-part1");
+
+        String input2 = "{plus,hello,world}";
+        Expression expression2 = FunctionParser.parseExpression(input2);
+        EffectiveValue result2 = expression2.eval(null, null);
+        assertResult(Double.NaN, result2.getValue(), CellType.NUMERIC, result2.getCellType(), "testPlusFunction-part2");
+
+        String input3 = "{plus,UNKNOWN,world}";
+        Expression expression3 = FunctionParser.parseExpression(input3);
+        EffectiveValue result3 = expression3.eval(null, null);
+        assertResult(Double.NaN, result3.getValue(), CellType.NUMERIC, result3.getCellType(), "testPlusFunction-part3");
     }
 
     private static void testMinusFunction() {
-        String input = "{minus, 10, 4}";
+        String input = "{minus,10,4}";
         Expression expression = FunctionParser.parseExpression(input);
         EffectiveValue result = expression.eval(null, null);
-        assertResult(6.0, result.getValue(), CellType.NUMERIC, result.getCellType(), "testMinusFunction");
+        assertResult(6.0, result.getValue(), CellType.NUMERIC, result.getCellType(), "testMinusFunction-part1");
+
+        String input2 = "{minus,hello,world}";
+        Expression expression2 = FunctionParser.parseExpression(input2);
+        EffectiveValue result2 = expression2.eval(null, null);
+        assertResult(Double.NaN, result2.getValue(), CellType.NUMERIC, result2.getCellType(), "testMinusFunction-part2");
     }
 
     private static void testTimesFunction() {
-        String input = "{times, 6, 7}";
+        String input = "{times,6,7}";
         Expression expression = FunctionParser.parseExpression(input);
         EffectiveValue result = expression.eval(null, null);
-        assertResult(42.0, result.getValue(), CellType.NUMERIC, result.getCellType(), "testTimesFunction");
+        assertResult(42.0, result.getValue(), CellType.NUMERIC, result.getCellType(), "testTimesFunction-part1");
+
+        String input2 = "{times,hello,world}";
+        Expression expression2 = FunctionParser.parseExpression(input2);
+        EffectiveValue result2 = expression2.eval(null, null);
+        assertResult(Double.NaN, result2.getValue(), CellType.NUMERIC, result2.getCellType(), "testTimesFunction-part2");
     }
 
     private static void testDivideFunction() {
-        String input = "{divide, 10, 2}";
+        String input = "{divide,10,2}";
         Expression expression = FunctionParser.parseExpression(input);
         EffectiveValue result = expression.eval(null, null);
-        assertResult(5.0, result.getValue(), CellType.NUMERIC, result.getCellType(), "testDivideFunction");
+        assertResult(5.0, result.getValue(), CellType.NUMERIC, result.getCellType(), "testDivideFunction-part1");
+
+        String input2 = "{divide,hello,world}";
+        Expression expression2 = FunctionParser.parseExpression(input2);
+        EffectiveValue result2 = expression2.eval(null, null);
+        assertResult(Double.NaN, result2.getValue(), CellType.NUMERIC, result2.getCellType(), "testDivideFunction-part2");
     }
 
     private static void testModFunction() {
-        String input = "{mod, 10, 3}";
+        String input = "{mod,10,3}";
         Expression expression = FunctionParser.parseExpression(input);
         EffectiveValue result = expression.eval(null, null);
-        assertResult(1.0, result.getValue(), CellType.NUMERIC, result.getCellType(), "testModFunction");
+        assertResult(1.0, result.getValue(), CellType.NUMERIC, result.getCellType(), "testModFunction-part1");
+
+        String input2 = "{mod,hello,world}";
+        Expression expression2 = FunctionParser.parseExpression(input2);
+        EffectiveValue result2 = expression2.eval(null, null);
+        assertResult(Double.NaN, result2.getValue(), CellType.NUMERIC, result2.getCellType(), "testModFunction-part2");
     }
 
     private static void testPowFunction() {
-        String input = "{pow, 2, 3}";
+        String input = "{pow,2,3}";
         Expression expression = FunctionParser.parseExpression(input);
         EffectiveValue result = expression.eval(null, null);
-        assertResult(8.0, result.getValue(), CellType.NUMERIC, result.getCellType(), "testPowFunction");
+        assertResult(8.0, result.getValue(), CellType.NUMERIC, result.getCellType(), "testPowFunction-part1");
+
+        String input2 = "{pow,hello,world}";
+        Expression expression2 = FunctionParser.parseExpression(input2);
+        EffectiveValue result2 = expression2.eval(null, null);
+        assertResult(Double.NaN, result2.getValue(), CellType.NUMERIC, result2.getCellType(), "testPowFunction-part2");
     }
 
     private static void testAbsFunction() {
-        String input = "{abs, -5}";
+        String input = "{abs,-5}";
         Expression expression = FunctionParser.parseExpression(input);
         EffectiveValue result = expression.eval(null, null);
-        assertResult(5.0, result.getValue(), CellType.NUMERIC, result.getCellType(), "testAbsFunction");
+        assertResult(5.0, result.getValue(), CellType.NUMERIC, result.getCellType(), "testAbsFunction-part1");
+
+        String input2 = "{abs,hello}";
+        Expression expression2 = FunctionParser.parseExpression(input2);
+        EffectiveValue result2 = expression2.eval(null, null);
+        assertResult(Double.NaN, result2.getValue(), CellType.NUMERIC, result2.getCellType(), "testAbsFunction-part2");
+
+        String input3 = "{abs,UNKNOWN}";
+        Expression expression3 = FunctionParser.parseExpression(input3);
+        EffectiveValue result3 = expression3.eval(null, null);
+        assertResult(Double.NaN, result3.getValue(), CellType.NUMERIC, result3.getCellType(), "testAbsFunction-part3");
     }
 
     private static void testConcatFunction() {
@@ -117,7 +162,7 @@ public class FunctionParserTest {
 
     private static void testNestedFunctions() {
         // Test nested PLUS and TIMES
-        String input = "{plus, {times, 3, 4}, {minus, 10, 2}}";
+        String input = "{plus,{times,3,4},{minus,10,2}}";
         Expression expression = FunctionParser.parseExpression(input);
         EffectiveValue result = expression.eval(null, null);
         assertResult(20.0, result.getValue(), CellType.NUMERIC, result.getCellType(), "testNestedFunctions");
@@ -131,7 +176,7 @@ public class FunctionParserTest {
 
     private static void testInvalidArguments() {
         try {
-            String input = "{plus, 3}";
+            String input = "{plus,3}";
             FunctionParser.parseExpression(input);
             System.err.println("testInvalidArguments failed: Exception expected but not thrown for PLUS");
         } catch (IllegalArgumentException e) {
@@ -139,7 +184,7 @@ public class FunctionParserTest {
         }
 
         try {
-            String input = "{divide, 10, 0}";
+            String input = "{divide,10,0}";
             Expression expression = FunctionParser.parseExpression(input);
             EffectiveValue result = expression.eval(null, null);
             assertResult(Double.NaN, result.getValue(), CellType.NUMERIC, result.getCellType(), "testDivideByZero");
@@ -155,14 +200,15 @@ public class FunctionParserTest {
         } catch (IllegalArgumentException e) {
             System.err.println("testInvalidArguments failed: Exception should not be thrown for SUB with out of bounds indices");
         }
-
         try {
-            String input = "{times, hello, world}";
-            FunctionParser.parseExpression(input);
-            System.err.println("testInvalidArguments failed: Exception expected but not thrown for TIMES with strings");
+            String input = "{times,hello,world}";
+            Expression expression = FunctionParser.parseExpression(input);
+            EffectiveValue result = expression.eval(null, null);
+            assertResult(Double.NaN, result.getValue(), CellType.NUMERIC, result.getCellType(), "testInvalidArguments - TIMES with strings");
         } catch (IllegalArgumentException e) {
-            System.out.println("testInvalidArguments passed for TIMES with strings: " + e.getMessage());
+            System.err.println("testInvalidArguments failed: Exception should not be thrown for DIVIDE by zero");
         }
+
     }
 
 
@@ -175,8 +221,7 @@ public class FunctionParserTest {
         }
     }
 
-    // new test cases
-    //*****************************************************************************************************************
+    //**************************************Level 2***************************************************************************
     private static void assertEqual(Object expected, Object actual) {
         if (expected == null) {
             if (actual != null) {
@@ -192,7 +237,7 @@ public class FunctionParserTest {
     }
 
     public static void testPlusFunctionWithTrimming() {
-        String input = "{plus, 4 ,  5}";
+        String input = "{plus,4,5}";
         Expression expression = FunctionParser.parseExpression(input);
         EffectiveValue result = expression.eval(null, null);
         assertEqual(9.0, result.getValue());
@@ -228,7 +273,7 @@ public class FunctionParserTest {
     }
 
     public static void testMinusFunctionWithNegativeResult() {
-        String input = "{minus, 5, 10}";
+        String input = "{minus,5,10}";
         Expression expression = FunctionParser.parseExpression(input);
         EffectiveValue result = expression.eval(null, null);
         assertEqual(-5.0, result.getValue());
@@ -237,7 +282,7 @@ public class FunctionParserTest {
     }
 
     public static void testModFunctionWithPositiveResult() {
-        String input = "{mod, 10, 3}";
+        String input = "{mod,10,3}";
         Expression expression = FunctionParser.parseExpression(input);
         EffectiveValue result = expression.eval(null, null);
         assertEqual(1.0, result.getValue());
@@ -246,7 +291,7 @@ public class FunctionParserTest {
     }
 
     public static void testModFunctionWithNegativeDivisor() {
-        String input = "{mod, 10, -3}";
+        String input = "{mod,10,-3}";
         Expression expression = FunctionParser.parseExpression(input);
         EffectiveValue result = expression.eval(null, null);
         assertEqual(-2.0, result.getValue());
@@ -264,7 +309,7 @@ public class FunctionParserTest {
     }
 
     public static void testInvalidFunctionName() {
-        String input = "{unknown, 4, 5}";
+        String input = "{unknown,4,5}";
         try {
             FunctionParser.parseExpression(input);
             fail("Expected an IllegalArgumentException for an unknown function name");
@@ -306,7 +351,7 @@ public class FunctionParserTest {
 
     public static void testComplexNestedNumericExpressions() {
         // Test input combining multiple numeric expressions
-        String input = "{PLUS, {TIMES, {MOD, 17, 5}, {POW, 2, 3}}, {DIVIDE, {ABS, -20}, 4}}";
+        String input = "{PLUS,{TIMES,{MOD,17,5},{POW,2,3}},{DIVIDE,{ABS,-20},4}}";
 
         try {
             Expression expression = FunctionParser.parseExpression(input);

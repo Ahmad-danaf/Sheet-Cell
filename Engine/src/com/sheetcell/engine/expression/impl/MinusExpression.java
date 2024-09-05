@@ -32,6 +32,9 @@ public class MinusExpression implements BinaryExpression {
         // Evaluate the expressions
         EffectiveValue leftValue = left.eval(sheet, callingCell);
         EffectiveValue rightValue = right.eval(sheet, callingCell);
+        if (Expression.isInvalidNumeric(leftValue) || Expression.isInvalidNumeric(rightValue)) {
+            return new EffectiveValue(CellType.NUMERIC, Double.NaN);
+        }
 
         // Attempt to cast the left and right values to Double
         Double leftNumeric = leftValue.castValueTo(Double.class);
@@ -39,16 +42,7 @@ public class MinusExpression implements BinaryExpression {
 
         // If either value is null, it means the cast failed (not a numeric type)
         if (leftNumeric == null || rightNumeric == null) {
-            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
-                    ? callingCell.getCoordinate().toString()
-                    : "unknown";
-            if ("unknown".equals(cellCoordinates)) {
-                throw new IllegalArgumentException("Error: The operands provided to the MINUS function are not numeric.\n" +
-                        "Please ensure that both operands are valid numeric values.");
-            } else {
-                throw new IllegalArgumentException("Error: The operands provided to the MINUS function are not numeric.\n" +
-                        "Please ensure that both operands are valid numeric values. Cell: " + cellCoordinates);
-            }
+            return new EffectiveValue(CellType.NUMERIC, Double.NaN);
         }
 
         // Perform the subtraction

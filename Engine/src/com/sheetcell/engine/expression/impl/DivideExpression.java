@@ -33,39 +33,21 @@ public class DivideExpression implements BinaryExpression {
         EffectiveValue leftValue = left.eval(sheet, callingCell);
         EffectiveValue rightValue = right.eval(sheet, callingCell);
 
-        // Attempt to cast the right value (divisor) to Double
-        Double divisor = rightValue.castValueTo(Double.class);
-        if (divisor == null) {
-            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
-                    ? callingCell.getCoordinate().toString()
-                    : "unknown";
-            if ("unknown".equals(cellCoordinates)) {
-                throw new IllegalArgumentException("Error: The divisor provided to the DIVIDE function is not numeric.\n" +
-                        "Please ensure that the divisor is a valid numeric value.");
-            } else {
-                throw new IllegalArgumentException("Error: The divisor provided to the DIVIDE function is not numeric.\n" +
-                        "Please ensure that the divisor is a valid numeric value. Cell: " + cellCoordinates);
-            }
+
+        if (Expression.isInvalidNumeric(leftValue) || Expression.isInvalidNumeric(rightValue)) {
+            return new EffectiveValue(CellType.NUMERIC, Double.NaN);
         }
 
-        // Check for division by zero
-        if (divisor == 0.0) {
-            return new EffectiveValue(CellType.NUMERIC, Double.NaN); // Return NaN for division by zero
+        // Attempt to cast the right value (divisor) to Double
+        Double divisor = rightValue.castValueTo(Double.class);
+        if (divisor == null || divisor==0.0) {
+           return new EffectiveValue(CellType.NUMERIC, Double.NaN);
         }
 
         // Attempt to cast the left value (dividend) to Double
         Double dividend = leftValue.castValueTo(Double.class);
         if (dividend == null) {
-            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
-                    ? callingCell.getCoordinate().toString()
-                    : "unknown";
-            if ("unknown".equals(cellCoordinates)) {
-                throw new IllegalArgumentException("Error: The dividend provided to the DIVIDE function is not numeric.\n" +
-                        "Please ensure that the dividend is a valid numeric value.");
-            } else {
-                throw new IllegalArgumentException("Error: The dividend provided to the DIVIDE function is not numeric.\n" +
-                        "Please ensure that the dividend is a valid numeric value. Cell: " + cellCoordinates);
-            }
+            return new EffectiveValue(CellType.NUMERIC, Double.NaN);
         }
 
         // Perform the division

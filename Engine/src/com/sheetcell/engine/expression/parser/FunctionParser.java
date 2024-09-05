@@ -54,17 +54,8 @@ public enum FunctionParser {
             }
 
             // structure is good. parse arguments
-            Expression left = parseExpression(arguments.get(0).trim());
-            Expression right = parseExpression(arguments.get(1).trim());
-
-            // more validations on the expected argument types
-            CellType leftCellType = left.getFunctionResultType();
-            CellType rightCellType = right.getFunctionResultType();
-            // support UNKNOWN type as its value will be determined at runtime
-            if ( (!leftCellType.equals(CellType.NUMERIC) && !leftCellType.equals(CellType.UNKNOWN)) ||
-                    (!rightCellType.equals(CellType.NUMERIC) && !rightCellType.equals(CellType.UNKNOWN)) ) {
-                throw new IllegalArgumentException("Invalid argument types for PLUS function. Expected NUMERIC, but got " + leftCellType + " and " + rightCellType);
-            }
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
 
             // all is good. create the relevant function instance
             return new PlusExpression(left, right);
@@ -79,16 +70,8 @@ public enum FunctionParser {
             }
 
             // structure is good. parse arguments
-            Expression left = parseExpression(arguments.get(0).trim());
-            Expression right = parseExpression(arguments.get(1).trim());
-
-            // more validations on the expected argument types
-            CellType leftCellType = left.getFunctionResultType();
-            CellType rightCellType = right.getFunctionResultType();
-            if ( (!leftCellType.equals(CellType.NUMERIC) && !leftCellType.equals(CellType.UNKNOWN)) ||
-                    (!rightCellType.equals(CellType.NUMERIC) && !rightCellType.equals(CellType.UNKNOWN))) {
-                throw new IllegalArgumentException("Invalid argument types for MINUS function. Expected NUMERIC, but got " + left.getFunctionResultType() + " and " + right.getFunctionResultType());
-            }
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
 
             // all is good. create the relevant function instance
             return new MinusExpression(left, right);
@@ -103,17 +86,8 @@ public enum FunctionParser {
             }
 
             // Parse the arguments
-            Expression left = parseExpression(arguments.get(0).trim());
-            Expression right = parseExpression(arguments.get(1).trim());
-
-            // Validate that both arguments are numeric or unknown
-            CellType leftCellType = left.getFunctionResultType();
-            CellType rightCellType = right.getFunctionResultType();
-            if ((!leftCellType.equals(CellType.NUMERIC) && !leftCellType.equals(CellType.UNKNOWN)) ||
-                    (!rightCellType.equals(CellType.NUMERIC) && !rightCellType.equals(CellType.UNKNOWN))) {
-                throw new IllegalArgumentException("Invalid argument types for DIVIDE function. Expected NUMERIC, but got " +
-                        leftCellType + " and " + rightCellType);
-            }
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
 
             // Create and return the DivideExpression
             return new DivideExpression(left, right);
@@ -128,17 +102,8 @@ public enum FunctionParser {
             }
 
             // Parse the arguments
-            Expression left = parseExpression(arguments.get(0).trim());
-            Expression right = parseExpression(arguments.get(1).trim());
-
-            // Validate that both arguments are numeric or unknown
-            CellType leftCellType = left.getFunctionResultType();
-            CellType rightCellType = right.getFunctionResultType();
-            if ((!leftCellType.equals(CellType.NUMERIC) && !leftCellType.equals(CellType.UNKNOWN)) ||
-                    (!rightCellType.equals(CellType.NUMERIC) && !rightCellType.equals(CellType.UNKNOWN))) {
-                throw new IllegalArgumentException("Invalid argument types for TIMES function. Expected NUMERIC, but got " +
-                        leftCellType + " and " + rightCellType);
-            }
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
 
             // Create and return the TimesExpression
             return new TimesExpression(left, right);
@@ -153,17 +118,8 @@ public enum FunctionParser {
             }
 
             // Parse the arguments
-            Expression left = parseExpression(arguments.get(0).trim());
-            Expression right = parseExpression(arguments.get(1).trim());
-
-            // Validate that both arguments are numeric or unknown
-            CellType leftCellType = left.getFunctionResultType();
-            CellType rightCellType = right.getFunctionResultType();
-            if ((!leftCellType.equals(CellType.NUMERIC) && !leftCellType.equals(CellType.UNKNOWN)) ||
-                    (!rightCellType.equals(CellType.NUMERIC) && !rightCellType.equals(CellType.UNKNOWN))) {
-                throw new IllegalArgumentException("Invalid argument types for MOD function. Expected NUMERIC, but got " +
-                        leftCellType + " and " + rightCellType);
-            }
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
 
             // Create and return the ModExpression
             return new ModExpression(left, right);
@@ -178,17 +134,8 @@ public enum FunctionParser {
             }
 
             // Parse the arguments
-            Expression base = parseExpression(arguments.get(0).trim());
-            Expression exponent = parseExpression(arguments.get(1).trim());
-
-            // Validate that both arguments are numeric or unknown
-            CellType baseCellType = base.getFunctionResultType();
-            CellType exponentCellType = exponent.getFunctionResultType();
-            if ((!baseCellType.equals(CellType.NUMERIC) && !baseCellType.equals(CellType.UNKNOWN)) ||
-                    (!exponentCellType.equals(CellType.NUMERIC) && !exponentCellType.equals(CellType.UNKNOWN))) {
-                throw new IllegalArgumentException("Invalid argument types for POW function. Expected NUMERIC, but got " +
-                        baseCellType + " and " + exponentCellType);
-            }
+            Expression base = parseExpression(arguments.get(0));
+            Expression exponent = parseExpression(arguments.get(1));
 
             // Create and return the PowExpression
             return new PowExpression(base, exponent);
@@ -203,13 +150,7 @@ public enum FunctionParser {
             }
 
             // Parse the argument
-            Expression argument = parseExpression(arguments.get(0).trim());
-
-            // Validate that the argument is numeric or unknown
-            CellType argumentCellType = argument.getFunctionResultType();
-            if (!argumentCellType.equals(CellType.NUMERIC) && !argumentCellType.equals(CellType.UNKNOWN)) {
-                throw new IllegalArgumentException("Invalid argument type for ABS function. Expected NUMERIC, but got " + argumentCellType);
-            }
+            Expression argument = parseExpression(arguments.get(0));
 
             // Create and return the AbsExpression
             return new AbsExpression(argument);
@@ -227,15 +168,6 @@ public enum FunctionParser {
             Expression str1 = parseExpression(arguments.get(0));
             Expression str2 = parseExpression(arguments.get(1));
 
-            // Validate that both arguments are strings or unknown
-            CellType str1CellType = str1.getFunctionResultType();
-            CellType str2CellType = str2.getFunctionResultType();
-            if ((!str1CellType.equals(CellType.STRING) && !str1CellType.equals(CellType.UNKNOWN)) ||
-                    (!str2CellType.equals(CellType.STRING) && !str2CellType.equals(CellType.UNKNOWN))) {
-                throw new IllegalArgumentException("Invalid argument types for CONCAT function. Expected STRING, but got " +
-                        str1CellType + " and " + str2CellType);
-            }
-
             // Create and return the ConcatExpression
             return new ConcatExpression(str1, str2);
         }
@@ -250,19 +182,8 @@ public enum FunctionParser {
 
             // Parse the arguments
             Expression source = parseExpression(arguments.get(0));
-            Expression startIndex = parseExpression(arguments.get(1).trim());
-            Expression endIndex = parseExpression(arguments.get(2).trim());
-
-            // Validate that the source is a string and the indices are numeric or unknown
-            CellType sourceCellType = source.getFunctionResultType();
-            CellType startIndexCellType = startIndex.getFunctionResultType();
-            CellType endIndexCellType = endIndex.getFunctionResultType();
-            if ((!sourceCellType.equals(CellType.STRING) && !sourceCellType.equals(CellType.UNKNOWN)) ||
-                    (!startIndexCellType.equals(CellType.NUMERIC) && !startIndexCellType.equals(CellType.UNKNOWN)) ||
-                    (!endIndexCellType.equals(CellType.NUMERIC) && !endIndexCellType.equals(CellType.UNKNOWN))) {
-                throw new IllegalArgumentException("Invalid argument types for SUB function. Expected STRING, NUMERIC, NUMERIC, but got " +
-                        sourceCellType + ", " + startIndexCellType + ", and " + endIndexCellType);
-            }
+            Expression startIndex = parseExpression(arguments.get(1));
+            Expression endIndex = parseExpression(arguments.get(2));
 
             // Create and return the SubExpression
             return new SubExpression(source, startIndex, endIndex);
@@ -277,7 +198,7 @@ public enum FunctionParser {
             }
 
             // verify indeed argument represents a reference to a cell and create a Coordinate instance. if not ok returns a null. need to verify it
-            Coordinate target = CoordinateFactory.from(arguments.get(0).trim());
+            Coordinate target = CoordinateFactory.from(arguments.get(0).trim().toUpperCase());
             if (target == null) {
                 throw new IllegalArgumentException("Invalid argument for REF function. Expected a valid cell reference, but got " + arguments.get(0));
             }
@@ -302,13 +223,17 @@ public enum FunctionParser {
             //remove the first element from the array
             topLevelParts.remove(0);
             // Validate function name against known enum constants
+            FunctionParser functionParser;
             try {
-                return FunctionParser.valueOf(functionName).parse(topLevelParts);
+                functionParser= FunctionParser.valueOf(functionName);
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Error: The function name '" + functionName +
-                        "' in your input '" + input + "' is either unknown or incorrectly used.\n" +
-                        "Please ensure that you are using a valid function name and that you follow " +
-                        "the correct syntax rules");            }
+                        "' in your input '" + input + "' is unknown.\n" +
+                        "Please check the function name and ensure it is one of the following: ");
+            }
+            // Now, try to parse the function
+            return functionParser.parse(topLevelParts);
+
         }
 
         // handle identity expression
@@ -360,6 +285,15 @@ public enum FunctionParser {
         Expression expression = FunctionParser.parseExpression(input);
         EffectiveValue result = expression.eval(null,null);
         System.out.println("value: " + result.getValue() + " of type " + result.getCellType());
+
+        try{
+            String input2 = "{times,2 3}";
+            Expression expression2 = FunctionParser.parseExpression(input2);
+            EffectiveValue result2 = expression2.eval(null,null);
+            System.out.println("value: " + result2.getValue() + " of type " + result2.getCellType());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
 

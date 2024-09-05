@@ -23,23 +23,15 @@ public class AbsExpression implements UnaryExpression {
     public EffectiveValue eval(SheetReadActions sheet, Cell callingCell) {
         // Evaluate the expression
         EffectiveValue value = argument.eval(sheet, callingCell);
-
+        if (Expression.isInvalidNumeric(value)) {
+            return new EffectiveValue(CellType.NUMERIC, Double.NaN);
+        }
         // Check if the value can be cast to Double (i.e., it is numeric)
         Double numericValue = value.castValueTo(Double.class);
 
         // If the value is null, it means the cast failed (not a numeric type)
         if (numericValue == null) {
-            String cellCoordinates = (callingCell != null && callingCell.getCoordinate() != null)
-                    ? callingCell.getCoordinate().toString()
-                    : "unknown";
-            if (cellCoordinates.equals("unknown")) {
-                throw new IllegalArgumentException("Error: The argument provided to the ABS function is not numeric.\n" +
-                        "Please ensure that the argument is a valid numeric value.");
-            }
-            else{
-                throw new IllegalArgumentException("Error: The argument provided to the ABS function is not numeric.\n" +
-                        "Please ensure that the argument is a valid numeric value. Cell: " + cellCoordinates);
-            }
+            return new EffectiveValue(CellType.NUMERIC, Double.NaN);
         }
 
         // Compute the absolute value
