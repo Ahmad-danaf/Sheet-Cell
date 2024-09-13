@@ -205,6 +205,37 @@ public enum FunctionParser {
 
             return new RefExpression(target);
         }
+    },
+    SUM {
+        @Override
+        public Expression parse(List<String> arguments) {
+            if (arguments.size() != 1) {
+                throw new IllegalArgumentException("Invalid number of arguments for SUM function. Expected 1, but got " + arguments.size());
+            }
+            return new SumExpression(arguments.get(0).trim());
+        }
+    },
+    AVERAGE {
+        @Override
+        public Expression parse(List<String> arguments) {
+            if (arguments.size() != 1) {
+                throw new IllegalArgumentException("Invalid number of arguments for AVERAGE function. Expected 1, but got " + arguments.size());
+            }
+            return new AverageExpression(arguments.get(0).trim());
+        }
+    },
+    PERCENT {
+        @Override
+        public Expression parse(List<String> arguments) {
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for PERCENT function. Expected 2, but got " + arguments.size());
+            }
+
+            Expression part = parseExpression(arguments.get(0).trim());
+            Expression whole = parseExpression(arguments.get(1).trim());
+
+            return new PercentExpression(part, whole);
+        }
     }
     ;
 

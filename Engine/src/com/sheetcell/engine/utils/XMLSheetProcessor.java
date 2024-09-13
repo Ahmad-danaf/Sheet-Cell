@@ -6,7 +6,6 @@ import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.expression.api.*;
 import com.sheetcell.engine.sheet.Sheet;
-import com.sheetcell.engine.expression.impl.*;
 import com.sheetcell.engine.expression.parser.FunctionParser;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -60,6 +59,7 @@ public class XMLSheetProcessor {
         int columnUnitWidth = stlSheet.getSTLLayout().getSTLSize().getColumnWidthUnits();
         int rowUnitHeight = stlSheet.getSTLLayout().getSTLSize().getRowsHeightUnits();
         currentSheet = new Sheet(sheetName, sheetRows, sheetColumns, rowUnitHeight, columnUnitWidth);
+        fillSheetWithRanges(stlSheet);
         fillSheetWithCells(stlSheet, sheetRows, sheetColumns);
     }
 
@@ -151,8 +151,8 @@ public class XMLSheetProcessor {
         boolean isColumnInvalid = cellColumn < (MIN_SHEET_COLUMNS - 1) || cellColumn >= totalColumns;
 
         if (isRowInvalid || isColumnInvalid) {
-            throw new IllegalArgumentException("Cell at (" + (cellRow+1) + ", " + CoordinateFactory.convertIndexToColumnLabel(cellColumn) + ") is outside the valid range. "
-                    + "Valid rows: " + MIN_SHEET_ROWS  + "-" + totalRows + ", "
+            throw new IllegalArgumentException("Cell at (" + (cellRow + 1) + ", " + CoordinateFactory.convertIndexToColumnLabel(cellColumn) + ") is outside the valid range. "
+                    + "Valid rows: " + MIN_SHEET_ROWS + "-" + totalRows + ", "
                     + "Valid columns: " + MIN_SHEET_COLUMNS + "-" + totalColumns);
         }
     }
@@ -160,4 +160,25 @@ public class XMLSheetProcessor {
     public Sheet getCurrentSheet() {
         return this.currentSheet;
     }
+
+    private void fillSheetWithRanges(STLSheet stlSheet) {
+        if (stlSheet.getSTLRanges() != null) {
+            for (STLRange stlRange : stlSheet.getSTLRanges().getSTLRange()) {
+                String rangeName = stlRange.getName();
+                String from = stlRange.getSTLBoundaries().getFrom();
+                String to = stlRange.getSTLBoundaries().getTo();
+
+                // Convert "from" and "to" to coordinates
+                int[] fromCoordinates = CoordinateFactory.convertCellIdToIndex(from);
+                int[] toCoordinates = CoordinateFactory.convertCellIdToIndex(to);
+
+                Coordinate fromCoord = CoordinateFactory.createCoordinate(fromCoordinates[0], fromCoordinates[1]);
+                Coordinate toCoord = CoordinateFactory.createCoordinate(toCoordinates[0], toCoordinates[1]);
+
+                // Add or update the range in the sheet
+                currentSheet.addRange(rangeName, fromCoord, toCoord);
+            }
+        }
+    }
+
 }

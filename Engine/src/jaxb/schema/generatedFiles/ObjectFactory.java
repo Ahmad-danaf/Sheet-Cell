@@ -16,7 +16,7 @@ import jakarta.xml.bind.annotation.XmlRegistry;
 /**
  * This object contains factory methods for each 
  * Java content interface and Java element interface 
- * generated in the jaxb.schema.generatedFiles package. 
+ * generated in the generatedFiles package. 
  * <p>An ObjectFactory allows you to programmatically 
  * construct new instances of the Java representation 
  * for XML content. The Java representation of XML 
@@ -33,7 +33,7 @@ public class ObjectFactory {
     private static final QName _STLOriginalValue_QNAME = new QName("", "STL-Original-Value");
 
     /**
-     * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: jaxb.schema.generatedFiles
+     * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: generatedFiles
      * 
      */
     public ObjectFactory() {
@@ -67,6 +67,36 @@ public class ObjectFactory {
      */
     public STLLayout createSTLLayout() {
         return new STLLayout();
+    }
+
+    /**
+     * Create an instance of {@link STLRanges }
+     * 
+     * @return
+     *     the new instance of {@link STLRanges }
+     */
+    public STLRanges createSTLRanges() {
+        return new STLRanges();
+    }
+
+    /**
+     * Create an instance of {@link STLRange }
+     * 
+     * @return
+     *     the new instance of {@link STLRange }
+     */
+    public STLRange createSTLRange() {
+        return new STLRange();
+    }
+
+    /**
+     * Create an instance of {@link STLBoundaries }
+     * 
+     * @return
+     *     the new instance of {@link STLBoundaries }
+     */
+    public STLBoundaries createSTLBoundaries() {
+        return new STLBoundaries();
     }
 
     /**

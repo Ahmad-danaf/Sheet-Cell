@@ -8,6 +8,7 @@ import com.sheetcell.engine.expression.parser.FunctionParser;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.sheet.api.SheetUpdateActions;
 import com.sheetcell.engine.utils.CellGraphManager;
+import com.sheetcell.engine.utils.RangeFactory;
 import com.sheetcell.engine.utils.SheetUpdateResult;
 
 import java.io.*;
@@ -23,6 +24,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
     private int maxRows;
     private int MaxColumns;
     private Map<Coordinate, Cell> activeCells;
+    private final Set<String> activeRanges;
     private int rowHeight;
     private int columnWidth;
     private int CellChangeCount;
@@ -34,6 +36,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         this.MaxColumns = MaxColumns;
         this.version = 1; // Start at version 1
         this.activeCells = new HashMap<>();
+        this.activeRanges = new HashSet<>();
         this.rowHeight = rowHeight;
         this.columnWidth = columnWidth;
         this.CellChangeCount = 0;
@@ -330,4 +333,36 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
             return this;
         }
     }
+
+    public void addRange(String rangeName, Coordinate from, Coordinate to) {
+        RangeFactory.addRange(rangeName, from, to);
+        activeRanges.add(rangeName);
+    }
+
+    @Override
+    public Set<Coordinate> getRangeCoordinates(String rangeName) {
+        return RangeFactory.getRange(rangeName);
+    }
+
+    public void deleteRange(String rangeName) {
+        if (isRangeUsed(rangeName)) {
+            throw new IllegalStateException("Cannot delete range '" + rangeName + "' because it is in use.");
+        }
+        RangeFactory.deleteRange(rangeName);
+        activeRanges.remove(rangeName);
+    }
+
+    public boolean isRangeUsed(String rangeName) {
+        return activeRanges.contains(rangeName);
+    }
+
+    public void markRangeAsUsed(String rangeName) {
+        activeRanges.add(rangeName);
+    }
+
+    public void markRangeAsUnused(String rangeName) {
+        activeRanges.remove(rangeName);
+    }
+
+
 }

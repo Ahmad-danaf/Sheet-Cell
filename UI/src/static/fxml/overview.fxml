@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+
+<BorderPane id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="@../css/overview.css" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1">
+   <top>
+      <VBox id="mainContainer" alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
+         <children>
+            <Label id="applicationTitle" fx:id="applicationTitle" styleClass="title-label" text="ShtiCell">
+               <font>
+                  <Font name="System Bold" size="18.0" />
+               </font>
+            </Label>
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+               <children>
+                  <Button id="loadFileButton" fx:id="loadFileButton" mnemonicParsing="false" onAction="#handleLoadFile" styleClass="load-button" text="Load File" />
+                  <TextField id="filePathField" fx:id="filePathField" editable="false" styleClass="file-path" />
+               </children>
+            </HBox>
+            <HBox alignment="TOP_CENTER" spacing="10.0">
+               <children>
+                  <TextField id="selectedCellId" fx:id="selectedCellId" editable="false" promptText="Selected Cell ID" />
+                  <TextField id="originalCellValue" fx:id="originalCellValue" promptText="Original Cell value" />
+                  <Button id="updateValueButton" fx:id="updateValueButton" mnemonicParsing="false" onAction="#handleUpdateValue" text="Update value" />
+                  <TextField id="lastUpdateCellVersion" fx:id="lastUpdateCellVersion" editable="false" promptText="Last update cell version" />
+                  <ChoiceBox id="versionSelector" fx:id="versionSelector" accessibleHelp="version selection" accessibleText="version selection" prefWidth="150.0" />
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </top>
+
+   <center>
+        <fx:include source="sheet.fxml" fx:id="spreadsheetGrid"/>
+    </center>
+
+   <left>
+      <VBox spacing="10.0" BorderPane.alignment="CENTER">
+         <children>
+            <VBox id="commandsSection" fx:id="commandsSection" spacing="5.0" styleClass="section-container">
+               <children>
+                  <Button id="sortButton" fx:id="sortButton" mnemonicParsing="false" onAction="#handleSort" text="Sort" />
+                  <Button id="filterButton" fx:id="filterButton" mnemonicParsing="false" onAction="#handleFilter" text="Filter" />
+               </children>
+            </VBox>
+            <VBox id="rangesSection" spacing="5.0" styleClass="section-container">
+               <children>
+                  <Button id="addRangeButton" fx:id="addRangeButton" mnemonicParsing="false" onAction="#handleAddRange" text="Add Range" />
+                  <Button id="deleteRangeButton" fx:id="deleteRangeButton" mnemonicParsing="false" onAction="#handleDeleteRange" text="Delete Range" />
+               </children>
+            </VBox>
+         </children>
+      </VBox>
+   </left>
+
+</BorderPane>

@@ -1,0 +1,109 @@
+/* style.css */
+
+/* General Window Style */
+.root {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 14px;
+    -fx-background-color: #f2f2f2;
+}
+
+/* Title Styling */
+.title-label {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+    -fx-padding: 10 0 5 0; /* Adds vertical space around the title */
+}
+
+/* Top Bar Styling */
+.hbox {
+    -fx-spacing: 10; /* Space between child elements */
+    -fx-padding: 5 0 5 0; /* Padding inside the HBox */
+}
+
+.load-button {
+    -fx-background-color: #6fa23f;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-margin: 50;
+}
+
+.file-path {
+    -fx-pref-width: 200px;
+    -fx-background-color: white;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 3;
+}
+
+/* Action Line Styling */
+.action-line {
+    -fx-spacing: 10;
+    -fx-padding: 5 0 5 0;
+}
+
+.text-field {
+    -fx-pref-width: 100px;
+    -fx-background-color: white;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 3;
+}
+
+.update-button {
+    -fx-background-color: #4185f4;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 5 10 5 10;
+}
+
+.version-selector {
+    -fx-pref-width: 150px;
+}
+
+/* Commands and Ranges Section */
+.section-container {
+    -fx-background-color: #e6e6e6;
+    -fx-padding: 10;
+    -fx-spacing: 5;
+    -fx-border-color: #cccccc;
+    -fx-border-width: 1;
+}
+
+.section-container Button {
+    -fx-background-color: #d9d9d9;
+    -fx-border-color: #b3b3b3;
+    -fx-border-radius: 3;
+    -fx-text-fill: #333333;
+}
+
+.section-container Button:hover {
+    -fx-background-color: #c0c0c0;
+}
+
+#commandsSection {
+    -fx-background-color: blue;
+}
+
+#rangesSection{
+    -fx-background-color: yellow;
+}
+
+/* Main Grid Area */
+#gridScrollPane {
+    -fx-background-color: white;
+}
+
+#spreadsheetTableView {
+    -fx-hgap: 1;
+    -fx-vgap: 1;
+    -fx-padding: 10;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #cccccc;
+    -fx-border-width: 1;
+}
+
+#spreadsheetGrid {
+    -fx-padding: 10;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #cccccc;
+    -fx-border-width: 1;
+}

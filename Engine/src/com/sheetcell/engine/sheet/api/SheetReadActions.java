@@ -1,6 +1,9 @@
 package com.sheetcell.engine.sheet.api;
 
 import com.sheetcell.engine.cell.Cell;
+import com.sheetcell.engine.coordinate.Coordinate;
+
+import java.util.Set;
 
 public interface SheetReadActions {
     public int getCellChangeCount();
@@ -12,5 +15,6 @@ public interface SheetReadActions {
     int getRowHeight();
     int getColumnWidth();
     String getSheetName();
+    Set<Coordinate> getRangeCoordinates(String rangeName);
 
 }
