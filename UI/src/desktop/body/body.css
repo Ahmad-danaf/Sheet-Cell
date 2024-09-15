@@ -15,6 +15,7 @@
     -fx-padding: 10 0 5 0; /* Adds vertical space around the title */
 }
 
+
 /* Top Bar Styling */
 .hbox {
     -fx-spacing: 10; /* Space between child elements */
@@ -29,11 +30,17 @@
 }
 
 .file-path {
-    -fx-pref-width: 200px;
+    -fx-pref-width: 300px;
+    -fx-min-width: 100px;
+    -fx-max-width: 500px;
     -fx-background-color: white;
     -fx-border-color: #cccccc;
     -fx-border-radius: 3;
+    -fx-text-fill: #000000;
+
+    
 }
+
 
 /* Action Line Styling */
 .action-line {
@@ -87,23 +94,4 @@
     -fx-background-color: yellow;
 }
 
-/* Main Grid Area */
-#gridScrollPane {
-    -fx-background-color: white;
-}
 
-#spreadsheetTableView {
-    -fx-hgap: 1;
-    -fx-vgap: 1;
-    -fx-padding: 10;
-    -fx-background-color: #ffffff;
-    -fx-border-color: #cccccc;
-    -fx-border-width: 1;
-}
-
-#spreadsheetGrid {
-    -fx-padding: 10;
-    -fx-background-color: #ffffff;
-    -fx-border-color: #cccccc;
-    -fx-border-width: 1;
-}

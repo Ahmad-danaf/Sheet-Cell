@@ -50,6 +50,10 @@ public class FunctionParserTest {
         System.out.println("*****************************************************************************************************************");
         testComplexNestedNumericExpressions();
         testComplexNestedStringExpressions();
+
+        System.out.println("starting level 4 tests");
+        System.out.println("*****************************************************************************************************************");
+        testIfFunction();
     }
 
     private static void testPlusFunction() {
@@ -430,6 +434,51 @@ public class FunctionParserTest {
 
         } catch (Exception e) {
             fail("testComplexNestedStringExpressions failed with exception: " + e.getMessage());
+        }
+    }
+
+    //lvl 4
+    public static void testIfFunction() {
+        // Test 1: Simple Boolean Condition
+        String input1 = "{IF,TRUE,10,20}";
+        try {
+            Expression expression1 = FunctionParser.parseExpression(input1);
+            EffectiveValue result1 = expression1.eval(null, null);
+            assertResult(10.0, result1.getValue(), CellType.NUMERIC, result1.getCellType(), "testIfFunction - Simple Boolean Condition");
+        } catch (Exception e) {
+            System.err.println("Exception in testIfFunction - Simple Boolean Condition: " + e.getMessage());
+        }
+
+        // Test 2: Boolean Expression Condition
+        String input2 = "{IF,{AND,TRUE,FALSE},Yes,No}";
+        try {
+            Expression expression2 = FunctionParser.parseExpression(input2);
+            EffectiveValue result2 = expression2.eval(null, null);
+            assertResult("No", result2.getValue(), CellType.STRING, result2.getCellType(), "testIfFunction - Boolean Expression Condition");
+        } catch (Exception e) {
+            System.err.println("Exception in testIfFunction - Boolean Expression Condition: " + e.getMessage());
+        }
+
+        // Test 3: Invalid Condition
+        String input3 = "{IF,invalid,10,20}";
+        try {
+            Expression expression3 = FunctionParser.parseExpression(input3);
+            EffectiveValue result3 = expression3.eval(null, null);
+            assertResult("UNKNOWN", result3.getValue(), CellType.BOOLEAN, result3.getCellType(), "testIfFunction - Invalid Condition");
+        } catch (Exception e) {
+            System.err.println("Exception in testIfFunction - Invalid Condition: " + e.getMessage());
+        }
+
+        // Test 4: Type Mismatch Between then and else
+        try {
+            String input4 = "{IF,TRUE,10,text}";
+            Expression expression4 = FunctionParser.parseExpression(input4);
+            EffectiveValue result4 = expression4.eval(null, null);
+            System.err.println("Failed: Expected IllegalArgumentException due to type mismatch between 'then' and 'else'");
+        } catch (IllegalArgumentException e) {
+            System.out.println("testIfFunction - Type Mismatch Between then and else passed: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Exception in testIfFunction - Type Mismatch Between then and else: " + e.getMessage());
         }
     }
 

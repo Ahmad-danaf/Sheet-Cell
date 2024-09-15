@@ -6,8 +6,10 @@ import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.expression.api.Expression;
 import com.sheetcell.engine.expression.impl.*;
-import com.sheetcell.engine.sheet.Sheet;
-import com.sheetcell.engine.sheet.api.SheetReadActions;
+import com.sheetcell.engine.expression.impl.bool.*;
+import com.sheetcell.engine.expression.impl.numeric.*;
+import com.sheetcell.engine.expression.impl.string.ConcatExpression;
+import com.sheetcell.engine.expression.impl.string.SubExpression;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -235,6 +237,77 @@ public enum FunctionParser {
             Expression whole = parseExpression(arguments.get(1).trim());
 
             return new PercentExpression(part, whole);
+        }
+    },
+    EQUAL {
+        @Override
+        public Expression parse(List<String> arguments) {
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for EQUAL function. Expected 2, but got " + arguments.size());
+            }
+            return new EqualExpression(parseExpression(arguments.get(0)), parseExpression(arguments.get(1)));
+        }
+    },
+    NOT {
+        @Override
+        public Expression parse(List<String> arguments) {
+            if (arguments.size() != 1) {
+                throw new IllegalArgumentException("Invalid number of arguments for NOT function. Expected 1, but got " + arguments.size());
+            }
+            return new NotExpression(parseExpression(arguments.get(0)));
+        }
+    },
+    BIGGER {
+        @Override
+        public Expression parse(List<String> arguments) {
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for BIGGER function. Expected 2, but got " + arguments.size());
+            }
+            return new BiggerExpression(parseExpression(arguments.get(0)), parseExpression(arguments.get(1)));
+        }
+    },
+    LESS {
+        @Override
+        public Expression parse(List<String> arguments) {
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for LESS function. Expected 2, but got " + arguments.size());
+            }
+            return new LessExpression(parseExpression(arguments.get(0)), parseExpression(arguments.get(1)));
+        }
+    },
+    AND {
+        @Override
+        public Expression parse(List<String> arguments) {
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for AND function. Expected 2, but got " + arguments.size());
+            }
+            return new AndExpression(parseExpression(arguments.get(0)), parseExpression(arguments.get(1)));
+        }
+    },
+    OR {
+        @Override
+        public Expression parse(List<String> arguments) {
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for OR function. Expected 2, but got " + arguments.size());
+            }
+            return new OrExpression(parseExpression(arguments.get(0)), parseExpression(arguments.get(1)));
+        }
+    },
+    IF {
+        @Override
+        public Expression parse(List<String> arguments) {
+            // Ensure there are exactly three arguments
+            if (arguments.size() != 3) {
+                throw new IllegalArgumentException("Invalid number of arguments for IF function. Expected 3, but got " + arguments.size());
+            }
+
+            // Parse the arguments
+            Expression condition = parseExpression(arguments.get(0));
+            Expression thenExpr = parseExpression(arguments.get(1));
+            Expression elseExpr = parseExpression(arguments.get(2));
+
+            // All is good, create the IfExpression instance
+            return new IfExpression(condition, thenExpr, elseExpr);
         }
     }
     ;

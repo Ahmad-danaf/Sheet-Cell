@@ -16,6 +16,7 @@ import jaxb.schema.generatedFiles.*;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 public class XMLSheetProcessor {
@@ -126,6 +127,25 @@ public class XMLSheetProcessor {
                 callingCell.addDependency(referencedCell);
                 referencedCell.addInfluencedCell(callingCell);
             }
+        }else if (expression instanceof RangeExpression) {
+            RangeExpression rangeExpr = (RangeExpression) expression;
+            String rangeName = rangeExpr.getRange();
+
+            // Get the coordinates of the range
+            Set<Coordinate> rangeCoordinates = RangeFactory.getRange(rangeName);
+
+            if (rangeCoordinates.isEmpty()) {
+                throw new IllegalArgumentException("Error: The specified range '" + rangeName + "' does not exist.");
+            }
+
+//            // Add each cell in the range as a dependency
+//            for (Coordinate coord : rangeCoordinates) {
+//                Cell referencedCell = activeCells.get(coord);
+//                if (referencedCell != null) {
+//                    callingCell.addDependency(referencedCell);
+//                    referencedCell.addInfluencedCell(callingCell);
+//                }
+//            }
         } else if (expression instanceof UnaryExpression) {
             UnaryExpression unaryExpr = (UnaryExpression) expression;
             findAndRegisterDependencies(unaryExpr.getArgument(), callingCell, activeCells);
