@@ -28,6 +28,10 @@ public class XMLSheetProcessor {
 
     private Sheet currentSheet;
 
+    public XMLSheetProcessor() {
+        this.currentSheet = null;
+    }
+
     public void processSheetFile(String xmlFilePath) throws JAXBException {
         if (!xmlFilePath.toLowerCase().endsWith(".xml")) {
             throw new JAXBException(xmlFilePath + " is not a valid XML file");
@@ -132,7 +136,7 @@ public class XMLSheetProcessor {
             String rangeName = rangeExpr.getRange();
 
             // Get the coordinates of the range
-            Set<Coordinate> rangeCoordinates = RangeFactory.getRange(rangeName);
+            Set<Coordinate> rangeCoordinates = currentSheet.getRangeFactory().getRange(rangeName);
 
             if (rangeCoordinates.isEmpty()) {
                 throw new IllegalArgumentException("Error: The specified range '" + rangeName + "' does not exist.");

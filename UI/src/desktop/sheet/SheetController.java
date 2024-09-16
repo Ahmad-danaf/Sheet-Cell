@@ -8,6 +8,7 @@ import com.sheetcell.engine.cell.CellType;
 import desktop.CellRange;
 import desktop.CellWrapper;
 import desktop.body.BodyController;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -177,25 +178,28 @@ public class SheetController {
     }
 
     public void displaySheet(SheetReadActions sheetData) {
-        this.sheetData = sheetData;
+        Platform.runLater(() -> {
+            this.sheetData = sheetData;
 
-        // Clear existing data
-        spreadsheetTableView.getColumns().clear();
-        spreadsheetTableView.getItems().clear();
+            // Clear existing data
+            spreadsheetTableView.getColumns().clear();
+            spreadsheetTableView.getItems().clear();
 
-        // Get sheet dimensions
-        int maxRows = sheetData.getMaxRows();
-        int maxColumns = sheetData.getMaxColumns();
+            // Get sheet dimensions
+            int maxRows = sheetData.getMaxRows();
+            int maxColumns = sheetData.getMaxColumns();
 
-        // Add row number column
-        addRowNumberColumn();
+            // Add row number column
+            addRowNumberColumn();
 
-        // Create data columns dynamically
-        createColumns(maxColumns);
+            // Create data columns dynamically
+            createColumns(maxColumns);
 
-        // Populate rows
-        populateRows(maxRows, maxColumns);
+            // Populate rows
+            populateRows(maxRows, maxColumns);
+        });
     }
+
 
 
     private void createColumns(int maxColumns) {
@@ -250,48 +254,49 @@ public class SheetController {
 
     public void resetSort() {
         if (originalData != null) {
-            // Restore the original data
-            spreadsheetTableView.setItems(FXCollections.observableArrayList(originalData));
-            spreadsheetTableView.refresh();
+            Platform.runLater(() -> {
+                // Restore the original data
+                spreadsheetTableView.setItems(FXCollections.observableArrayList(originalData));
+                spreadsheetTableView.refresh();
+            });
         }
     }
 
 
+
     public void sortRange(CellRange range, List<Integer> sortColumns) {
-        // Extract the sublist of rows to sort
-        ObservableList<ObservableList<CellWrapper>> data = spreadsheetTableView.getItems();
-        List<ObservableList<CellWrapper>> subList = data.subList(range.startRow, range.endRow + 1);
+        Platform.runLater(() -> {
+            ObservableList<ObservableList<CellWrapper>> data = spreadsheetTableView.getItems();
+            List<ObservableList<CellWrapper>> subList = data.subList(range.startRow, range.endRow + 1);
 
-        // Sort the sublist
-        Collections.sort(subList, new Comparator<ObservableList<CellWrapper>>() {
-            @Override
-            public int compare(ObservableList<CellWrapper> row1, ObservableList<CellWrapper> row2) {
-                for (int colIndex : sortColumns) {
-                    // Ensure colIndex is within the range
-                    if (colIndex < range.startCol || colIndex > range.endCol) {
-                        continue;
+            Collections.sort(subList, new Comparator<ObservableList<CellWrapper>>() {
+                @Override
+                public int compare(ObservableList<CellWrapper> row1, ObservableList<CellWrapper> row2) {
+                    for (int colIndex : sortColumns) {
+                        if (colIndex < range.startCol || colIndex > range.endCol) {
+                            continue;
+                        }
+
+                        Object value1 = getSortableValue(row1.get(colIndex));
+                        Object value2 = getSortableValue(row2.get(colIndex));
+
+                        if (!(value1 instanceof Number) || !(value2 instanceof Number)) {
+                            continue;
+                        }
+
+                        int cmp = Double.compare(((Number) value1).doubleValue(), ((Number) value2).doubleValue());
+                        if (cmp != 0) {
+                            return cmp;
+                        }
                     }
-
-                    Object value1 = getSortableValue(row1.get(colIndex));
-                    Object value2 = getSortableValue(row2.get(colIndex));
-
-                    // Only sort numerical values
-                    if (!(value1 instanceof Number) || !(value2 instanceof Number)) {
-                        continue;
-                    }
-
-                    int cmp = Double.compare(((Number) value1).doubleValue(), ((Number) value2).doubleValue());
-                    if (cmp != 0) {
-                        return cmp;
-                    }
+                    return 0;
                 }
-                // Stable sort: preserve original order if all compared values are equal
-                return 0;
-            }
-        });
+            });
 
-        spreadsheetTableView.refresh();
+            spreadsheetTableView.refresh();
+        });
     }
+
 
     private Object getSortableValue(CellWrapper cellWrapper) {
         if (cellWrapper == null || cellWrapper.getCell() == null) {
@@ -467,66 +472,60 @@ public class SheetController {
     }
 
     public void applyCellStyle(int row, int column, String style) {
-        // Since the data columns start from index 1 (after the row number column), adjust the column index
-        int adjustedColumn = column;
-        ObservableList<CellWrapper> rowData = spreadsheetTableView.getItems().get(row);
-        CellWrapper cellWrapper = rowData.get(adjustedColumn);
-        cellWrapper.setStyle(style);
-        spreadsheetTableView.refresh();
+        Platform.runLater(() -> {
+            int adjustedColumn = column;
+            ObservableList<CellWrapper> rowData = spreadsheetTableView.getItems().get(row);
+            CellWrapper cellWrapper = rowData.get(adjustedColumn);
+            cellWrapper.setStyle(style);
+            spreadsheetTableView.refresh();
+        });
     }
 
     public void showSortedData(CellRange range, List<Integer> sortColumns) {
-        // Extract the data to sort
-        ObservableList<ObservableList<CellWrapper>> data = spreadsheetTableView.getItems();
+        Platform.runLater(() -> {
+            ObservableList<ObservableList<CellWrapper>> data = spreadsheetTableView.getItems();
+            List<ObservableList<CellWrapper>> dataToSort = new ArrayList<>();
+            for (int i = range.startRow; i <= range.endRow; i++) {
+                ObservableList<CellWrapper> originalRow = data.get(i);
+                ObservableList<CellWrapper> rowCopy = FXCollections.observableArrayList();
 
-        // Create a deep copy of the data within the specified range
-        List<ObservableList<CellWrapper>> dataToSort = new ArrayList<>();
-        for (int i = range.startRow; i <= range.endRow; i++) {
-            ObservableList<CellWrapper> originalRow = data.get(i);
-            ObservableList<CellWrapper> rowCopy = FXCollections.observableArrayList();
-
-            for (int j = range.startCol; j <= range.endCol; j++) {
-                CellWrapper originalCell = originalRow.get(j);
-                // Create a copy of CellWrapper
-                CellWrapper cellCopy = new CellWrapper(originalCell.getCell(), originalCell.getOriginalRow(), originalCell.getColumn());
-                cellCopy.setStyle(originalCell.getStyle());
-                rowCopy.add(cellCopy);
-            }
-
-            dataToSort.add(rowCopy);
-        }
-
-        // Sort the data
-        Collections.sort(dataToSort, new Comparator<ObservableList<CellWrapper>>() {
-            @Override
-            public int compare(ObservableList<CellWrapper> row1, ObservableList<CellWrapper> row2) {
-                for (int colIndex : sortColumns) {
-                    // Ensure colIndex is within the range
-                    if (colIndex < range.startCol || colIndex > range.endCol) {
-                        continue;
-                    }
-
-                    Object value1 = getSortableValue(row1.get(colIndex - range.startCol));
-                    Object value2 = getSortableValue(row2.get(colIndex - range.startCol));
-
-                    // Only sort numerical values
-                    if (!(value1 instanceof Number) || !(value2 instanceof Number)) {
-                        continue;
-                    }
-
-                    int cmp = Double.compare(((Number) value1).doubleValue(), ((Number) value2).doubleValue());
-                    if (cmp != 0) {
-                        return cmp;
-                    }
+                for (int j = range.startCol; j <= range.endCol; j++) {
+                    CellWrapper originalCell = originalRow.get(j);
+                    CellWrapper cellCopy = new CellWrapper(originalCell.getCell(), originalCell.getOriginalRow(), originalCell.getColumn());
+                    cellCopy.setStyle(originalCell.getStyle());
+                    rowCopy.add(cellCopy);
                 }
-                // Stable sort: preserve original order if all compared values are equal
-                return 0;
+                dataToSort.add(rowCopy);
             }
-        });
 
-        // Display the sorted data in a pop-up window
-        displaySortedDataInPopup(dataToSort, range);
+            Collections.sort(dataToSort, new Comparator<ObservableList<CellWrapper>>() {
+                @Override
+                public int compare(ObservableList<CellWrapper> row1, ObservableList<CellWrapper> row2) {
+                    for (int colIndex : sortColumns) {
+                        if (colIndex < range.startCol || colIndex > range.endCol) {
+                            continue;
+                        }
+
+                        Object value1 = getSortableValue(row1.get(colIndex - range.startCol));
+                        Object value2 = getSortableValue(row2.get(colIndex - range.startCol));
+
+                        if (!(value1 instanceof Number) || !(value2 instanceof Number)) {
+                            continue;
+                        }
+
+                        int cmp = Double.compare(((Number) value1).doubleValue(), ((Number) value2).doubleValue());
+                        if (cmp != 0) {
+                            return cmp;
+                        }
+                    }
+                    return 0;
+                }
+            });
+
+            displaySortedDataInPopup(dataToSort, range);
+        });
     }
+
 
     private void displaySortedDataInPopup(List<ObservableList<CellWrapper>> sortedData, CellRange range) {
         // Create a new TableView to display the sorted data
@@ -616,11 +615,13 @@ public class SheetController {
     }
 
     public void resetCellStyle(int row, int column) {
-        int adjustedColumn = column;
-        ObservableList<CellWrapper> rowData = spreadsheetTableView.getItems().get(row);
-        CellWrapper cellWrapper = rowData.get(adjustedColumn);
-        cellWrapper.setStyle("");
-        spreadsheetTableView.refresh();
+        Platform.runLater(() -> {
+            int adjustedColumn = column;
+            ObservableList<CellWrapper> rowData = spreadsheetTableView.getItems().get(row);
+            CellWrapper cellWrapper = rowData.get(adjustedColumn);
+            cellWrapper.setStyle("");
+            spreadsheetTableView.refresh();
+        });
     }
     private void addRowNumberColumn() {
         TableColumn<ObservableList<CellWrapper>, Number> rowNumberCol = new TableColumn<>("#");

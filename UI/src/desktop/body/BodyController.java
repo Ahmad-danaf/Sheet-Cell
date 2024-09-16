@@ -4,14 +4,19 @@ import com.sheetcell.engine.Engine;
 import com.sheetcell.engine.EngineImpl;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import desktop.CellRange;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import desktop.sheet.SheetController;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -87,25 +92,65 @@ public class BodyController {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open Spreadsheet File");
         File file = fileChooser.showOpenDialog(mainPane.getScene().getWindow());
+
         if (file != null) {
-            try {
-                // Load the XML file with the engine
-                engine.loadSheet(file.getAbsolutePath());
-                filePathField.setText(file.getAbsolutePath());
+            // Create a new Task for loading the file
+            Task<Void> loadFileTask = new Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+                    try {
+                        // Simulate a loading delay (1-2 seconds) to show progress
+                        updateProgress(0, 100);
+                        Thread.sleep(500);  // Simulating initial delay
+                        updateProgress(50, 100);
 
-                // Get the SheetReadActions object
-                SheetReadActions sheetData = engine.getReadOnlySheet();
+                        // Load the XML file with the engine
+                        engine.loadSheet(file.getAbsolutePath());
+                        updateProgress(100, 100);
 
-                // Pass the sheet data to SheetController
-                spreadsheetGridController.displaySheet(sheetData);
+                        // Pass the sheet data to the SheetController
+                        SheetReadActions sheetData = engine.getReadOnlySheet();
+                        spreadsheetGridController.displaySheet(sheetData);
 
-            } catch (Exception e) {
-                e.printStackTrace();
-                showAlert(e.getMessage());
+                        // Update the file path field on the UI thread
+                        Platform.runLater(() -> filePathField.setText(file.getAbsolutePath()));
+                    } catch (Exception e) {
+                        // If there's an error, show an alert on the UI thread
+                        Platform.runLater(() -> showAlert(e.getMessage()));
+                        throw e;  // Re-throw to handle in the task's failed handler
+                    }
+                    return null;
+                }
+            };
 
-            }
+            // Show a progress indicator while the task is running
+            ProgressBar progressBar = new ProgressBar();
+            progressBar.progressProperty().bind(loadFileTask.progressProperty());
+
+            // Create a dialog or progress bar indicator in your UI to show progress
+            Stage progressStage = new Stage();
+            VBox progressRoot = new VBox(progressBar);
+            Scene progressScene = new Scene(progressRoot);
+            progressStage.setScene(progressScene);
+            progressStage.setTitle("Loading File...");
+            progressStage.setAlwaysOnTop(true);
+            progressStage.show();
+
+            // Handle task completion
+            loadFileTask.setOnSucceeded(workerStateEvent -> {
+                progressStage.close();  // Close progress dialog when loading is done
+            });
+
+            loadFileTask.setOnFailed(workerStateEvent -> {
+                progressStage.close();  // Close progress dialog if loading fails
+                //showAlert("Failed to load the file. Please check the file format and try again.");
+            });
+
+            // Start the task in a new thread
+            new Thread(loadFileTask).start();
         }
     }
+
 
     @FXML
     private void handleSort(ActionEvent event) {

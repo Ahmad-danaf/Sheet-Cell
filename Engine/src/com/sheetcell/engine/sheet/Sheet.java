@@ -28,6 +28,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
     private int rowHeight;
     private int columnWidth;
     private int CellChangeCount;
+    RangeFactory rangeFactory;
 
     // Constructor
     public Sheet(String name, int MaxRows, int MaxColumns,int rowHeight, int columnWidth) {
@@ -40,6 +41,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         this.rowHeight = rowHeight;
         this.columnWidth = columnWidth;
         this.CellChangeCount = 0;
+        rangeFactory = new RangeFactory();
     }
 
     // Getters
@@ -247,7 +249,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
             String rangeName = rangeExpr.getRange();
 
             // Get the coordinates of the range
-            Set<Coordinate> rangeCoordinates = RangeFactory.getRange(rangeName);
+            Set<Coordinate> rangeCoordinates = rangeFactory.getRange(rangeName);
 
             if (rangeCoordinates.isEmpty()) {
                 throw new IllegalArgumentException("Error: The specified range '" + rangeName + "' does not exist.");
@@ -325,7 +327,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         if (!isCoordinateWithinBounds(from) || !isCoordinateWithinBounds(to)) {
             throw new IllegalArgumentException("Error in"+ rangeName +": Range coordinates are outside the boundaries of the sheet.");
         }
-        RangeFactory.addRange(rangeName, from, to);
+        rangeFactory.addRange(rangeName, from, to);
         activeRanges.add(rangeName);
     }
 
@@ -339,14 +341,14 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
 
     @Override
     public Set<Coordinate> getRangeCoordinates(String rangeName) {
-        return RangeFactory.getRange(rangeName);
+        return rangeFactory.getRange(rangeName);
     }
 
     public void deleteRange(String rangeName) {
         if (isRangeUsed(rangeName)) {
             throw new IllegalStateException("Cannot delete range '" + rangeName + "' because it is in use.");
         }
-        RangeFactory.deleteRange(rangeName);
+        rangeFactory.deleteRange(rangeName);
         activeRanges.remove(rangeName);
     }
 
@@ -362,5 +364,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         activeRanges.remove(rangeName);
     }
 
-
+    public RangeFactory getRangeFactory() {
+        return rangeFactory;
+    }
 }
