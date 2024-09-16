@@ -18,17 +18,16 @@ public class EngineImpl implements Engine, Serializable {
 
     private Sheet currentSheet;
     private Map<Integer, Sheet> sheetVersions;
-    private transient XMLSheetProcessor xmlSheetProcessor; // Not serialized
 
 
     public EngineImpl() {
         this.sheetVersions = new HashMap<>();
-        this.xmlSheetProcessor = new XMLSheetProcessor();
         currentSheet= null;
     }
 
     @Override
     public void loadSheet(String filePath) throws Exception {
+        XMLSheetProcessor xmlSheetProcessor = new XMLSheetProcessor();
         xmlSheetProcessor.processSheetFile(filePath);
         this.currentSheet = xmlSheetProcessor.getCurrentSheet();
         this.sheetVersions.clear();
@@ -50,7 +49,6 @@ public class EngineImpl implements Engine, Serializable {
         try (FileInputStream fileIn = new FileInputStream(filePath);
              ObjectInputStream in = new ObjectInputStream(fileIn)) {
             EngineImpl engine = (EngineImpl) in.readObject(); // Deserialize the EngineImpl object
-            engine.xmlSheetProcessor = new XMLSheetProcessor(); // Re-initialize the transient field
             return engine;
         } catch (Exception e) {
             //e.printStackTrace();

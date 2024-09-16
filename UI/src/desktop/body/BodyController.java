@@ -82,23 +82,6 @@ public class BodyController {
         spreadsheetGridController.setBodyController(this);
     }
 
-
-
-    @FXML
-    void handleAddRange(ActionEvent event) {
-
-    }
-
-    @FXML
-    void handleDeleteRange(ActionEvent event) {
-
-    }
-
-    @FXML
-    void handleFilter(ActionEvent event) {
-
-    }
-
     @FXML
     private void handleLoadFile(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
@@ -118,7 +101,8 @@ public class BodyController {
 
             } catch (Exception e) {
                 e.printStackTrace();
-                // Show an error dialog or message
+                showAlert(e.getMessage());
+
             }
         }
     }
@@ -223,16 +207,33 @@ public class BodyController {
     }
 
 
-    private void showAlert(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
 
     @FXML
     void handleUpdateValue(ActionEvent event) {
+        String cellAddress = selectedCellId.getText();
+        String newValue = originalCellValue.getText();
+        if (cellAddress == null || cellAddress.isEmpty()) {
+            showAlert("No cell selected", "Please select a cell to update.");
+            return;
+        }
+        if (newValue == null) {
+            newValue = "";
+        }
+        int row = getRowIndex(cellAddress);
+        int column = getColumnIndex(cellAddress);
+        try{
+            engine.setCellValue(cellAddress, newValue);
+            spreadsheetGridController.refreshSpreadsheet();
+            // Update the last update cell version
+            int newVersion = engine.getReadOnlySheet().getCell(row, column).getVersion();
+            lastUpdateCellVersion.setText(String.valueOf(newVersion));
 
+            // Optionally, you can refresh the cell selection to update displayed value
+            spreadsheetGridController.reselectCell(row, column);
+            showAlert("Cell Updated", "Cell value updated successfully.");
+        } catch (Exception e) {
+            showAlert("Error updating cell", e.getMessage());
+        }
     }
 
     @FXML
@@ -303,4 +304,32 @@ public class BodyController {
     }
 
 
+    @FXML
+    void handleAddRange(ActionEvent event) {
+
+    }
+
+    @FXML
+    void handleDeleteRange(ActionEvent event) {
+
+    }
+
+    @FXML
+    void handleFilter(ActionEvent event) {
+
+    }
+    private void showAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    public void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION); // Choose the type of alert
+        alert.setTitle("Info");
+        alert.setHeaderText(title);
+        alert.setContentText(message);
+
+        alert.showAndWait();
+    }
 }

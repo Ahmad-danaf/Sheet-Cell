@@ -164,7 +164,16 @@ public class SheetController {
     }
 
     public void refreshSpreadsheet() {
-        // Refresh data in spreadsheetTableView
+        // Clear and reload data
+        sheetData= engine.getReadOnlySheet();
+        displaySheet(sheetData);
+    }
+
+    public void reselectCell(int row, int column) {
+        // Adjust column index to account for row number column
+        int adjustedColumn = column + 1;
+        spreadsheetTableView.getSelectionModel().clearSelection();
+        spreadsheetTableView.getSelectionModel().select(row, spreadsheetTableView.getColumns().get(adjustedColumn));
     }
 
     public void displaySheet(SheetReadActions sheetData) {

@@ -137,15 +137,14 @@ public class XMLSheetProcessor {
             if (rangeCoordinates.isEmpty()) {
                 throw new IllegalArgumentException("Error: The specified range '" + rangeName + "' does not exist.");
             }
-
-//            // Add each cell in the range as a dependency
-//            for (Coordinate coord : rangeCoordinates) {
-//                Cell referencedCell = activeCells.get(coord);
-//                if (referencedCell != null) {
-//                    callingCell.addDependency(referencedCell);
-//                    referencedCell.addInfluencedCell(callingCell);
-//                }
-//            }
+            // Add each cell in the range as a dependency
+            for (Coordinate coord : rangeCoordinates) {
+                Cell referencedCell = activeCells.get(coord);
+                if (referencedCell != null) {
+                    callingCell.addDependency(referencedCell);
+                    referencedCell.addInfluencedCell(callingCell);
+                }
+            }
         } else if (expression instanceof UnaryExpression) {
             UnaryExpression unaryExpr = (UnaryExpression) expression;
             findAndRegisterDependencies(unaryExpr.getArgument(), callingCell, activeCells);

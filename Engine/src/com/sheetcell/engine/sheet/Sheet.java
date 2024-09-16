@@ -242,6 +242,25 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
                 callingCell.addDependency(referencedCell);
                 referencedCell.addInfluencedCell(callingCell);
             }
+        } else if (expression instanceof RangeExpression) {
+            RangeExpression rangeExpr = (RangeExpression) expression;
+            String rangeName = rangeExpr.getRange();
+
+            // Get the coordinates of the range
+            Set<Coordinate> rangeCoordinates = RangeFactory.getRange(rangeName);
+
+            if (rangeCoordinates.isEmpty()) {
+                throw new IllegalArgumentException("Error: The specified range '" + rangeName + "' does not exist.");
+            }
+
+            // Add each cell in the range as a dependency
+            for (Coordinate coord : rangeCoordinates) {
+                Cell rangeCell = activeCells.get(coord);
+                if (rangeCell != null) {
+                    callingCell.addDependency(rangeCell);
+                    rangeCell.addInfluencedCell(callingCell);
+                }
+            }
         } else if (expression instanceof UnaryExpression) {
             UnaryExpression unaryExpr = (UnaryExpression) expression;
             findAndRegisterDependencies(unaryExpr.getArgument(), callingCell, activeCells);
@@ -261,32 +280,6 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
 
     }
 
-//    @Override
-//    public Sheet updateCellValueAndCalculate(int row, int column, String value) {
-//        Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
-//
-//        Sheet newSheetVersion = copySheet();
-//        Cell newCell = new Cell(row, column, value, newSheetVersion.getVersion() +1 , newSheetVersion);
-//        newSheetVersion.activeCells.put(coordinate, newCell);
-//
-//        try {
-//            List<Cell> cellsThatHaveChanged =
-//                    newSheetVersion
-//                            .orderCellsForCalculation()
-//                            .stream()
-//                            .filter(Cell::calculateEffectiveValue)
-//                            .collect(Collectors.toList());
-//
-//            // successful calculation. update sheet and relevant cells version
-//            // int newVersion = newSheetVersion.increaseVersion();
-//            // cellsThatHaveChanged.forEach(cell -> cell.updateVersion(newVersion));
-//
-//            return newSheetVersion;
-//        } catch (Exception e) {
-//            // deal with the runtime error that was discovered as part of invocation
-//            return this;
-//        }
-//    }
 
     // Sets the original value of a cell during the XML loading process without calculating effective values.
     public void setOriginalValueDuringLoad(int row, int column, String originalValue) {
@@ -308,12 +301,6 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         this.version++;
     }
 
-    private List<Cell> orderCellsForCalculation() {
-        // data structure 1 0 1: Topological sort...
-        // build graph from the cells. each cell is a node. each cell that has ref(s) constitutes an edge
-        // handle case of circular dependencies -> should fail
-        return null;
-    }
 
     private Sheet copySheet() {
         // lots of options here:
@@ -335,8 +322,19 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
     }
 
     public void addRange(String rangeName, Coordinate from, Coordinate to) {
+        if (!isCoordinateWithinBounds(from) || !isCoordinateWithinBounds(to)) {
+            throw new IllegalArgumentException("Error in"+ rangeName +": Range coordinates are outside the boundaries of the sheet.");
+        }
         RangeFactory.addRange(rangeName, from, to);
         activeRanges.add(rangeName);
+    }
+
+    private boolean isCoordinateWithinBounds(Coordinate coord) {
+        int maxRows = getMaxRows(); // Method or variable that provides the maximum number of rows in the sheet
+        int maxColumns = getMaxColumns(); // Method or variable that provides the maximum number of columns in the sheet
+
+        return coord.getRow() >= 1 && coord.getRow() <= maxRows &&
+                coord.getColumn() >= 1 && coord.getColumn() <= maxColumns;
     }
 
     @Override
