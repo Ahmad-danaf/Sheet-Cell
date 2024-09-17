@@ -39,7 +39,7 @@ public class SumExpression implements RangeExpression {
                 }
             }
         }
-
+        sheet.markRangeAsUsed(rangeName);
         return new EffectiveValue(CellType.NUMERIC, sum);
     }
 

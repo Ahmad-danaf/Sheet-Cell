@@ -24,7 +24,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
     private int maxRows;
     private int MaxColumns;
     private Map<Coordinate, Cell> activeCells;
-    private final Set<String> activeRanges;
+    private Set<String> activeRanges;
     private int rowHeight;
     private int columnWidth;
     private int CellChangeCount;
@@ -105,13 +105,13 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
     @Override
     public SheetUpdateResult setCell(int row, int column, String value) {
         Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
-
+        Set<String> backupActiveRangesSet = new HashSet<>(activeRanges);
+        activeRanges.clear();
         Sheet newSheetVersion = copySheet();
         newSheetVersion.resetCellChangeCount();
 
         // Get the old cell that is about to be replaced (if it exists)
         Cell oldCell = newSheetVersion.activeCells.get(coordinate);
-
         // Backup the old cell's dependencies and influenced cells
         Map<Cell, Set<Cell>> oldDependenciesBackup = new HashMap<>();
         Map<Cell, Set<Cell>> oldInfluencedCellsBackup = new HashMap<>();
@@ -166,6 +166,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
                     cell.getInfluencedCells().addAll(entry.getValue());
                 }
             }
+            activeRanges.addAll(backupActiveRangesSet);
             return new SheetUpdateResult(this, e.getMessage());
         }
     }
@@ -173,7 +174,8 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
     @Override
     public SheetUpdateResult deleteCell(int row, int column) {
         Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
-
+        Set<String> backupActiveRangesSet = new HashSet<>(activeRanges);
+        activeRanges.clear();
         // Create a new version of the sheet
         Sheet newSheetVersion = copySheet();
         newSheetVersion.resetCellChangeCount();
@@ -209,6 +211,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
             return new SheetUpdateResult(newSheetVersion, null);
         } catch (Exception e) {
             // Return the current sheet with the error message
+            activeRanges.addAll(backupActiveRangesSet);
             return new SheetUpdateResult(this, e.getMessage());
         }
     }
@@ -328,15 +331,14 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
             throw new IllegalArgumentException("Error in"+ rangeName +": Range coordinates are outside the boundaries of the sheet.");
         }
         rangeFactory.addRange(rangeName, from, to);
-        activeRanges.add(rangeName);
     }
 
     private boolean isCoordinateWithinBounds(Coordinate coord) {
         int maxRows = getMaxRows(); // Method or variable that provides the maximum number of rows in the sheet
         int maxColumns = getMaxColumns(); // Method or variable that provides the maximum number of columns in the sheet
 
-        return coord.getRow() >= 1 && coord.getRow() <= maxRows &&
-                coord.getColumn() >= 1 && coord.getColumn() <= maxColumns;
+        return coord.getRow() >= 0 && coord.getRow() < maxRows &&
+                coord.getColumn() >= 0 && coord.getColumn() < maxColumns;
     }
 
     @Override
@@ -345,8 +347,8 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
     }
 
     public void deleteRange(String rangeName) {
-        if (isRangeUsed(rangeName)) {
-            throw new IllegalStateException("Cannot delete range '" + rangeName + "' because it is in use.");
+        if(isRangeUsed(rangeName)){
+            throw new IllegalArgumentException("The range '"+rangeName+"' is in use and cannot be deleted.");
         }
         rangeFactory.deleteRange(rangeName);
         activeRanges.remove(rangeName);
@@ -364,7 +366,19 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         activeRanges.remove(rangeName);
     }
 
+    public Set<String> getRanges() {
+        return rangeFactory.getAllRangeNames();
+    }
+
     public RangeFactory getRangeFactory() {
         return rangeFactory;
+    }
+
+    public void setRowHeight(int height) {
+        this.rowHeight = height;
+    }
+
+    public void setColumnWidth(int width) {
+        this.columnWidth = width;
     }
 }

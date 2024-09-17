@@ -47,7 +47,7 @@ public class AverageExpression implements RangeExpression {
         if (count == 0) {
             throw new IllegalArgumentException("Error: The specified range '" + rangeName + "' does not contain any numeric cells.");
         }
-
+        sheet.markRangeAsUsed(rangeName);
         double average = sum / count;
         return new EffectiveValue(CellType.NUMERIC, average);
     }

@@ -20,6 +20,7 @@ public class RangeFactory implements Serializable {
         // Prevent instantiation
         ranges = new HashMap<>();
     }
+
     /**
      * Adds a new range to the factory.
      *

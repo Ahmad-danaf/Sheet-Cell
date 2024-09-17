@@ -16,5 +16,6 @@ public interface SheetReadActions {
     int getColumnWidth();
     String getSheetName();
     Set<Coordinate> getRangeCoordinates(String rangeName);
+    void markRangeAsUsed(String rangeName);
 
 }

@@ -1,32 +1,35 @@
-/* style.css */
-
 /* General Window Style */
 .root {
-    -fx-font-family: "Segoe UI";
+    -fx-font-family: "Segoe UI", sans-serif;
     -fx-font-size: 14px;
-    -fx-background-color: #f2f2f2;
+    -fx-background-color: #f9f9f9; /* Lighter background for a clean look */
 }
 
 /* Title Styling */
 .title-label {
-    -fx-font-size: 24px;
+    -fx-font-size: 26px;
     -fx-font-weight: bold;
-    -fx-text-fill: #333333;
-    -fx-padding: 10 0 5 0; /* Adds vertical space around the title */
+    -fx-text-fill: #2d2d2d; /* Darker text for better contrast */
+    -fx-padding: 15 0 10 0; /* More space around the title */
+    -fx-alignment: center; /* Center the title */
 }
-
 
 /* Top Bar Styling */
 .hbox {
-    -fx-spacing: 10; /* Space between child elements */
-    -fx-padding: 5 0 5 0; /* Padding inside the HBox */
+    -fx-spacing: 15; /* Increased space between child elements */
+    -fx-padding: 10 0 10 0; /* More padding for a spacious feel */
 }
 
 .load-button {
-    -fx-background-color: #6fa23f;
+    -fx-background-color: #4caf50; /* Brighter green for call to action */
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-margin: 50;
+    -fx-padding: 8 15 8 15; /* More padding for a bigger button */
+    -fx-border-radius: 5;
+}
+
+.load-button:hover {
+    -fx-background-color: #388e3c; /* Darker green on hover */
 }
 
 .file-path {
@@ -37,29 +40,33 @@
     -fx-border-color: #cccccc;
     -fx-border-radius: 3;
     -fx-text-fill: #000000;
-
-    
+    -fx-padding: 5;
 }
-
 
 /* Action Line Styling */
 .action-line {
-    -fx-spacing: 10;
-    -fx-padding: 5 0 5 0;
+    -fx-spacing: 15; /* Increased spacing for a cleaner look */
+    -fx-padding: 10 0 10 0; /* Uniform padding */
 }
 
 .text-field {
-    -fx-pref-width: 100px;
+    -fx-pref-width: 120px; /* Slightly wider by default */
     -fx-background-color: white;
     -fx-border-color: #cccccc;
     -fx-border-radius: 3;
+    -fx-padding: 5;
 }
 
 .update-button {
-    -fx-background-color: #4185f4;
+    -fx-background-color: #4285f4; /* Brighter blue */
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-padding: 5 10 5 10;
+    -fx-padding: 8 15 8 15; /* More padding for a bigger button */
+    -fx-border-radius: 5;
+}
+
+.update-button:hover {
+    -fx-background-color: #3367d6; /* Darker blue on hover */
 }
 
 .version-selector {
@@ -68,30 +75,79 @@
 
 /* Commands and Ranges Section */
 .section-container {
-    -fx-background-color: #e6e6e6;
-    -fx-padding: 10;
-    -fx-spacing: 5;
-    -fx-border-color: #cccccc;
+    -fx-background-color: #ffffff; /* White background for contrast */
+    -fx-padding: 15;
+    -fx-spacing: 10;
+    -fx-border-color: #dddddd;
     -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0.0, 0, 1); /* Subtle shadow */
 }
 
 .section-container Button {
-    -fx-background-color: #d9d9d9;
+    -fx-background-color: #f5f5f5; /* Light grey for subtle buttons */
     -fx-border-color: #b3b3b3;
     -fx-border-radius: 3;
     -fx-text-fill: #333333;
+    -fx-font-size: 13px;
+    -fx-padding: 6 12 6 12; /* Consistent button size */
 }
 
 .section-container Button:hover {
-    -fx-background-color: #c0c0c0;
+    -fx-background-color: #e0e0e0; /* Darker grey on hover */
 }
 
 #commandsSection {
-    -fx-background-color: blue;
+    -fx-background-color: #e3f2fd; /* Light blue background */
+    -fx-border-color: #90caf9;
+    -fx-border-radius: 5;
 }
 
-#rangesSection{
-    -fx-background-color: yellow;
+#rangesSection {
+    -fx-background-color: #fff3e0; /* Light orange background */
+    -fx-border-color: #ffcc80;
+    -fx-border-radius: 5;
 }
 
+/* Color Picker Styling */
+.color-picker {
+    -fx-background-color: transparent; /* Transparent background */
+    -fx-padding: 5 5 5 5;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 3;
+}
 
+/* Slider Styling */
+.slider {
+    -fx-pref-width: 150;
+    -fx-background-color: #e0e0e0;
+}
+
+.slider .track {
+    -fx-background-color: #d0d0d0;
+}
+
+.slider .thumb {
+    -fx-background-color: #4285f4;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 2, 0.0, 0, 1);
+}
+
+/* TitledPane Styling */
+.titled-pane > .title {
+    -fx-background-color: #fafafa;
+    -fx-font-weight: bold;
+    -fx-padding: 5;
+}
+
+.titled-pane > .content {
+    -fx-background-color: #ffffff;
+}
+
+/* Tooltip Styling */
+.tooltip {
+    -fx-background-color: #333333;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-padding: 5;
+    -fx-background-radius: 5;
+}

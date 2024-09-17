@@ -26,7 +26,7 @@ public enum FunctionParser {
             // all is good. create the relevant function instance
             String actualValue = arguments.get(0);
             if (isBoolean(actualValue)) {
-                return new IdentityExpression(Boolean.parseBoolean(actualValue.trim()), CellType.BOOLEAN);
+                return new IdentityExpression(Boolean.parseBoolean(actualValue.trim().toUpperCase()), CellType.BOOLEAN);
             } else if (isNumeric(actualValue)) {
                 return new IdentityExpression(Double.parseDouble(actualValue.trim()), CellType.NUMERIC);
             } else {

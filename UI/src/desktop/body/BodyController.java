@@ -2,26 +2,28 @@ package desktop.body;
 
 import com.sheetcell.engine.Engine;
 import com.sheetcell.engine.EngineImpl;
+import com.sheetcell.engine.coordinate.Coordinate;
+import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import desktop.CellRange;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import desktop.sheet.SheetController;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class BodyController {
 
@@ -62,11 +64,26 @@ public class BodyController {
     private Button deleteRangeButton;
     @FXML
     private Button ViewRanges;
-
+    @FXML
+    private TextField rowHeightField;
+    @FXML
+    private TextField columnWidthField;
+    @FXML
+    private ChoiceBox<String> alignmentChoiceBox;
 
     // Reference to SheetController
     @FXML
     private SheetController spreadsheetGridController;
+    @FXML
+    private ChoiceBox<String> columnChoiceBox;
+    @FXML
+    private Slider columnHeightSlider;
+    @FXML
+    private Label columnHeightLabel;
+    @FXML
+    private HBox columnHeightControls;
+
+    private Map<Integer, Integer> columnHeights = new HashMap<>();
 
 
 
@@ -79,8 +96,26 @@ public class BodyController {
             spreadsheetGridController.setBodyController(this);
         }
 
+        columnHeightSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+            columnHeightLabel.setText(String.valueOf(newValue.intValue()));
+            adjustColumnHeight();
+        });
+
+
     }
 
+    @FXML
+    private void handleColumnSelection(ActionEvent event) {
+        String selectedColumn = columnChoiceBox.getSelectionModel().getSelectedItem();
+        if (selectedColumn != null && !selectedColumn.isEmpty()) {
+            columnHeightControls.setVisible(true);
+        } else {
+            columnHeightControls.setVisible(false);
+        }
+    }
+    private void adjustColumnHeight() {
+
+    }
     public void setSpreadsheetGridController(SheetController spreadsheetGridController) {
         this.spreadsheetGridController = spreadsheetGridController;
         spreadsheetGridController.setEngine(engine);
@@ -114,6 +149,8 @@ public class BodyController {
 
                         // Update the file path field on the UI thread
                         Platform.runLater(() -> filePathField.setText(file.getAbsolutePath()));
+                        populateColumnChoiceBox();
+
                     } catch (Exception e) {
                         // If there's an error, show an alert on the UI thread
                         Platform.runLater(() -> showAlert(e.getMessage()));
@@ -149,6 +186,19 @@ public class BodyController {
             // Start the task in a new thread
             new Thread(loadFileTask).start();
         }
+    }
+
+    private void populateColumnChoiceBox() {
+        // Clear existing choices
+        columnChoiceBox.getItems().clear();
+
+        int maxColumns = engine.getReadOnlySheet().getMaxColumns();
+        for (int i = 0; i < maxColumns; i++) {
+            columnChoiceBox.getItems().add("Column " + CoordinateFactory.convertIndexToColumnLabel(i));
+        }
+
+        // Reset slider visibility
+        columnHeightControls.setVisible(false);
     }
 
 
@@ -266,6 +316,7 @@ public class BodyController {
         }
         int row = getRowIndex(cellAddress);
         int column = getColumnIndex(cellAddress);
+
         try{
             engine.setCellValue(cellAddress, newValue);
             spreadsheetGridController.refreshSpreadsheet();
@@ -339,6 +390,13 @@ public class BodyController {
         return columnNameToIndex(colPart);
     }
 
+    private int getColumnIndexFromLabel(String columnLabel) {
+        // Remove the "Column " prefix
+        String columnName = columnLabel.replace("Column ", "").trim();
+        return columnNameToIndex(columnName);
+    }
+
+
     private int columnNameToIndex(String columnName) {
         int index = 0;
         for (int i = 0; i < columnName.length(); i++) {
@@ -350,19 +408,125 @@ public class BodyController {
 
 
     @FXML
-    void handleAddRange(ActionEvent event) {
+    private void handleAddRange(ActionEvent event) {
+        // Create a dialog to input range name and definition
+        TextInputDialog rangeDialog = new TextInputDialog();
+        rangeDialog.setTitle("Add New Range");
+        rangeDialog.setHeaderText("Define a New Range");
+        rangeDialog.setContentText("Enter range name (unique):");
 
+        // Create input fields for range definition
+        TextField rangeNameField = new TextField();
+        rangeNameField.setPromptText("Unique Range Name");
+
+        TextField rangeDefinitionField = new TextField();
+        rangeDefinitionField.setPromptText("Range Definition (e.g., A1..A4)");
+
+        VBox dialogContent = new VBox();
+        dialogContent.getChildren().addAll(
+                new Label("Range Name:"), rangeNameField,
+                new Label("Range Definition:"), rangeDefinitionField
+        );
+        rangeDialog.getDialogPane().setContent(dialogContent);
+
+        Optional<String> result = rangeDialog.showAndWait();
+
+        if (result.isPresent()) {
+            String rangeName = rangeNameField.getText().trim();
+            String rangeDefinition = rangeDefinitionField.getText().trim();
+
+            try {
+                engine.addRange(rangeName, rangeDefinition); // Add range using engine method
+                showAlert("Success", "Range added successfully.");
+            } catch (Exception e) {
+                showError("Error Adding Range", e.getMessage());
+            }
+        }
+    }
+
+
+    @FXML
+    private void handleDeleteRange(ActionEvent event) {
+        Set<String> ranges = engine.getAllRanges();
+        List<String> rangeList = new ArrayList<>(ranges);
+        ChoiceDialog<String> deleteDialog = new ChoiceDialog<>(rangeList.isEmpty() ? null : rangeList.get(0), rangeList);
+        deleteDialog.setTitle("Delete Range");
+        deleteDialog.setHeaderText("Select a Range to Delete");
+        deleteDialog.setContentText("Choose a range:");
+
+        Optional<String> result = deleteDialog.showAndWait();
+
+        if (result.isPresent()) {
+            String rangeName = result.get();
+            try {
+                engine.deleteRange(rangeName);
+                showAlert("Success", "Range deleted successfully.");
+            } catch (Exception e) {
+                showError("Error Deleting Range", e.getMessage());
+            }
+        }
     }
 
     @FXML
-    void handleDeleteRange(ActionEvent event) {
+    private void handleViewRange(ActionEvent event) {
+        // Fetch all ranges from the engine
+        Set<String> ranges = engine.getAllRanges();
 
+        if (ranges.isEmpty()) {
+            showAlert("No ranges defined", "There are no ranges currently defined to view.");
+            return;
+        }
+
+        // Create a Choice Dialog to select a range
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(ranges.iterator().next(), ranges);
+        dialog.setTitle("View Range");
+        dialog.setHeaderText("Select a range to view:");
+        dialog.setContentText("Available Ranges:");
+
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(rangeName -> {
+            try {
+                // Get the set of coordinates for the selected range
+                Set<Coordinate> rangeCoordinates = engine.getRangeCoordinates(rangeName);
+
+                // Highlight the cells within this range
+                spreadsheetGridController.highlightRange(rangeCoordinates);
+
+            } catch (Exception e) {
+                showError("Error", e.getMessage());
+            }
+        });
     }
+
+
 
     @FXML
     void handleFilter(ActionEvent event) {
 
     }
+
+
+
+    // Handle applying column alignment
+    @FXML
+    private void handleApplyAlignment(ActionEvent event) {
+
+    }
+
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    public void showError(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(title);  // You can set a header if you want, or leave it as null
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
     private void showAlert(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setContentText(message);

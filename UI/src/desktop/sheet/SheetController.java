@@ -1,6 +1,7 @@
 package desktop.sheet;
 
 import com.sheetcell.engine.Engine;
+import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.cell.EffectiveValue;
@@ -36,16 +37,13 @@ public class SheetController {
 
     private Engine engine;
     @FXML private BodyController bodyController;
-
     @FXML
     private ScrollPane gridScrollPane;
-
     @FXML
     private TableView<ObservableList<CellWrapper>> spreadsheetTableView;
     private ObservableList<ObservableList<CellWrapper>> originalData;
-
-
     private SheetReadActions sheetData;
+
 
     public void setEngine(Engine engine) {
         this.engine = engine;
@@ -153,19 +151,9 @@ public class SheetController {
         this.bodyController = bodyController;
     }
 
-
-    private void setupSpreadsheetTableView() {
-        // Configure the table view columns, cell factories, etc.
-        // Implement resizing, wrapping, alignment as per requirements
-    }
-
-    public void loadSpreadsheetData() {
-        // Use engine to load data
-        // Populate spreadsheetTableView with data
-    }
-
     public void refreshSpreadsheet() {
         // Clear and reload data
+
         sheetData= engine.getReadOnlySheet();
         displaySheet(sheetData);
     }
@@ -252,52 +240,6 @@ public class SheetController {
         spreadsheetTableView.setItems(data);
     }
 
-    public void resetSort() {
-        if (originalData != null) {
-            Platform.runLater(() -> {
-                // Restore the original data
-                spreadsheetTableView.setItems(FXCollections.observableArrayList(originalData));
-                spreadsheetTableView.refresh();
-            });
-        }
-    }
-
-
-
-    public void sortRange(CellRange range, List<Integer> sortColumns) {
-        Platform.runLater(() -> {
-            ObservableList<ObservableList<CellWrapper>> data = spreadsheetTableView.getItems();
-            List<ObservableList<CellWrapper>> subList = data.subList(range.startRow, range.endRow + 1);
-
-            Collections.sort(subList, new Comparator<ObservableList<CellWrapper>>() {
-                @Override
-                public int compare(ObservableList<CellWrapper> row1, ObservableList<CellWrapper> row2) {
-                    for (int colIndex : sortColumns) {
-                        if (colIndex < range.startCol || colIndex > range.endCol) {
-                            continue;
-                        }
-
-                        Object value1 = getSortableValue(row1.get(colIndex));
-                        Object value2 = getSortableValue(row2.get(colIndex));
-
-                        if (!(value1 instanceof Number) || !(value2 instanceof Number)) {
-                            continue;
-                        }
-
-                        int cmp = Double.compare(((Number) value1).doubleValue(), ((Number) value2).doubleValue());
-                        if (cmp != 0) {
-                            return cmp;
-                        }
-                    }
-                    return 0;
-                }
-            });
-
-            spreadsheetTableView.refresh();
-        });
-    }
-
-
     private Object getSortableValue(CellWrapper cellWrapper) {
         if (cellWrapper == null || cellWrapper.getCell() == null) {
             return null;
@@ -335,13 +277,13 @@ public class SheetController {
                     Object value = effectiveValue != null ? effectiveValue.getValue() : null;
                     String displayText = value != null ? value.toString() : "";
 
+                    // Set alignment
+                    setAlignment(alignment);
+
                     // Handle boolean values
                     if (effectiveValue != null && effectiveValue.getCellType() == CellType.BOOLEAN) {
                         displayText = displayText.toUpperCase();
                     }
-
-                    // Set alignment
-                    setAlignment(alignment);
 
                     // Combine cell style and highlight style
                     String fullStyle = cellWrapper.getStyle() + cellWrapper.getHighlightStyle();
@@ -384,17 +326,14 @@ public class SheetController {
         });
     }
 
-
     private void clearHighlights() {
         for (ObservableList<CellWrapper> rowData : spreadsheetTableView.getItems()) {
             for (CellWrapper cellWrapper : rowData) {
                 cellWrapper.setHighlightStyle("");
             }
         }
+        spreadsheetTableView.refresh();
     }
-
-
-
 
     // Context menu for column settings
     private void addColumnContextMenu(TableColumn<ObservableList<CellWrapper>, CellWrapper> column) {
@@ -640,8 +579,48 @@ public class SheetController {
         spreadsheetTableView.getColumns().add(0, rowNumberCol);
     }
 
+    public void adjustRowHeight(double newHeight) {
+        Platform.runLater(() -> {
+            // Set the fixed height for each row in the table view
+            spreadsheetTableView.setFixedCellSize(newHeight);
+
+            // Force the table to re-layout and apply the new row height
+            spreadsheetTableView.refresh();
+        });
+    }
+
+    public void adjustColumnWidth(int columnIndex, int weight) {
+        Platform.runLater(() -> {
+            TableColumn<ObservableList<CellWrapper>, CellWrapper> column = (TableColumn<ObservableList<CellWrapper>, CellWrapper>) spreadsheetTableView.getColumns().get(columnIndex);
+            column.setPrefWidth(weight);
+            spreadsheetTableView.refresh();
+        });
+    }
+
+    public void highlightRange(Set<Coordinate> rangeCoordinates) {
+        Platform.runLater(() -> {
+            // Clear any previous highlights
+            clearHighlights();
+
+            // Loop through each coordinate and apply a highlight style
+            for (Coordinate coord : rangeCoordinates) {
+                int row = coord.getRow();
+                int col = coord.getColumn();
+                ObservableList<CellWrapper> rowData = spreadsheetTableView.getItems().get(row);
+                CellWrapper cellWrapper = rowData.get(col);
+
+                // Apply a highlight style
+                cellWrapper.setHighlightStyle("-fx-background-color: #FFD699;");  // Example highlight style
+            }
+
+            // Refresh the table to show the updated highlights
+            spreadsheetTableView.refresh();
+        });
+    }
 
 
 
-    // Additional methods as needed
+
+
+
 }

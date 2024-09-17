@@ -1,12 +1,15 @@
 package com.sheetcell.engine;
 
 import com.sheetcell.engine.cell.Cell;
+import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.sheet.Sheet;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.utils.SheetUpdateResult;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface Engine {
     void loadSheet(String filePath) throws Exception; // Loads sheet data from an XML file
@@ -18,5 +21,12 @@ public interface Engine {
     SheetReadActions getSheetVersion(int version);
     void doesCellIdVaildAndExist(String cellId);
     void doesCellIdVaild(String cellId);
+    void setRowHeight(int height);
+    void setColumnWidth(int width);
+    void addRange(String rangeName, String rangeDefinition);
+    Set<String> getAllRanges();
+    void deleteRange(String rangeName);
+    Set<Coordinate> getRangeCoordinates(String rangeName);
+
 
 }

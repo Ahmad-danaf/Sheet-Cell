@@ -8,12 +8,21 @@ public class CellWrapper {
     private int column;
     private String style = "";
     private String highlightStyle = "";
+    private int height;
 
 
     public CellWrapper(Cell cell, int row, int column) {
         this.cell = cell;
         this.originalRow  = row;
         this.column = column;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public int getHeight() {
+        return height;
     }
 
     public String getHighlightStyle() {
