@@ -120,13 +120,13 @@ public class SheetController {
         List<Cell> dependents = selectedCell!= null ? selectedCell.getDependencies() : new ArrayList<>();
 
         // Highlight precedents in light blue
-        String precedentStyle = "-fx-background-color: lightblue;";
+        String precedentStyle = "-fx-background-color: lightgreen;";
         for (Cell precedent : precedents) {
             highlightCell(precedent, precedentStyle);
         }
 
         // Highlight dependents in light green
-        String dependentStyle = "-fx-background-color: lightgreen;";
+        String dependentStyle = "-fx-background-color: lightblue;";
         for (Cell dependent : dependents) {
             highlightCell(dependent, dependentStyle);
         }
@@ -610,7 +610,7 @@ public class SheetController {
                 CellWrapper cellWrapper = rowData.get(col);
 
                 // Apply a highlight style
-                cellWrapper.setHighlightStyle("-fx-background-color: #FFD699;");  // Example highlight style
+                cellWrapper.setHighlightStyle("-fx-background-color: #FFD699;");
             }
 
             // Refresh the table to show the updated highlights

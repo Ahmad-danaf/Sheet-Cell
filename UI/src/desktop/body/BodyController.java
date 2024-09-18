@@ -5,6 +5,7 @@ import com.sheetcell.engine.EngineImpl;
 import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
+import com.sheetcell.engine.utils.RangeValidator;
 import desktop.CellRange;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -210,16 +211,20 @@ public class BodyController {
 
         if (result.isPresent()) {
             SortParameters params = result.get();
+            String rangeInput=params.rangeInput.trim().toUpperCase();
+            String columnsInput=params.columnsInput.trim().toUpperCase();
 
             try {
+                validateSortInput(rangeInput, columnsInput);
                 // Parse the range and columns
-                CellRange range = parseRange(params.rangeInput);
-                List<Integer> sortColumns = parseColumns(params.columnsInput);
+                CellRange range = parseRange(rangeInput);
+                List<Integer> sortColumns = parseColumns(columnsInput);
 
                 // Trigger sorting in SheetController
                 spreadsheetGridController.showSortedData(range, sortColumns);
             } catch (Exception e) {
-                showAlert("Invalid input format. Please check your entries.");
+                showError("Invalid input format.", e.getMessage());
+
             }
         }
     }
@@ -301,6 +306,28 @@ public class BodyController {
         return columns;
     }
 
+    private void validateSortInput(String rangeInput, String columnsInput) {
+        RangeValidator rangeValidator = new RangeValidator(engine.getReadOnlySheet().getMaxRows(),
+                engine.getReadOnlySheet().getMaxColumns());
+
+        if (!rangeValidator.isValidRange(rangeInput)) {
+            throw new IllegalArgumentException("Invalid range. Please ensure the range is within the sheet bounds and correctly formatted.");
+        }
+
+        // Validate columns format
+        if (!columnsInput.matches("^[a-zA-Z](,[a-zA-Z])*$")) {
+            throw new IllegalArgumentException("Invalid columns format. Expected format: a,b,c");
+        }
+
+        // Check if the columns are within the valid range of the sheet
+        List<Integer> columns = parseColumns(columnsInput);
+        int maxColumns = engine.getReadOnlySheet().getMaxColumns();
+        for (int column : columns) {
+            if (column < 0 || column >= maxColumns) {
+                throw new IllegalArgumentException("Column out of bounds. Please enter valid columns.");
+            }
+        }
+    }
 
 
     @FXML
@@ -320,11 +347,9 @@ public class BodyController {
         try{
             engine.setCellValue(cellAddress, newValue);
             spreadsheetGridController.refreshSpreadsheet();
-            // Update the last update cell version
             int newVersion = engine.getReadOnlySheet().getCell(row, column).getVersion();
             lastUpdateCellVersion.setText(String.valueOf(newVersion));
 
-            // Optionally, you can refresh the cell selection to update displayed value
             spreadsheetGridController.reselectCell(row, column);
             showAlert("Cell Updated", "Cell value updated successfully.");
         } catch (Exception e) {
