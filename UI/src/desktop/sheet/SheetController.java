@@ -86,7 +86,7 @@ public class SheetController {
                     originalValue= cell.getOriginalValue() != null ? cell.getOriginalValue().toString() : "";
                     version = cell.getVersion();
                 }
-                Object value = effectiveValue != null ? effectiveValue.getValue() : null;
+                Object value = effectiveValue != null ? effectiveValue.getValue() : ""; //"" or null?
 
                 String versionString = version!=0 ? "Version: " + String.valueOf(version) : "";
 
@@ -136,6 +136,9 @@ public class SheetController {
     }
 
     private void highlightCell(Cell cell, String style) {
+        if (cell == null) {
+            return;
+        }
         int row = cell.getCoordinate().getRow();
         int column = cell.getCoordinate().getColumn();
 
@@ -268,24 +271,12 @@ public class SheetController {
             @Override
             protected void updateItem(CellWrapper cellWrapper, boolean empty) {
                 super.updateItem(cellWrapper, empty);
-                if (empty || cellWrapper == null || cellWrapper.getCell() == null) {
+                if (cellWrapper == null) {
+                    // If there's no cell wrapper, treat it as empty
                     setText(null);
                     setGraphic(null);
-                    setStyle("");
+                    setStyle(""); // Clear any previous styles
                 } else {
-                    EffectiveValue effectiveValue = cellWrapper.getCell().getEffectiveValue();
-                    Object value = effectiveValue != null ? effectiveValue.getValue() : null;
-                    String displayText = value != null ? value.toString() : "";
-
-                    // Set alignment
-                    setAlignment(alignment);
-
-                    // Handle boolean values
-                    if (effectiveValue != null && effectiveValue.getCellType() == CellType.BOOLEAN) {
-                        displayText = displayText.toUpperCase();
-                    }
-
-                    // Combine cell style and highlight style
                     String fullStyle = cellWrapper.getStyle() + cellWrapper.getHighlightStyle();
 
                     // Initialize style variables
@@ -294,6 +285,7 @@ public class SheetController {
 
                     if (fullStyle != null && !fullStyle.isEmpty()) {
                         // Split the style string into individual styles
+                        System.out.println(fullStyle);
                         String[] styles = fullStyle.split(";");
                         for (String style : styles) {
                             style = style.trim();
@@ -305,26 +297,46 @@ public class SheetController {
                         }
                     }
 
-                    // Apply background style to the TableCell
-                    setStyle(backgroundStyle);
+                    // Apply background style to the TableCell (applies regardless of cell content)
+                    setStyle(backgroundStyle + textStyle);
 
-                    if (wrapText) {
-                        // Use Text node and apply text style
-                        Text text = new Text(displayText);
-                        text.wrappingWidthProperty().bind(column.widthProperty().subtract(10));
-                        text.setStyle(textStyle);
-                        setGraphic(text);
-                        setText(null); // Clear any text
+                    // Handle empty or non-empty cells separately
+                    if (empty || cellWrapper.getCell() == null) {
+                        // Empty cell: Clear text and graphic
+                        setText(null);
+                        setGraphic(null);
                     } else {
-                        // Use setText and apply text style to the cell
-                        setText(displayText);
-                        setGraphic(null); // Clear any graphics
-                        setStyle(backgroundStyle + textStyle); // Apply both styles to the cell
+                        // Non-empty cell: Handle value display
+                        EffectiveValue effectiveValue = cellWrapper.getCell().getEffectiveValue();
+                        Object value = effectiveValue != null ? effectiveValue.getValue() : null;
+                        String displayText = value != null ? value.toString() : "";
+
+                        // Handle boolean values
+                        if (effectiveValue != null && effectiveValue.getCellType() == CellType.BOOLEAN) {
+                            displayText = displayText.toUpperCase();
+                        }
+
+                        // Set alignment and display the value
+                        setAlignment(alignment);
+
+                        if (wrapText) {
+                            // Use Text node and apply text style
+                            Text text = new Text(displayText);
+                            text.wrappingWidthProperty().bind(column.widthProperty().subtract(10));
+                            text.setStyle(textStyle);
+                            setGraphic(text);
+                            setText(null); // Clear any text
+                        } else {
+                            // Use setText for normal text display
+                            setText(displayText);
+                            setGraphic(null); // Clear any graphics
+                        }
                     }
                 }
             }
         });
     }
+
 
     private void clearHighlights() {
         for (ObservableList<CellWrapper> rowData : spreadsheetTableView.getItems()) {
@@ -575,7 +587,7 @@ public class SheetController {
             return new ReadOnlyObjectWrapper<>(index + 1);
         });
         rowNumberCol.setSortable(false);
-        rowNumberCol.setPrefWidth(50); // Adjust width as needed
+        rowNumberCol.setPrefWidth(50);
         spreadsheetTableView.getColumns().add(0, rowNumberCol);
     }
 
@@ -606,19 +618,39 @@ public class SheetController {
             for (Coordinate coord : rangeCoordinates) {
                 int row = coord.getRow();
                 int col = coord.getColumn();
+
+                // Ensure rowData exists for the given row
+                if (row >= spreadsheetTableView.getItems().size()) {
+                    System.out.println("Row out of bounds: " + row);
+                    continue; // Skip if row is out of bounds
+                }
+
                 ObservableList<CellWrapper> rowData = spreadsheetTableView.getItems().get(row);
+
+                // Ensure CellWrapper exists for the given column
+                if (col >= rowData.size()) {
+                    System.out.println("Column out of bounds: " + col);
+                    continue; // Skip if column is out of bounds
+                }
+
                 CellWrapper cellWrapper = rowData.get(col);
 
-                // Apply a highlight style
-                cellWrapper.setHighlightStyle("-fx-background-color: #FFD699;");
+                // Handle empty cells (if cellWrapper.getCell() is null)
+                if (cellWrapper.getCell() == null) {
+                    System.out.println("Empty cell at: " + row + "," + col);
+                    cellWrapper.setHighlightStyle("-fx-background-color: #FFD699;"); // Highlight empty cell
+                } else {
+                    System.out.println("Highlighting non-empty cell at: " + row + "," + col);
+                    cellWrapper.setHighlightStyle("-fx-background-color: #FFD699;");  // Highlight non-empty cell
+                }
+                System.out.println("CellWrapper: " + cellWrapper.getHighlightStyle() + " at row " + row + " col " + col);
+
             }
 
             // Refresh the table to show the updated highlights
             spreadsheetTableView.refresh();
         });
     }
-
-
 
 
 
