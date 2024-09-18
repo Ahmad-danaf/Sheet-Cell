@@ -2,16 +2,20 @@ package desktop.body;
 
 import com.sheetcell.engine.Engine;
 import com.sheetcell.engine.EngineImpl;
+import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.utils.RangeValidator;
 import desktop.CellRange;
+import desktop.CellWrapper;
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -102,6 +106,19 @@ public class BodyController {
             adjustColumnHeight();
         });
 
+        versionSelector.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null && !newValue.isEmpty()) {
+                // Parse the selected version number
+                int selectedVersion = extractNewVersionSheet(newValue);
+                int currentVersion = engine.getReadOnlySheet()!=null ? engine.getReadOnlySheet().getVersion() : 0;
+
+                // Only display the popup if a past version is selected
+                if (selectedVersion < currentVersion && selectedVersion > 0) {
+                    handleVersionSelection(selectedVersion);
+                }
+            }
+        });
+
 
     }
 
@@ -147,6 +164,11 @@ public class BodyController {
                         // Pass the sheet data to the SheetController
                         SheetReadActions sheetData = engine.getReadOnlySheet();
                         spreadsheetGridController.displaySheet(sheetData);
+                        Platform.runLater(() -> {
+                            versionSelector.getItems().clear();
+                            versionSelector.getItems().add("Version 1"+ " Cells Changed: "+engine.getReadOnlySheet().getCellChangeCount());
+                            versionSelector.getSelectionModel().select(0); // Select the first version
+                        });
 
                         // Update the file path field on the UI thread
                         Platform.runLater(() -> filePathField.setText(file.getAbsolutePath()));
@@ -349,7 +371,11 @@ public class BodyController {
             spreadsheetGridController.refreshSpreadsheet();
             int newVersion = engine.getReadOnlySheet().getCell(row, column).getVersion();
             lastUpdateCellVersion.setText(String.valueOf(newVersion));
-
+            int newVersionSheet = engine.getReadOnlySheet().getVersion();
+            Platform.runLater(() -> {
+                versionSelector.getItems().add("Version " + newVersionSheet + " Cells Changed: "+engine.getReadOnlySheet().getCellChangeCount());
+                versionSelector.getSelectionModel().selectLast();
+            });
             spreadsheetGridController.reselectCell(row, column);
             showAlert("Cell Updated", "Cell value updated successfully.");
         } catch (Exception e) {
@@ -369,6 +395,30 @@ public class BodyController {
 
             spreadsheetGridController.applyCellStyle(row, column, style);
         }
+    }
+
+    @FXML
+    private void handleVersionSelection(int selectedVersion) {
+        try {
+            // Fetch the sheet for the selected version
+            SheetReadActions versionSheet = engine.getSheetVersion(selectedVersion);
+
+            // Pass the versioned sheet to the SheetController to display in a popup
+            spreadsheetGridController.displayVersionInPopup(versionSheet, selectedVersion);
+            
+        } catch (Exception e) {
+            showError("Error displaying version", e.getMessage());
+        }
+    }
+
+
+
+    public static int extractNewVersionSheet(String input) {
+        // Use split method to break the string at "Version " and " Cells Changed:"
+        String[] parts = input.split("Version | Cells Changed:");
+
+        // The newVersionSheet will be in the second part of the split array
+        return Integer.parseInt(parts[1].trim());
     }
 
 

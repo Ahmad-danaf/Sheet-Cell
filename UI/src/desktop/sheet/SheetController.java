@@ -653,6 +653,51 @@ public class SheetController {
     }
 
 
+    public void displayVersionInPopup(SheetReadActions versionSheet, int versionNumber) {
+        Stage versionStage = new Stage();
+        versionStage.setTitle("Version " + versionNumber);
+
+        TableView<ObservableList<CellWrapper>> versionTableView = new TableView<>();
+        versionTableView.setEditable(false);
+
+        // Add columns and populate rows as in displaySheet method
+        // No styling, raw content only
+        Platform.runLater(() -> {
+            int maxRows = versionSheet.getMaxRows();
+            int maxColumns = versionSheet.getMaxColumns();
+
+            // Create columns
+            for (int colIndex = 0; colIndex < maxColumns; colIndex++) {
+                String columnName = getColumnName(colIndex);
+                TableColumn<ObservableList<CellWrapper>, CellWrapper> column = new TableColumn<>(columnName);
+
+                final int col = colIndex;
+                column.setCellValueFactory(cellData -> {
+                    ObservableList<CellWrapper> row = cellData.getValue();
+                    CellWrapper cellWrapper = row.get(col);
+                    return new ReadOnlyObjectWrapper<>(cellWrapper);
+                });
+                versionTableView.getColumns().add(column);
+            }
+
+            // Populate rows
+            ObservableList<ObservableList<CellWrapper>> data = FXCollections.observableArrayList();
+            for (int rowIndex = 0; rowIndex < maxRows; rowIndex++) {
+                ObservableList<CellWrapper> rowData = FXCollections.observableArrayList();
+                for (int colIndex = 0; colIndex < maxColumns; colIndex++) {
+                    Cell cell = versionSheet.getCell(rowIndex, colIndex);
+                    CellWrapper cellWrapper = new CellWrapper(cell, rowIndex, colIndex);
+                    rowData.add(cellWrapper);
+                }
+                data.add(rowData);
+            }
+            versionTableView.setItems(data);
+        });
+
+        Scene versionScene = new Scene(new VBox(versionTableView));
+        versionStage.setScene(versionScene);
+        versionStage.show();
+    }
 
 
 }
