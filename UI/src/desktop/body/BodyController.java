@@ -35,6 +35,8 @@ public class BodyController {
     private Engine engine;
 
     @FXML
+    private ScrollPane mainScrollPane;
+    @FXML
     private BorderPane mainPane;
 
     // Top section components

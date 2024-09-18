@@ -171,7 +171,7 @@ public class SheetController {
     public void displaySheet(SheetReadActions sheetData) {
         Platform.runLater(() -> {
             this.sheetData = sheetData;
-
+            adjustAllColumnWidth(sheetData.getColumnWidth());
             // Clear existing data
             spreadsheetTableView.getColumns().clear();
             spreadsheetTableView.getItems().clear();
@@ -605,6 +605,17 @@ public class SheetController {
         Platform.runLater(() -> {
             TableColumn<ObservableList<CellWrapper>, CellWrapper> column = (TableColumn<ObservableList<CellWrapper>, CellWrapper>) spreadsheetTableView.getColumns().get(columnIndex);
             column.setPrefWidth(weight);
+            spreadsheetTableView.refresh();
+        });
+    }
+
+    //adjust column width for all columns exepect column 0(the column that have row numbers)
+    public void adjustAllColumnWidth(int weight) {
+        Platform.runLater(() -> {
+            for (int i = 1; i < spreadsheetTableView.getColumns().size(); i++) {
+                TableColumn<ObservableList<CellWrapper>, CellWrapper> column = (TableColumn<ObservableList<CellWrapper>, CellWrapper>) spreadsheetTableView.getColumns().get(i);
+                column.setPrefWidth(weight);
+            }
             spreadsheetTableView.refresh();
         });
     }
