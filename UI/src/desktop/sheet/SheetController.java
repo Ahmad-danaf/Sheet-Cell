@@ -6,6 +6,7 @@ import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.cell.EffectiveValue;
 import com.sheetcell.engine.cell.CellType;
+import com.sheetcell.engine.utils.RangeValidator;
 import desktop.utils.CellRange;
 import desktop.utils.CellWrapper;
 import desktop.body.BodyController;
@@ -266,7 +267,7 @@ public class SheetController {
     }
 
 
-    private String getColumnName(int colIndex) {
+    public String getColumnName(int colIndex) {
         // Convert column index to column name (e.g., 0 -> "A", 1 -> "B", ...)
         StringBuilder columnName = new StringBuilder();
         int tempIndex = colIndex;
@@ -576,6 +577,131 @@ public class SheetController {
         });
     }
 
+
+    public List<String> getUniqueValuesInColumn(int columnIndex) {
+        Set<String> uniqueValues = new HashSet<>();
+
+        ObservableList<ObservableList<CellWrapper>> data = spreadsheetTableView.getItems();
+
+        for (ObservableList<CellWrapper> row : data) {
+            if (columnIndex >= 0 && columnIndex < row.size()) {
+                CellWrapper cellWrapper = row.get(columnIndex);
+                if (cellWrapper != null && cellWrapper.getCell() != null) {
+                    EffectiveValue effectiveValue = cellWrapper.getCell().getEffectiveValue();
+                    if (effectiveValue != null) {
+                        String value = effectiveValue.getValue().toString();
+                        if (value != null && !value.isEmpty() && ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value))) {
+                            value=value.toUpperCase();
+                        }
+                        uniqueValues.add(value);
+                    }
+                }
+            }
+        }
+        return new ArrayList<>(uniqueValues);
+    }
+
+    public void showFilteredData(CellRange range, int filterColumnIndex, List<String> selectedValues) {
+        Platform.runLater(() -> {
+            ObservableList<ObservableList<CellWrapper>> data = spreadsheetTableView.getItems();
+            List<ObservableList<CellWrapper>> filteredData = new ArrayList<>();
+
+            // Loop through each row within the range
+            for (int i = range.startRow; i <= range.endRow; i++) {
+                ObservableList<CellWrapper> originalRow = data.get(i);
+                CellWrapper cellToFilter = originalRow.get(filterColumnIndex);
+
+                if (cellToFilter != null && cellToFilter.getCell() != null) {
+                    EffectiveValue effectiveValue = cellToFilter.getCell().getEffectiveValue();
+                    if (effectiveValue != null) {
+                        String cellValue = effectiveValue.getValue().toString();
+
+                        // Check if the cell value is one of the selected values
+                        if (selectedValues.contains(cellValue)) {
+                            // Create a copy of the row with its styles
+                            ObservableList<CellWrapper> rowCopy = FXCollections.observableArrayList();
+                            for (int j = range.startCol; j <= range.endCol; j++) {
+                                CellWrapper originalCell = originalRow.get(j);
+                                CellWrapper cellCopy = new CellWrapper(originalCell.getCell(), originalCell.getOriginalRow(), originalCell.getColumn());
+                                cellCopy.setStyle(originalCell.getStyle());
+                                rowCopy.add(cellCopy);
+                            }
+                            filteredData.add(rowCopy);
+                        }
+                    }
+                }
+            }
+
+            // Display the filtered data in a popup
+            displayFilteredDataInPopup(filteredData, range);
+        });
+    }
+
+    private void displayFilteredDataInPopup(List<ObservableList<CellWrapper>> filteredData, CellRange range) {
+        // Create a new TableView to display the filtered data
+        TableView<ObservableList<CellWrapper>> filteredTableView = new TableView<>();
+        filteredTableView.setEditable(false);
+
+        // Add row number column
+        TableColumn<ObservableList<CellWrapper>, Number> rowNumberCol = new TableColumn<>("#");
+        rowNumberCol.setCellValueFactory(cellData -> {
+            int originalRowIndex = cellData.getValue().get(0).getOriginalRow();
+            return new ReadOnlyObjectWrapper<>(originalRowIndex + 1);
+        });
+        rowNumberCol.setSortable(false);
+        rowNumberCol.setPrefWidth(50);
+        filteredTableView.getColumns().add(rowNumberCol);
+
+        // Create columns based on the range
+        for (int colIndex = range.startCol; colIndex <= range.endCol; colIndex++) {
+            String columnName = getColumnName(colIndex);
+            TableColumn<ObservableList<CellWrapper>, CellWrapper> column = new TableColumn<>(columnName);
+
+            final int col = colIndex - range.startCol;
+
+            column.setCellValueFactory(cellData -> {
+                ObservableList<CellWrapper> row = cellData.getValue();
+                if (col < row.size()) { // Ensure we don't go out of bounds
+                    CellWrapper cellWrapper = row.get(col);
+                    return new ReadOnlyObjectWrapper<>(cellWrapper);
+                }
+                return null;
+            });
+
+            // Configure cell factory
+            configureCellFactoryForPopup(column);
+
+            // Disable sorting on the columns in the pop-up
+            column.setSortable(false);
+
+            filteredTableView.getColumns().add(column);
+        }
+
+        // Set the filtered data to the TableView
+        if (filteredData.isEmpty()) {
+            System.out.println("No rows matched the filter criteria.");
+        } else {
+            System.out.println("Filtered rows: " + filteredData.size());
+        }
+
+        filteredTableView.setItems(FXCollections.observableArrayList(filteredData));
+
+        // Create a new Stage (window) to display the filtered TableView
+        Stage popupStage = new Stage();
+        popupStage.setTitle("Filtered Data");
+        popupStage.initModality(Modality.APPLICATION_MODAL);
+
+        // Add a close button
+        Button closeButton = new Button("Close");
+        closeButton.setOnAction(e -> popupStage.close());
+
+        VBox vbox = new VBox(filteredTableView, closeButton);
+        Scene scene = new Scene(vbox);
+
+        popupStage.setScene(scene);
+        popupStage.show();
+    }
+
     public void resetCellStyle(int row, int column) {
         Platform.runLater(() -> {
             int adjustedColumn = column;
@@ -721,5 +847,64 @@ public class SheetController {
         versionStage.show();
     }
 
+    public void applyMultiColumnFilter(String range, Map<Integer, List<String>> filterCriteria) {
+        System.out.println("In applyMultiColumnFilter");
+        System.out.println("Range: " + range);
+        System.out.println("Filter criteria: ");
+        // Print out the filter criteria
+        for (Map.Entry<Integer, List<String>> entry : filterCriteria.entrySet()) {
+            int key = entry.getKey();
+            List<String> value = entry.getValue();
+            System.out.println("Key: " + key + " Value: " + value);
+        }
+
+        RangeValidator rangeValidator = new RangeValidator(engine.getReadOnlySheet().getMaxRows(), engine.getReadOnlySheet().getMaxColumns());
+        Coordinate[] rangeCoords = rangeValidator.parseRange(range);
+
+        // Print the coordinates
+        System.out.println("Start row: " + rangeCoords[0].getRow() + " Start column: " + rangeCoords[0].getColumn());
+        System.out.println("End row: " + rangeCoords[1].getRow() + " End column: " + rangeCoords[1].getColumn());
+
+        int startRow = rangeCoords[0].getRow();
+        int startCol = rangeCoords[0].getColumn();
+        int endRow = rangeCoords[1].getRow();
+        int endCol = rangeCoords[1].getColumn();
+
+        Set<Integer> matchingRowIndices = new HashSet<>();
+
+        for (Map.Entry<Integer, List<String>> entry : filterCriteria.entrySet()) {
+            int colIndex = entry.getKey();
+            List<String> selectedValues = entry.getValue();
+
+            System.out.println("Applying filter for column: " + colIndex);
+
+            for (int rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
+                ObservableList<CellWrapper> row = spreadsheetTableView.getItems().get(rowIndex);
+                CellWrapper cellWrapper = row.get(colIndex);
+
+                if (cellWrapper != null && cellWrapper.getCell() != null) {
+                    EffectiveValue chosenValue = cellWrapper.getCell().getEffectiveValue();
+                    String cellValue = chosenValue != null ? chosenValue.getValue().toString() : "";
+
+                    if ("true".equalsIgnoreCase(cellValue) || "false".equalsIgnoreCase(cellValue)) {
+                        cellValue = cellValue.toUpperCase();
+                    }
+
+                    if (selectedValues.contains(cellValue)) {
+                        matchingRowIndices.add(rowIndex);
+                    }
+                }
+            }
+        }
+
+        ObservableList<ObservableList<CellWrapper>> filteredData = FXCollections.observableArrayList();
+        for (int rowIndex : matchingRowIndices) {
+            ObservableList<CellWrapper> row = spreadsheetTableView.getItems().get(rowIndex);
+            filteredData.add(row);
+        }
+
+        CellRange cellRange = new CellRange(startRow, startCol, endRow, endCol);
+        displayFilteredDataInPopup(filteredData, cellRange);
+    }
 
 }

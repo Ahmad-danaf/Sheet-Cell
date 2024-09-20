@@ -98,6 +98,11 @@
                               <Tooltip text="Filter table data" />
                            </tooltip>
                         </Button>
+                        <Button fx:id="multiColumnFilter" mnemonicParsing="false" onAction="#handleMultiColumnFilter" text="Multi-Column Filter">
+                           <tooltip>
+                              <Tooltip text="Filter the table data by multiple columns" />
+                           </tooltip>
+                        </Button>
                      </children>
                   </VBox>
                </TitledPane>
