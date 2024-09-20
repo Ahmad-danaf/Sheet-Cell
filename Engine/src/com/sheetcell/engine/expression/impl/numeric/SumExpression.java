@@ -26,7 +26,7 @@ public class SumExpression implements RangeExpression {
         Set<Coordinate> coordinates = sheet.getRangeCoordinates(rangeName);
 
         if (coordinates.isEmpty()) {
-            throw new IllegalArgumentException("Error: The specified range '" + rangeName + "' does not exist.");
+            return new EffectiveValue(CellType.NUMERIC, Double.NaN);
         }
 
         double sum = 0;
@@ -34,7 +34,7 @@ public class SumExpression implements RangeExpression {
             Cell cell = sheet.getCell(coordinate.getRow(), coordinate.getColumn());
             if (cell != null && cell.getEffectiveValue() != null) {
                 Double numericValue = cell.getEffectiveValue().castValueTo(Double.class);
-                if (numericValue != null) {
+                if (numericValue != null && !numericValue.isNaN()) {
                     sum += numericValue;
                 }
             }

@@ -28,7 +28,7 @@ public class AverageExpression implements RangeExpression {
         Set<Coordinate> coordinates = sheet.getRangeCoordinates(rangeName);
 
         if (coordinates.isEmpty()) {
-            throw new IllegalArgumentException("Error: The specified range '" + rangeName + "' does not exist.");
+            return new EffectiveValue(CellType.NUMERIC, Double.NaN);
         }
 
         double sum = 0;
@@ -37,7 +37,7 @@ public class AverageExpression implements RangeExpression {
             Cell cell = sheet.getCell(coordinate.getRow(), coordinate.getColumn());
             if (cell != null && cell.getEffectiveValue() != null) {
                 Double numericValue = cell.getEffectiveValue().castValueTo(Double.class);
-                if (numericValue != null) {
+                if (numericValue != null && !numericValue.isNaN()) {
                     sum += numericValue;
                     count++;
                 }
@@ -45,7 +45,7 @@ public class AverageExpression implements RangeExpression {
         }
 
         if (count == 0) {
-            throw new IllegalArgumentException("Error: The specified range '" + rangeName + "' does not contain any numeric cells.");
+            return new EffectiveValue(CellType.NUMERIC, Double.NaN);
         }
         sheet.markRangeAsUsed(rangeName);
         double average = sum / count;

@@ -17,7 +17,6 @@ public class RangeFactory implements Serializable {
 
 
     public RangeFactory() {
-        // Prevent instantiation
         ranges = new HashMap<>();
     }
 

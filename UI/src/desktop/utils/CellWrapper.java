@@ -1,4 +1,4 @@
-package desktop;
+package desktop.utils;
 
 import com.sheetcell.engine.cell.Cell;
 
@@ -56,6 +56,15 @@ public class CellWrapper {
 
     @Override
     public String toString() {
-        return cell != null && cell.getEffectiveValue()!=null ? cell.getEffectiveValue().toString() : "" ;
+        String value = cell != null && cell.getEffectiveValue()!=null ? cell.getEffectiveValue().toString() : "" ;
+        if (value.isEmpty()){
+            return "";
+        }
+        if (value.equalsIgnoreCase("true")) {
+            return "TRUE";
+        } else if (value.equalsIgnoreCase("false")) {
+            return "FALSE";
+        }
+        return value;
     }
 }

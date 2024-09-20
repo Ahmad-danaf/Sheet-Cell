@@ -29,6 +29,8 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
     private int columnWidth;
     private int CellChangeCount;
     RangeFactory rangeFactory;
+    private Map<Coordinate, Set<Coordinate>> dependenciesMap;
+    private Map<Coordinate, Set<Coordinate>> influencedMap;
 
     // Constructor
     public Sheet(String name, int MaxRows, int MaxColumns,int rowHeight, int columnWidth) {
@@ -42,6 +44,8 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         this.columnWidth = columnWidth;
         this.CellChangeCount = 0;
         rangeFactory = new RangeFactory();
+        dependenciesMap = new HashMap<>();
+        influencedMap = new HashMap<>();
     }
 
     // Getters
@@ -87,6 +91,31 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         return activeCells.get(CoordinateFactory.createCoordinate(row, column));
     }
 
+    public Set<Coordinate> getDependencies(Coordinate coord) {
+        return dependenciesMap.getOrDefault(coord, Collections.emptySet());
+    }
+
+    public Set<Coordinate> getInfluenced(Coordinate coord) {
+        return influencedMap.getOrDefault(coord, Collections.emptySet());
+    }
+
+    public Set<Coordinate> getDependenciesForCell(int row, int column) {
+        Coordinate coord = CoordinateFactory.createCoordinate(row, column);
+        return getDependencies(coord);
+    }
+
+    public Set<Coordinate> getInfluencedForCell(int row, int column) {
+        Coordinate coord = CoordinateFactory.createCoordinate(row, column);
+        return getInfluenced(coord);
+    }
+
+    public void addDependency(Coordinate callingCoord, Coordinate referencedCoord) {
+        dependenciesMap.computeIfAbsent(callingCoord, k -> new HashSet<>()).add(referencedCoord);
+        influencedMap.computeIfAbsent(referencedCoord, k -> new HashSet<>()).add(callingCoord);
+    }
+
+
+
     @Override
     public String getOriginalValue(int row, int column) {
         Cell cell = activeCells.get(CoordinateFactory.createCoordinate(row, column));
@@ -105,8 +134,26 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
     @Override
     public SheetUpdateResult setCell(int row, int column, String value) {
         Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
+        Cell doesOldCellExist = activeCells.get(coordinate);
+        if (doesOldCellExist!=null && doesOldCellExist.getOriginalValue()!= null &&
+                doesOldCellExist.getOriginalValue().equals(value)){
+            return new SheetUpdateResult(this,
+                    "The cell at " + CoordinateFactory.convertIndexToCellCord(row, column) +
+                            " already has the value " + value + ". No action was taken.", true);
+        }
         Set<String> backupActiveRangesSet = new HashSet<>(activeRanges);
         activeRanges.clear();
+        Map<Coordinate, Set<Coordinate>> dependenciesBackup = new HashMap<>();
+        Map<Coordinate, Set<Coordinate>> influencedBackup = new HashMap<>();
+        for (Map.Entry<Coordinate, Set<Coordinate>> entry : dependenciesMap.entrySet()) {
+            dependenciesBackup.put(entry.getKey(), new HashSet<>(entry.getValue()));
+        }
+        for (Map.Entry<Coordinate, Set<Coordinate>> entry : influencedMap.entrySet()) {
+            influencedBackup.put(entry.getKey(), new HashSet<>(entry.getValue()));
+        }
+        dependenciesBackup.clear();
+        influencedBackup.clear();
+
         Sheet newSheetVersion = copySheet();
         newSheetVersion.resetCellChangeCount();
 
@@ -127,6 +174,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
                     cell.getInfluencedCells().remove(oldCell);
                 }
             }
+
         }
 
         Cell newCell = new Cell(row, column, value, newSheetVersion.getVersion() +1 , newSheetVersion);
@@ -166,7 +214,13 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
                     cell.getInfluencedCells().addAll(entry.getValue());
                 }
             }
+            activeRanges.clear();
             activeRanges.addAll(backupActiveRangesSet);
+            dependenciesMap.clear();
+            dependenciesMap.putAll(dependenciesBackup);
+
+            influencedMap.clear();
+            influencedMap.putAll(influencedBackup);
             return new SheetUpdateResult(this, e.getMessage());
         }
     }
@@ -174,16 +228,26 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
     @Override
     public SheetUpdateResult deleteCell(int row, int column) {
         Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
+        if (!activeCells.containsKey(coordinate)) {
+            return new SheetUpdateResult(this, "The cell at " + CoordinateFactory.convertIndexToCellCord(row, column) + " is already empty or does not exist. No action was taken.", true);
+        }
         Set<String> backupActiveRangesSet = new HashSet<>(activeRanges);
         activeRanges.clear();
+        Map<Coordinate, Set<Coordinate>> dependenciesBackup = new HashMap<>();
+        Map<Coordinate, Set<Coordinate>> influencedBackup = new HashMap<>();
+        for (Map.Entry<Coordinate, Set<Coordinate>> entry : dependenciesMap.entrySet()) {
+            dependenciesBackup.put(entry.getKey(), new HashSet<>(entry.getValue()));
+        }
+        for (Map.Entry<Coordinate, Set<Coordinate>> entry : influencedMap.entrySet()) {
+            influencedBackup.put(entry.getKey(), new HashSet<>(entry.getValue()));
+        }
+        dependenciesBackup.clear();
+        influencedBackup.clear();
         // Create a new version of the sheet
         Sheet newSheetVersion = copySheet();
         newSheetVersion.resetCellChangeCount();
         newSheetVersion.setCellChangeCount(1);
         Cell cellToDelete = newSheetVersion.activeCells.remove(coordinate);
-        if (cellToDelete == null) {
-            return new SheetUpdateResult(this, "The cell at " + CoordinateFactory.convertIndexToCellCord(row, column) + " is already empty or does not exist. No action was taken.", true);
-        }
         Map<Coordinate, Cell> newActiveSheetVersion = newSheetVersion.getActiveCells();
         // Remove the deleted cell from the dependencies of other cells
         for (Cell cell : newActiveSheetVersion.values()) {
@@ -211,7 +275,13 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
             return new SheetUpdateResult(newSheetVersion, null);
         } catch (Exception e) {
             // Return the current sheet with the error message
+            activeCells.clear();
             activeRanges.addAll(backupActiveRangesSet);
+            dependenciesMap.clear();
+            dependenciesMap.putAll(dependenciesBackup);
+
+            influencedMap.clear();
+            influencedMap.putAll(influencedBackup);
             return new SheetUpdateResult(this, e.getMessage());
         }
     }
@@ -242,7 +312,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
             ReferenceExpression refExpr = (ReferenceExpression) expression;
             Coordinate refCoord = refExpr.getCoordinate();
             Cell referencedCell = activeCells.get(refCoord);
-
+            addDependency(callingCell.getCoordinate(), refCoord);
             if (referencedCell != null) {
                 callingCell.addDependency(referencedCell);
                 referencedCell.addInfluencedCell(callingCell);
@@ -254,13 +324,11 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
             // Get the coordinates of the range
             Set<Coordinate> rangeCoordinates = rangeFactory.getRange(rangeName);
 
-            if (rangeCoordinates.isEmpty()) {
-                throw new IllegalArgumentException("Error: The specified range '" + rangeName + "' does not exist.");
-            }
 
             // Add each cell in the range as a dependency
             for (Coordinate coord : rangeCoordinates) {
                 Cell rangeCell = activeCells.get(coord);
+                addDependency(callingCell.getCoordinate(), coord);
                 if (rangeCell != null) {
                     callingCell.addDependency(rangeCell);
                     rangeCell.addInfluencedCell(callingCell);

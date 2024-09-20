@@ -6,29 +6,21 @@ import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.cell.EffectiveValue;
 import com.sheetcell.engine.cell.CellType;
-import desktop.CellRange;
-import desktop.CellWrapper;
+import desktop.utils.CellRange;
+import desktop.utils.CellWrapper;
 import desktop.body.BodyController;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.scene.control.TableColumn.CellDataFeatures;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.util.Callback;
-import javafx.scene.text.TextAlignment;
 import javafx.geometry.Pos;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.scene.control.TablePosition;
 
 
 import java.util.*;
@@ -96,7 +88,9 @@ public class SheetController {
                 }
 
                 // Highlight precedents and dependents
-                highlightPrecedentsAndDependents(cell);
+                System.out.println("Row: " + row + ", Column: " + dataColumnIndex);
+                System.out.println("Cell: " + cellAddress);
+                highlightPrecedentsAndDependents(row,dataColumnIndex);
             } else {
                 // No cell selected; clear selection in BodyController
                 if (bodyController != null) {
@@ -111,24 +105,33 @@ public class SheetController {
     }
 
 
-    private void highlightPrecedentsAndDependents(Cell selectedCell) {
+    private void highlightPrecedentsAndDependents(int row, int column) {
         // Clear previous highlights
         clearHighlights();
-
+        Cell selectedCell = sheetData.getCell(row, column);
         // Get precedents and dependents
         List<Cell> precedents = selectedCell!= null ? selectedCell.getInfluencedCells() : new ArrayList<>();
         List<Cell> dependents = selectedCell!= null ? selectedCell.getDependencies() : new ArrayList<>();
 
-        // Highlight precedents in light blue
+        // Highlight precedents in light green
         String precedentStyle = "-fx-background-color: lightgreen;";
         for (Cell precedent : precedents) {
             highlightCell(precedent, precedentStyle);
         }
 
-        // Highlight dependents in light green
+        // Highlight dependents in light blue
         String dependentStyle = "-fx-background-color: lightblue;";
         for (Cell dependent : dependents) {
             highlightCell(dependent, dependentStyle);
+        }
+        // highlight even empty cells
+        Set <Coordinate> emptydependents = engine.getDependenciesForCell(row, column);
+        for (Coordinate emptydependent : emptydependents) {
+            highlightEmptyCell(emptydependent.getRow(),emptydependent.getColumn(), dependentStyle);
+        }
+        Set<Coordinate> emptyprecedents = engine.getInfluencedForCell(row, column);
+        for (Coordinate emptyprecedent : emptyprecedents) {
+            highlightEmptyCell(emptyprecedent.getRow(),emptyprecedent.getColumn(), precedentStyle);
         }
 
         // Refresh the table to apply styles
@@ -141,6 +144,14 @@ public class SheetController {
         }
         int row = cell.getCoordinate().getRow();
         int column = cell.getCoordinate().getColumn();
+
+        // Get the cell wrapper and apply style
+        ObservableList<CellWrapper> rowData = spreadsheetTableView.getItems().get(row);
+        CellWrapper cellWrapper = rowData.get(column);
+        cellWrapper.setHighlightStyle(style);
+    }
+
+    private void highlightEmptyCell(int row,int column, String style) {
 
         // Get the cell wrapper and apply style
         ObservableList<CellWrapper> rowData = spreadsheetTableView.getItems().get(row);

@@ -27,6 +27,7 @@ public interface Engine {
     Set<String> getAllRanges();
     void deleteRange(String rangeName);
     Set<Coordinate> getRangeCoordinates(String rangeName);
-
+    Set<Coordinate> getDependenciesForCell(int row, int col);
+    Set<Coordinate> getInfluencedForCell(int row, int col);
 
 }

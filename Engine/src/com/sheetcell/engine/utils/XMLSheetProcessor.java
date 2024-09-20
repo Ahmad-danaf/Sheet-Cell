@@ -126,7 +126,7 @@ public class XMLSheetProcessor {
             ReferenceExpression refExpr = (ReferenceExpression) expression;
             Coordinate refCoord = refExpr.getCoordinate();
             Cell referencedCell = activeCells.get(refCoord);
-
+            currentSheet.addDependency(callingCell.getCoordinate(), refCoord);
             if (referencedCell != null) {
                 callingCell.addDependency(referencedCell);
                 referencedCell.addInfluencedCell(callingCell);
@@ -138,12 +138,10 @@ public class XMLSheetProcessor {
             // Get the coordinates of the range
             Set<Coordinate> rangeCoordinates = currentSheet.getRangeFactory().getRange(rangeName);
 
-            if (rangeCoordinates.isEmpty()) {
-                throw new IllegalArgumentException("Error: The specified range '" + rangeName + "' does not exist.");
-            }
             // Add each cell in the range as a dependency
             for (Coordinate coord : rangeCoordinates) {
                 Cell referencedCell = activeCells.get(coord);
+                currentSheet.addDependency(callingCell.getCoordinate(), coord);
                 if (referencedCell != null) {
                     callingCell.addDependency(referencedCell);
                     referencedCell.addInfluencedCell(callingCell);

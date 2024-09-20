@@ -239,4 +239,16 @@ public class EngineImpl implements Engine, Serializable {
         }
         return currentSheet.getRangeCoordinates(rangeName);
     }
+
+    @Override
+    public Set<Coordinate> getDependenciesForCell(int row, int col) {
+        doesCellIdVaild(CoordinateFactory.convertIndexToCellCord(row, col));
+        return currentSheet.getDependenciesForCell(row, col);
+    }
+
+    @Override
+    public Set<Coordinate> getInfluencedForCell(int row, int col) {
+        doesCellIdVaild(CoordinateFactory.convertIndexToCellCord(row, col));
+        return currentSheet.getInfluencedForCell(row, col);
+    }
 }

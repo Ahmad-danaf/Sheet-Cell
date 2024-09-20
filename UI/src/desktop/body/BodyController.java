@@ -7,12 +7,9 @@ import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.utils.RangeValidator;
-import desktop.CellRange;
-import desktop.CellWrapper;
+import com.sheetcell.engine.utils.SheetUpdateResult;
+import desktop.utils.CellRange;
 import javafx.application.Platform;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -38,7 +35,6 @@ public class BodyController {
     private ScrollPane mainScrollPane;
     @FXML
     private BorderPane mainPane;
-
     // Top section components
     @FXML
     private Button loadFileButton;
@@ -60,7 +56,6 @@ public class BodyController {
     private ChoiceBox<String> versionSelector;
 
     // Left section components
-
     @FXML
     private Button sortButton;
     @FXML
@@ -90,7 +85,7 @@ public class BodyController {
     @FXML
     private HBox columnHeightControls;
 
-    private Map<Integer, Integer> columnHeights = new HashMap<>();
+    boolean isSheetLoaded = false;
 
 
 
@@ -166,6 +161,7 @@ public class BodyController {
                         // Pass the sheet data to the SheetController
                         SheetReadActions sheetData = engine.getReadOnlySheet();
                         spreadsheetGridController.displaySheet(sheetData);
+                        isSheetLoaded = true;
                         Platform.runLater(() -> {
                             versionSelector.getItems().clear();
                             versionSelector.getItems().add("Version 1"+ " Cells Changed: "+engine.getReadOnlySheet().getCellChangeCount());
@@ -229,6 +225,10 @@ public class BodyController {
 
     @FXML
     private void handleSort(ActionEvent event) {
+        if (!isSheetLoaded) {
+            showAlert("No sheet loaded", "Please load a spreadsheet file to sort data.");
+            return;
+        }
         // Display a dialog to collect sorting parameters
         Dialog<SortParameters> dialog = createSortDialog();
         Optional<SortParameters> result = dialog.showAndWait();
@@ -346,9 +346,13 @@ public class BodyController {
         // Check if the columns are within the valid range of the sheet
         List<Integer> columns = parseColumns(columnsInput);
         int maxColumns = engine.getReadOnlySheet().getMaxColumns();
+        Set<Integer> uniqueColumns = new HashSet<>();
         for (int column : columns) {
             if (column < 0 || column >= maxColumns) {
                 throw new IllegalArgumentException("Column out of bounds. Please enter valid columns.");
+            }
+            if (!uniqueColumns.add(column)) {
+                throw new IllegalArgumentException("Column " + CoordinateFactory.convertIndexToColumnLabel(column) + " has already been selected. Duplicate selections are not allowed.");
             }
         }
     }
@@ -356,6 +360,10 @@ public class BodyController {
 
     @FXML
     void handleUpdateValue(ActionEvent event) {
+        if (!isSheetLoaded) {
+            showAlert("No sheet loaded", "Please load a spreadsheet file to update cell values.");
+            return;
+        }
         String cellAddress = selectedCellId.getText();
         String newValue = originalCellValue.getText();
         if (cellAddress == null || cellAddress.isEmpty()) {
@@ -369,10 +377,23 @@ public class BodyController {
         int column = getColumnIndex(cellAddress);
 
         try{
-            engine.setCellValue(cellAddress, newValue);
+            engine.doesCellIdVaild(cellAddress);
+            SheetUpdateResult result = engine.setCellValue(cellAddress, newValue);
+            if (result.isNoActionNeeded()) {
+                showAlert(result.getErrorMessage());
+                return;
+            } else if (result.hasError()) {
+                showError("Update failed: ",result.getErrorMessage());
+                return;
+            } else {
+                System.out.println("Cell " + cellAddress + " updated successfully.");
+            }
             spreadsheetGridController.refreshSpreadsheet();
-            int newVersion = engine.getReadOnlySheet().getCell(row, column).getVersion();
-            lastUpdateCellVersion.setText(String.valueOf(newVersion));
+            Cell changedCell = engine.getReadOnlySheet().getCell(row, column);
+            if (changedCell != null) {
+                int newVersion = changedCell.getVersion();
+                lastUpdateCellVersion.setText(String.valueOf(newVersion));
+            }
             int newVersionSheet = engine.getReadOnlySheet().getVersion();
             Platform.runLater(() -> {
                 versionSelector.getItems().add("Version " + newVersionSheet + " Cells Changed: "+engine.getReadOnlySheet().getCellChangeCount());
@@ -387,6 +408,10 @@ public class BodyController {
 
     @FXML
     private void handleApplyStyle(ActionEvent event) {
+        if (!isSheetLoaded) {
+            showAlert("No sheet loaded", "Please load a spreadsheet file to apply cell styles.");
+            return;
+        }
         String cellAddress = selectedCellId.getText();
         if (cellAddress != null && !cellAddress.isEmpty()) {
             int row = getRowIndex(cellAddress);
@@ -401,6 +426,10 @@ public class BodyController {
 
     @FXML
     private void handleVersionSelection(int selectedVersion) {
+        if (!isSheetLoaded) {
+            showAlert("No sheet loaded", "Please load a spreadsheet file to view past versions.");
+            return;
+        }
         try {
             // Fetch the sheet for the selected version
             SheetReadActions versionSheet = engine.getSheetVersion(selectedVersion);
@@ -427,6 +456,10 @@ public class BodyController {
 
     @FXML
     private void handleResetStyle(ActionEvent event) {
+        if (!isSheetLoaded) {
+            showAlert("No sheet loaded", "Please load a spreadsheet file to reset cell styles.");
+            return;
+        }
         String cellAddress = selectedCellId.getText();
         if (cellAddress != null && !cellAddress.isEmpty()) {
             int row = getRowIndex(cellAddress);
@@ -486,6 +519,10 @@ public class BodyController {
 
     @FXML
     private void handleAddRange(ActionEvent event) {
+        if (!isSheetLoaded) {
+            showAlert("No sheet loaded", "Please load a spreadsheet file to define a range.");
+            return;
+        }
         // Create a dialog to input range name and definition
         TextInputDialog rangeDialog = new TextInputDialog();
         rangeDialog.setTitle("Add New Range");
@@ -524,6 +561,10 @@ public class BodyController {
 
     @FXML
     private void handleDeleteRange(ActionEvent event) {
+        if (!isSheetLoaded) {
+            showAlert("No sheet loaded", "Please load a spreadsheet file to delete a range.");
+            return;
+        }
         Set<String> ranges = engine.getAllRanges();
         List<String> rangeList = new ArrayList<>(ranges);
         ChoiceDialog<String> deleteDialog = new ChoiceDialog<>(rangeList.isEmpty() ? null : rangeList.get(0), rangeList);
@@ -546,6 +587,10 @@ public class BodyController {
 
     @FXML
     private void handleViewRange(ActionEvent event) {
+        if (!isSheetLoaded) {
+            showAlert("No sheet loaded", "Please load a spreadsheet file to view ranges.");
+            return;
+        }
         // Fetch all ranges from the engine
         Set<String> ranges = engine.getAllRanges();
 
@@ -579,7 +624,10 @@ public class BodyController {
 
     @FXML
     void handleFilter(ActionEvent event) {
-
+        if (!isSheetLoaded) {
+            showAlert("No sheet loaded", "Please load a spreadsheet file to filter data.");
+            return;
+        }
     }
 
 
@@ -587,6 +635,10 @@ public class BodyController {
     // Handle applying column alignment
     @FXML
     private void handleApplyAlignment(ActionEvent event) {
+        if (!isSheetLoaded) {
+            showAlert("No sheet loaded", "Please load a spreadsheet file to apply column alignment.");
+            return;
+        }
 
     }
 

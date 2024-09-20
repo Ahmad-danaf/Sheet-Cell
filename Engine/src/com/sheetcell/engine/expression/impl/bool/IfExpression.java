@@ -56,7 +56,7 @@ public class IfExpression implements TernaryExpression {
         // Validate that both branches are of the same type
         EffectiveValue otherBranchValue = !conditionResult ? thenExpr.eval(sheet, callingCell) : elseExpr.eval(sheet, callingCell);
         if (resultValue.getCellType() != otherBranchValue.getCellType()) {
-            throw new IllegalArgumentException("Error: The 'then' and 'else' expressions do not produce the same type.");
+            return new EffectiveValue(CellType.BOOLEAN, "UNKNOWN");
         }
 
         return resultValue;
