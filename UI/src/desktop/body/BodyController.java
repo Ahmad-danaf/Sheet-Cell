@@ -115,13 +115,14 @@ public class BodyController {
         });
 
         columnWidthField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.isEmpty() && newValue.matches("\\d*")) {
-                int width = Integer.parseInt(newValue);
-
-                String selectedColumn = columnChoiceBox.getSelectionModel().getSelectedItem();
-                int column = CoordinateFactory.getColumnIndexFromLabel(selectedColumn);
-                engine.setColumnWidth(column, width);
-                spreadsheetGridController.adjustAllColumnWidth();
+            if (newValue.matches("\\d*")) {
+                if (!newValue.isEmpty()) {
+                    int width = Integer.parseInt(newValue);
+                    String selectedColumn = columnChoiceBox.getSelectionModel().getSelectedItem();
+                    int column = CoordinateFactory.getColumnIndexFromLabel(selectedColumn);
+                    engine.setColumnWidth(column, width);
+                    spreadsheetGridController.adjustAllColumnWidth();
+                }
             } else {
                 columnWidthField.setText(oldValue); // Revert to the old value if input is invalid
             }
@@ -215,7 +216,6 @@ public class BodyController {
         if (selectedColumn != null && !selectedColumn.isEmpty()) {
             int column = CoordinateFactory.getColumnIndexFromLabel(selectedColumn);
             columnControls.setVisible(true);
-            columnHeightField.setText(String.valueOf(engine.getColumnProperties(column).getHeight()));
             columnWidthField.setText(String.valueOf(engine.getColumnProperties(column).getWidth()));
             alignmentChoiceBox.setValue(engine.getColumnProperties(column).getAlignment());
         } else {
@@ -225,12 +225,33 @@ public class BodyController {
 
     @FXML
     private void handleRowSelection(ActionEvent event) {
-        int selectedRow = rowChoiceBox.getValue();
+        Integer selectedRow = rowChoiceBox.getValue();
         if(selectedRow != null) {
             rowControls.setVisible(true);
-
+            rowHeightField.setText(String.valueOf(engine.getRowProperties(selectedRow-1).getHeight()));
         } else {
             rowControls.setVisible(false);
+        }
+    }
+
+    @FXML
+    private void handleApplyRowHeight(ActionEvent event) {
+        // Get the selected row and entered row height
+        Integer selectedRow = rowChoiceBox.getValue();
+        String heightText = rowHeightField.getText();
+
+        try {
+            int newRowHeight = Integer.parseInt(heightText);
+
+            // Apply the new row height
+            if (selectedRow != null && newRowHeight > 0) {
+                engine.setRowHeight(selectedRow-1, newRowHeight);
+                spreadsheetGridController.adjustRowHeight(selectedRow-1, newRowHeight);
+            } else {
+                UIHelper.showError("Invalid Input", "Please enter a valid row height.");
+            }
+        } catch (NumberFormatException e) {
+            UIHelper.showError("Invalid Input", "Row height must be a number.");
         }
     }
 

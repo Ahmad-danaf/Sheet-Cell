@@ -5,6 +5,7 @@ import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.sheet.Sheet;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.utils.ColumnProperties;
+import com.sheetcell.engine.utils.RowProperties;
 import com.sheetcell.engine.utils.SheetUpdateResult;
 
 import java.io.IOException;
@@ -28,10 +29,12 @@ public interface Engine {
     Set<Coordinate> getRangeCoordinates(String rangeName);
     Set<Coordinate> getDependenciesForCell(int row, int col);
     Set<Coordinate> getInfluencedForCell(int row, int col);
-    void setColumnProperties(Integer column, String alignment, int height, int width);
+    void setColumnProperties(Integer column, String alignment, int width);
     void setColumnAlignment(Integer column, String alignment);
-    void setColumnHeight(Integer column, int height);
     void setColumnWidth(Integer column, int width);
     ColumnProperties getColumnProperties(Integer column);
+    void setRowProperties(Integer row, int height);
+    void setRowHeight(Integer row, int height);
+    RowProperties getRowProperties(Integer row);
 
 }

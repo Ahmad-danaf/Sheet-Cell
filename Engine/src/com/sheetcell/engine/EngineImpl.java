@@ -20,14 +20,14 @@ public class EngineImpl implements Engine, Serializable {
     private Sheet currentSheet;
     private Map<Integer, Sheet> sheetVersions;
     private final RangeValidator rangeValidator;
-    ColumnPropertyManager columnPropertyManager;
+    ColumnRowPropertyManager columnRowPropertyManager;
 
 
     public EngineImpl() {
         this.sheetVersions = new HashMap<>();
         currentSheet= null;
         this.rangeValidator = new RangeValidator(0, 0);
-        columnPropertyManager = new ColumnPropertyManager();
+        columnRowPropertyManager = new ColumnRowPropertyManager();
     }
 
     @Override
@@ -39,8 +39,8 @@ public class EngineImpl implements Engine, Serializable {
         this.sheetVersions.put(currentSheet.getVersion(), currentSheet);
         this.rangeValidator.setMaxRows(currentSheet.getMaxRows());
         this.rangeValidator.setMaxCols(currentSheet.getMaxColumns());
-        this.columnPropertyManager.clearColumnProperties();
-        this.columnPropertyManager.initColumnProperties(currentSheet.getMaxColumns(), currentSheet.getRowHeight(), currentSheet.getColumnWidth());
+        this.columnRowPropertyManager.clearAllProperties();
+        this.columnRowPropertyManager.initAllProperties(currentSheet.getMaxRows(),currentSheet.getMaxColumns(), currentSheet.getRowHeight(), currentSheet.getColumnWidth());
     }
 
 
@@ -239,11 +239,11 @@ public class EngineImpl implements Engine, Serializable {
     }
 
     @Override
-    public void setColumnProperties(Integer column, String alignment, int height, int width) {
+    public void setColumnProperties(Integer column, String alignment, int width) {
         if (column < 0 || column >= currentSheet.getMaxColumns()) {
             throw new IllegalArgumentException("Invalid column number: " + column + ". Please enter a valid column number.");
         }
-        columnPropertyManager.setColumnProperties(column, alignment, height, width);
+        columnRowPropertyManager.setColumnProperties(column, alignment, width);
     }
 
     @Override
@@ -251,15 +251,7 @@ public class EngineImpl implements Engine, Serializable {
         if (column < 0 || column >= currentSheet.getMaxColumns()) {
             throw new IllegalArgumentException("Invalid column number: " + column + ". Please enter a valid column number.");
         }
-        columnPropertyManager.setColumnAlignment(column, alignment);
-    }
-
-    @Override
-    public void setColumnHeight(Integer column, int height) {
-        if (column < 0 || column >= currentSheet.getMaxColumns()) {
-            throw new IllegalArgumentException("Invalid column number: " + column + ". Please enter a valid column number.");
-        }
-        columnPropertyManager.setColumnHeight(column, height);
+        columnRowPropertyManager.setColumnAlignment(column, alignment);
     }
 
     @Override
@@ -267,7 +259,7 @@ public class EngineImpl implements Engine, Serializable {
         if (column < 0 || column >= currentSheet.getMaxColumns()) {
             throw new IllegalArgumentException("Invalid column number: " + column + ". Please enter a valid column number.");
         }
-        columnPropertyManager.setColumnWidth(column, width);
+        columnRowPropertyManager.setColumnWidth(column, width);
     }
 
     @Override
@@ -275,6 +267,30 @@ public class EngineImpl implements Engine, Serializable {
         if (column < 0 || column >= currentSheet.getMaxColumns()) {
             throw new IllegalArgumentException("Invalid column number: " + column + ". Please enter a valid column number.");
         }
-        return columnPropertyManager.getColumnProperties(column);
+        return columnRowPropertyManager.getColumnProperties(column);
+    }
+
+    @Override
+    public void setRowProperties(Integer row, int height) {
+        if (row < 0 || row >= currentSheet.getMaxRows()) {
+            throw new IllegalArgumentException("Invalid row number: " + row + ". Please enter a valid row number.");
+        }
+        columnRowPropertyManager.setRowProperties(row, height);
+    }
+
+    @Override
+    public void setRowHeight(Integer row, int height) {
+        if (row < 0 || row >= currentSheet.getMaxRows()) {
+            throw new IllegalArgumentException("Invalid row number: " + row + ". Please enter a valid row number.");
+        }
+        columnRowPropertyManager.setRowHeight(row, height);
+    }
+
+    @Override
+    public RowProperties getRowProperties(Integer row) {
+        if (row < 0 || row >= currentSheet.getMaxRows()) {
+            throw new IllegalArgumentException("Invalid row number: " + row + ". Please enter a valid row number.");
+        }
+        return columnRowPropertyManager.getRowProperties(row);
     }
 }

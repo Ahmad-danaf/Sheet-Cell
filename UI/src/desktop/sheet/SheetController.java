@@ -9,6 +9,7 @@ import com.sheetcell.engine.cell.EffectiveValue;
 import com.sheetcell.engine.cell.CellType;
 import com.sheetcell.engine.utils.ColumnProperties;
 import com.sheetcell.engine.utils.RangeValidator;
+import com.sheetcell.engine.utils.RowProperties;
 import desktop.utils.sheet.SheetDisplayHelper;
 import desktop.utils.sheet.SheetUtils;
 import desktop.utils.cell.CellRange;
@@ -199,7 +200,7 @@ public class SheetController {
             // Populate rows
             populateRows(maxRows, maxColumns);
             adjustAllColumnWidth();
-            adjustAllColumnHeight();
+            adjustAllRowHeight();
         });
     }
 
@@ -222,7 +223,7 @@ public class SheetController {
             configureCellFactory(column, true);
 
             // Allow users to adjust column width
-            column.setResizable(true);
+            column.setResizable(false);
 
             // Allow users to set alignment and wrapping/clipping
             addColumnContextMenu(column);
@@ -289,8 +290,9 @@ public class SheetController {
                 if (cellWrapper != null) {
                     // Get column properties for width and height
                     ColumnProperties properties = engine.getColumnProperties(cellWrapper.getColumn());
+                    RowProperties rowProperties = engine.getRowProperties(cellWrapper.getOriginalRow());
                     if (properties != null) {
-                        int height = properties.getHeight();
+                        int height = rowProperties.getHeight();
                         int width = properties.getWidth();
 
                         // Set size for all cells (empty or non-empty)
@@ -365,6 +367,25 @@ public class SheetController {
             }
         });
     }
+
+    // Method to adjust row height
+    public void adjustRowHeight(int rowIndex, int height) {
+        spreadsheetTableView.setRowFactory(tv -> new TableRow<>() {
+            @Override
+            protected void updateItem(ObservableList<CellWrapper> item, boolean empty) {
+                super.updateItem(item, empty);
+
+                // Check if the row index matches the selected row
+                if (getIndex() == rowIndex) {
+                    setMinHeight(height);
+                    setPrefHeight(height);
+                    setMaxHeight(height);
+                }
+            }
+        });
+        spreadsheetTableView.refresh();
+    }
+
 
 
     private void clearHighlights() {
@@ -488,30 +509,48 @@ public class SheetController {
     public void adjustAllColumnWidth() {
         Platform.runLater(() -> {
             int weight = 50;
+
             for (int i = 1; i < spreadsheetTableView.getColumns().size(); i++) {
                 weight=engine.getColumnProperties(i-1).getWidth();
                 TableColumn<ObservableList<CellWrapper>, CellWrapper> column = (TableColumn<ObservableList<CellWrapper>, CellWrapper>) spreadsheetTableView.getColumns().get(i);
                 column.setPrefWidth(weight);
                 column.setMinWidth(weight);
                 column.setMinWidth(weight);
+                adjustColumnWidthByLabel(CoordinateFactory.convertIndexToColumnLabel(i-1), weight);
             }
             spreadsheetTableView.refresh();
         });
     }
 
-    //adjust all column height
-    public void adjustAllColumnHeight() {
+    public void adjustColumnWidthByLabel(String columnLabel, int newWidth) {
         Platform.runLater(() -> {
-            int height = 50;
-            for (int i = 1; i < spreadsheetTableView.getColumns().size(); i++) {
-                height=engine.getColumnProperties(i-1).getHeight();
-                TableColumn<ObservableList<CellWrapper>, CellWrapper> column = (TableColumn<ObservableList<CellWrapper>, CellWrapper>) spreadsheetTableView.getColumns().get(i);
-                //adjust column height
-                configureCellFactory(column,true);
-
+            // Loop through all columns in the TableView
+            for (TableColumn<ObservableList<CellWrapper>, ?> column : spreadsheetTableView.getColumns()) {
+                // Check if the column label matches the provided label
+                if (column.getText().trim().equals(columnLabel)) {
+                    // Set the width for the matching column
+                    column.setPrefWidth(newWidth);
+                    column.setMinWidth(newWidth);
+                    column.setMaxWidth(newWidth);  // Optional: if you want the column to be non-resizable
+                    break;  // Exit the loop once the matching column is found
+                }
             }
+            // Refresh the table view to apply the updated width
             spreadsheetTableView.refresh();
         });
+    }
+
+
+    //adjust all row height
+    public void adjustAllRowHeight() {
+        System.out.println("Adjusting all row heights");
+        System.out.println("Number of rows: " + spreadsheetTableView.getItems().size());
+        Platform.runLater(() -> {
+            for (int i = 0; i < spreadsheetTableView.getItems().size(); i++) {
+                int height = engine.getRowProperties(i).getHeight();
+                adjustRowHeight(i, height);
+            }
+    });
     }
 
     public void highlightRange(Set<Coordinate> rangeCoordinates) {
