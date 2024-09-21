@@ -6,10 +6,9 @@ import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
-import com.sheetcell.engine.utils.RangeValidator;
 import com.sheetcell.engine.utils.SheetUpdateResult;
-import desktop.dialogs.FilterDialog;
-import desktop.dialogs.SortDialog;
+import desktop.utils.dialogs.FilterDialog;
+import desktop.utils.dialogs.SortDialog;
 import desktop.utils.UIHelper;
 import desktop.utils.ValidationUtils;
 import desktop.utils.cell.CellRange;
@@ -27,9 +26,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import desktop.sheet.SheetController;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -75,28 +72,25 @@ public class BodyController {
     private Button deleteRangeButton;
     @FXML
     private Button ViewRanges;
-    @FXML
-    private TextField rowHeightField;
-    @FXML
-    private TextField columnWidthField;
-    @FXML
-    private ChoiceBox<String> alignmentChoiceBox;
-
     // Reference to SheetController
     @FXML
     private SheetController spreadsheetGridController;
     @FXML
     private ChoiceBox<String> columnChoiceBox;
     @FXML
-    private Slider columnHeightSlider;
+    private VBox columnControls;
     @FXML
-    private Label columnHeightLabel;
+    private ChoiceBox<String> alignmentChoiceBox;
     @FXML
-    private HBox columnHeightControls;
+    private TextField columnWidthField;
+    @FXML
+    private ChoiceBox<Integer> rowChoiceBox;
+    @FXML
+    private TextField rowHeightField;
+    @FXML
+    private VBox rowControls;
 
     boolean isSheetLoaded = false;
-
-
 
     @FXML
     private void initialize() {
@@ -106,11 +100,6 @@ public class BodyController {
             spreadsheetGridController.setEngine(engine);
             spreadsheetGridController.setBodyController(this);
         }
-
-        columnHeightSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
-            columnHeightLabel.setText(String.valueOf(newValue.intValue()));
-            adjustColumnHeight();
-        });
 
         versionSelector.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null && !newValue.isEmpty()) {
@@ -125,21 +114,20 @@ public class BodyController {
             }
         });
 
+        columnWidthField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.isEmpty() && newValue.matches("\\d*")) {
+                int width = Integer.parseInt(newValue);
 
+                String selectedColumn = columnChoiceBox.getSelectionModel().getSelectedItem();
+                int column = CoordinateFactory.getColumnIndexFromLabel(selectedColumn);
+                engine.setColumnWidth(column, width);
+                spreadsheetGridController.adjustAllColumnWidth();
+            } else {
+                columnWidthField.setText(oldValue); // Revert to the old value if input is invalid
+            }
+        });
     }
 
-    @FXML
-    private void handleColumnSelection(ActionEvent event) {
-        String selectedColumn = columnChoiceBox.getSelectionModel().getSelectedItem();
-        if (selectedColumn != null && !selectedColumn.isEmpty()) {
-            columnHeightControls.setVisible(true);
-        } else {
-            columnHeightControls.setVisible(false);
-        }
-    }
-    private void adjustColumnHeight() {
-
-    }
     public void setSpreadsheetGridController(SheetController spreadsheetGridController) {
         this.spreadsheetGridController = spreadsheetGridController;
         spreadsheetGridController.setEngine(engine);
@@ -178,8 +166,11 @@ public class BodyController {
                         });
 
                         // Update the file path field on the UI thread
-                        Platform.runLater(() -> filePathField.setText(file.getAbsolutePath()));
-                        populateColumnChoiceBox();
+                        Platform.runLater(() -> {
+                            filePathField.setText(file.getAbsolutePath());
+                            populateColumnChoiceBox();
+                            populateRowChoiceBox();
+                        });
 
                     } catch (Exception e) {
                         // If there's an error, show an alert on the UI thread
@@ -218,18 +209,58 @@ public class BodyController {
         }
     }
 
+    @FXML
+    private void handleColumnSelection(ActionEvent event) {
+        String selectedColumn = columnChoiceBox.getSelectionModel().getSelectedItem();
+        if (selectedColumn != null && !selectedColumn.isEmpty()) {
+            int column = CoordinateFactory.getColumnIndexFromLabel(selectedColumn);
+            columnControls.setVisible(true);
+            columnHeightField.setText(String.valueOf(engine.getColumnProperties(column).getHeight()));
+            columnWidthField.setText(String.valueOf(engine.getColumnProperties(column).getWidth()));
+            alignmentChoiceBox.setValue(engine.getColumnProperties(column).getAlignment());
+        } else {
+            columnControls.setVisible(false);
+        }
+    }
+
+    @FXML
+    private void handleRowSelection(ActionEvent event) {
+        int selectedRow = rowChoiceBox.getValue();
+        if(selectedRow != null) {
+            rowControls.setVisible(true);
+
+        } else {
+            rowControls.setVisible(false);
+        }
+    }
+
+
     private void populateColumnChoiceBox() {
         // Clear existing choices
-        columnChoiceBox.getItems().clear();
+        if (columnChoiceBox!= null && columnChoiceBox.getItems() != null) {
+            columnChoiceBox.getItems().clear();
+        }
 
         int maxColumns = engine.getReadOnlySheet().getMaxColumns();
         for (int i = 0; i < maxColumns; i++) {
             columnChoiceBox.getItems().add("Column " + CoordinateFactory.convertIndexToColumnLabel(i));
         }
 
-        // Reset slider visibility
-        columnHeightControls.setVisible(false);
+        // Reset visibility
+        columnControls.setVisible(false);
     }
+
+    private void populateRowChoiceBox() {
+        if (rowChoiceBox != null && rowChoiceBox.getItems() != null) {
+            rowChoiceBox.getItems().clear();
+        }
+        int maxRows = engine.getReadOnlySheet().getMaxRows();
+        for (int i = 0; i < maxRows; i++) {
+            rowChoiceBox.getItems().add(i+1);  // Display row number starting from 1
+        }
+        rowControls.setVisible(false);  // Hide the controls until a row is selected
+    }
+
 
     @FXML
     private void handleSort(ActionEvent event) {
@@ -543,6 +574,20 @@ public class BodyController {
             UIHelper.showAlert("No sheet loaded", "Please load a spreadsheet file to apply column alignment.");
             return;
         }
+        String selectedColumn = columnChoiceBox.getSelectionModel().getSelectedItem();
+        int column = CoordinateFactory.getColumnIndexFromLabel(selectedColumn);
+        String alignment = alignmentChoiceBox.getValue();
+        if (alignment != null && !alignment.isEmpty()) {
+            try {
+
+                engine.setColumnAlignment(column, alignment);
+            } catch (Exception e) {
+                UIHelper.showError("Error Applying Alignment", e.getMessage());
+            }
+        }
+        System.out.println("Selected column: " + selectedColumn+ " Column Index: "+column);
+        System.out.println("Selected alignment: " + alignmentChoiceBox.getValue());
+
 
     }
 

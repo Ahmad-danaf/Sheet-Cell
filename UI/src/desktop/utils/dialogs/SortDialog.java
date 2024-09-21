@@ -1,4 +1,4 @@
-package desktop.dialogs;
+package desktop.utils.dialogs;
 
 import desktop.utils.parameters.SortParameters;
 import javafx.scene.control.*;

@@ -1,4 +1,4 @@
-package desktop.dialogs;
+package desktop.utils.dialogs;
 
 import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.utils.RangeValidator;

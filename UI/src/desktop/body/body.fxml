@@ -111,44 +111,86 @@
                <TitledPane expanded="false" text="Table Settings">
                   <VBox fx:id="tableSettingsSection" spacing="5.0" styleClass="section-container">
                      <children>
+                        <!-- Select Column -->
                         <HBox spacing="5">
                            <Label text="Select Column:" />
                            <ChoiceBox fx:id="columnChoiceBox" onAction="#handleColumnSelection">
                               <tooltip>
-                                 <Tooltip text="Select a column to adjust height" />
+                                 <Tooltip text="Select a column to adjust settings" />
                               </tooltip>
                            </ChoiceBox>
                         </HBox>
-                        <HBox fx:id="columnHeightControls" spacing="5" visible="false">
-                           <Label text="Adjust Column Height:" />
-                           <Slider fx:id="columnHeightSlider" max="100" min="20" value="30">
-                              <tooltip>
-                                 <Tooltip text="Adjust the height of the selected column" />
-                              </tooltip>
-                           </Slider>
-                           <Label fx:id="columnHeightLabel" text="30" />
-                        </HBox>
+
+                        <!-- Column Controls (now in VBox) -->
+                        <VBox fx:id="columnControls" spacing="10" visible="false">
+                           <children>
+                              <!-- Column Width Controls -->
+                              <HBox spacing="5">
+                                 <Label text="Column Width:" />
+                                 <TextField fx:id="columnWidthField" prefWidth="60" text="100">
+                                    <tooltip>
+                                       <Tooltip text="Enter the width for the selected column" />
+                                    </tooltip>
+                                 </TextField>
+                                 <Label fx:id="columnWidthLabel" text="px" />
+                              </HBox>
+
+                              <!-- Column Alignment Controls -->
+                              <HBox spacing="5">
+                                 <Label text="Column Alignment:" />
+                                 <ChoiceBox fx:id="alignmentChoiceBox">
+                                    <items>
+                                       <FXCollections fx:factory="observableArrayList">
+                                          <String fx:value="Left" />
+                                          <String fx:value="Center" />
+                                          <String fx:value="Right" />
+                                       </FXCollections>
+                                    </items>
+                                 </ChoiceBox>
+                                 <Button fx:id="applyAlignmentButton" onAction="#handleApplyAlignment" text="Apply Alignment">
+                                    <tooltip>
+                                       <Tooltip text="Apply selected alignment to column" />
+                                    </tooltip>
+                                 </Button>
+                              </HBox>
+                           </children>
+                        </VBox>
+
                         <HBox spacing="5">
-                           <Label text="Column Alignment:" />
-                           <ChoiceBox fx:id="alignmentChoiceBox">
-                              <items>
-                                 <FXCollections fx:factory="observableArrayList">
-                                    <String fx:value="Left" />
-                                    <String fx:value="Center" />
-                                    <String fx:value="Right" />
-                                 </FXCollections>
-                              </items>
-                           </ChoiceBox>
-                           <Button fx:id="applyAlignmentButton" onAction="#handleApplyAlignment" text="Apply Alignment">
+                           <Label text="Select Row:" />
+                           <ChoiceBox fx:id="rowChoiceBox" onAction="#handleRowSelection">
                               <tooltip>
-                                 <Tooltip text="Apply selected alignment to columns" />
+                                 <Tooltip text="Select a row to adjust settings" />
                               </tooltip>
-                           </Button>
+                           </ChoiceBox>
                         </HBox>
+
+                        <VBox fx:id="rowControls" spacing="10" visible="false">
+                           <children>
+                              <!-- Row Height Controls -->
+                              <HBox spacing="5">
+                                 <Label text="Row Height:" />
+                                 <TextField fx:id="rowHeightField" prefWidth="60" text="50">
+                                    <tooltip>
+                                       <Tooltip text="Enter the height for the selected row" />
+                                    </tooltip>
+                                 </TextField>
+                                 <Label fx:id="rowHeightLabel" text="px" />
+                              </HBox>
+
+                              <!-- Apply Row Height Button -->
+                              <Button fx:id="applyRowHeightButton" onAction="#handleApplyRowHeight" text="Apply Row Height">
+                                 <tooltip>
+                                    <Tooltip text="Apply the specified row height" />
+                                 </tooltip>
+                              </Button>
+                           </children>
+                        </VBox>
                      </children>
                   </VBox>
                </TitledPane>
-      
+
+
                <!-- Range Actions Section -->
                <TitledPane expanded="false" text="Range Actions">
                   <VBox fx:id="rangesSection" spacing="5.0" styleClass="section-container">

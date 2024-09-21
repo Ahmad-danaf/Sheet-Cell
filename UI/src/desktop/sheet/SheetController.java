@@ -7,6 +7,7 @@ import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.cell.EffectiveValue;
 import com.sheetcell.engine.cell.CellType;
+import com.sheetcell.engine.utils.ColumnProperties;
 import com.sheetcell.engine.utils.RangeValidator;
 import desktop.utils.sheet.SheetDisplayHelper;
 import desktop.utils.sheet.SheetUtils;
@@ -180,7 +181,7 @@ public class SheetController {
     public void displaySheet(SheetReadActions sheetData) {
         Platform.runLater(() -> {
             this.sheetData = sheetData;
-            adjustAllColumnWidth(sheetData.getColumnWidth());
+
             // Clear existing data
             spreadsheetTableView.getColumns().clear();
             spreadsheetTableView.getItems().clear();
@@ -197,6 +198,8 @@ public class SheetController {
 
             // Populate rows
             populateRows(maxRows, maxColumns);
+            adjustAllColumnWidth();
+            adjustAllColumnHeight();
         });
     }
 
@@ -216,7 +219,7 @@ public class SheetController {
             column.setSortable(false);
 
             // Configure cell factory with default alignment and wrapping
-            configureCellFactory(column, Pos.CENTER, true);
+            configureCellFactory(column, true);
 
             // Allow users to adjust column width
             column.setResizable(true);
@@ -248,76 +251,121 @@ public class SheetController {
         spreadsheetTableView.setItems(data);
     }
 
-    private void configureCellFactory(TableColumn<ObservableList<CellWrapper>, CellWrapper> column, Pos alignment, boolean wrapText) {
+    private void configureCellFactory(TableColumn<ObservableList<CellWrapper>, CellWrapper> column, boolean wrapText) {
         column.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(CellWrapper cellWrapper, boolean empty) {
                 super.updateItem(cellWrapper, empty);
-                if (cellWrapper == null) {
-                    // If there's no cell wrapper, treat it as empty
+
+                // Ensure that the size and styles are applied regardless of cell being empty or not
+                if (cellWrapper == null || empty) {
+                    // Handle empty cell styling and size
+                    applySizeAndStyles(cellWrapper);
                     setText(null);
                     setGraphic(null);
-                    setStyle(""); // Clear any previous styles
                 } else {
-                    String fullStyle = cellWrapper.getStyle() + cellWrapper.getHighlightStyle();
+                    // Apply size and styles to non-empty cell
+                    applySizeAndStyles(cellWrapper);
 
-                    // Initialize style variables
-                    String backgroundStyle = "";
-                    String textStyle = "";
+                    // Get and display the value inside the cell
+                    EffectiveValue effectiveValue = cellWrapper.getCell() != null ? cellWrapper.getCell().getEffectiveValue() : null;
+                    String displayText = getDisplayText(effectiveValue);
 
-                    if (fullStyle != null && !fullStyle.isEmpty()) {
-                        // Split the style string into individual styles
-                        System.out.println(fullStyle);
-                        String[] styles = fullStyle.split(";");
-                        for (String style : styles) {
-                            style = style.trim();
-                            if (style.startsWith("-fx-background-color")) {
-                                backgroundStyle += style + ";";
-                            } else if (style.startsWith("-fx-text-fill") || style.startsWith("-fx-fill")) {
-                                textStyle += style + ";";
-                            }
-                        }
-                    }
-
-                    // Apply background style to the TableCell (applies regardless of cell content)
-                    setStyle(backgroundStyle + textStyle);
-
-                    // Handle empty or non-empty cells separately
-                    if (empty || cellWrapper.getCell() == null) {
-                        // Empty cell: Clear text and graphic
-                        setText(null);
-                        setGraphic(null);
+                    if (wrapText) {
+                        // Handle text wrapping
+                        applyWrappedText(displayText, column);
                     } else {
-                        // Non-empty cell: Handle value display
-                        EffectiveValue effectiveValue = cellWrapper.getCell().getEffectiveValue();
-                        Object value = effectiveValue != null ? effectiveValue.getValue() : null;
-                        String displayText = value != null ? value.toString() : "";
+                        setText(displayText);
+                        setGraphic(null);  // Clear any graphics
+                    }
 
-                        // Handle boolean values
-                        if (effectiveValue != null && effectiveValue.getCellType() == CellType.BOOLEAN) {
-                            displayText = displayText.toUpperCase();
-                        }
+                    // Apply alignment based on column properties
+                    applyAlignment(cellWrapper);
+                }
+            }
 
-                        // Set alignment and display the value
-                        setAlignment(alignment);
+            // Helper method to apply size (width and height) and styles (background and text)
+            private void applySizeAndStyles(CellWrapper cellWrapper) {
+                if (cellWrapper != null) {
+                    // Get column properties for width and height
+                    ColumnProperties properties = engine.getColumnProperties(cellWrapper.getColumn());
+                    if (properties != null) {
+                        int height = properties.getHeight();
+                        int width = properties.getWidth();
 
-                        if (wrapText) {
-                            // Use Text node and apply text style
-                            Text text = new Text(displayText);
-                            text.wrappingWidthProperty().bind(column.widthProperty().subtract(10));
-                            text.setStyle(textStyle);
-                            setGraphic(text);
-                            setText(null); // Clear any text
-                        } else {
-                            // Use setText for normal text display
-                            setText(displayText);
-                            setGraphic(null); // Clear any graphics
+                        // Set size for all cells (empty or non-empty)
+                        setMinHeight(height);
+                        setPrefHeight(height);
+                        setMaxHeight(height);
+                        setMinWidth(width);
+                        setPrefWidth(width);
+                        setMaxWidth(width);
+                    }
+
+                    // Apply styles from CellWrapper
+                    String fullStyle = cellWrapper.getStyle() + cellWrapper.getHighlightStyle();
+                    applyStyles(fullStyle);
+                }
+            }
+
+            // Helper method to apply styles
+            private void applyStyles(String fullStyle) {
+                String backgroundStyle = "";
+                String textStyle = "";
+
+                if (fullStyle != null && !fullStyle.isEmpty()) {
+                    String[] styles = fullStyle.split(";");
+                    for (String style : styles) {
+                        style = style.trim();
+                        if (style.startsWith("-fx-background-color")) {
+                            backgroundStyle += style + ";";
+                        } else if (style.startsWith("-fx-text-fill") || style.startsWith("-fx-fill")) {
+                            textStyle += style + ";";
                         }
                     }
+                }
+
+                setStyle(backgroundStyle + textStyle);  // Apply the combined styles
+            }
+
+            // Helper method to return the display text
+            private String getDisplayText(EffectiveValue effectiveValue) {
+                Object value = effectiveValue != null ? effectiveValue.getValue() : null;
+                String displayText = value != null ? value.toString() : "";
+
+                // Handle boolean values
+                if (effectiveValue != null && effectiveValue.getCellType() == CellType.BOOLEAN) {
+                    displayText = displayText.toUpperCase();
+                }
+                return displayText;
+            }
+
+            // Helper method to apply text wrapping
+            private void applyWrappedText(String textContent, TableColumn<ObservableList<CellWrapper>, CellWrapper> column) {
+                Text text = new Text(textContent);
+                text.wrappingWidthProperty().bind(column.widthProperty().subtract(10)); // Adjust based on column width
+                text.setStyle(getStyle());  // Use the cell's existing style
+                setGraphic(text);
+                setText(null);  // Clear the text property since we're using the graphic
+            }
+
+            // Helper method to apply alignment
+            private void applyAlignment(CellWrapper cellWrapper) {
+                ColumnProperties properties = engine.getColumnProperties(cellWrapper.getColumn());
+                if (properties != null) {
+                    String alignment = properties.getAlignment();
+                    Pos pos = Pos.CENTER; // Default alignment
+                    if ("left".equalsIgnoreCase(alignment)) {
+                        pos = Pos.CENTER_LEFT;
+                    } else if ("right".equalsIgnoreCase(alignment)) {
+                        pos = Pos.CENTER_RIGHT;
+                    }
+                    setAlignment(pos);  // Apply the alignment to the cell
                 }
             }
         });
     }
+
 
     private void clearHighlights() {
         for (ObservableList<CellWrapper> rowData : spreadsheetTableView.getItems()) {
@@ -347,7 +395,7 @@ public class SheetController {
         alignmentGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
             if (newToggle != null) {
                 Pos alignment = SheetUtils.getAlignmentFromToggle(newToggle, leftAlign, centerAlign, rightAlign);
-                configureCellFactory(column, alignment, wrapText.isSelected());
+                configureCellFactory(column, wrapText.isSelected());
                 spreadsheetTableView.refresh();
             }
         });
@@ -355,7 +403,7 @@ public class SheetController {
         wrapGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
             if (newToggle != null) {
                 boolean wrap = SheetUtils.isWrapTextSelected(newToggle, wrapText);
-                configureCellFactory(column, SheetUtils.getAlignmentFromToggle(alignmentGroup.getSelectedToggle(), leftAlign, centerAlign, rightAlign), wrap);
+                configureCellFactory(column, wrap);
                 spreadsheetTableView.refresh();
             }
         });
@@ -436,30 +484,31 @@ public class SheetController {
         spreadsheetTableView.getColumns().add(0, rowNumberCol);
     }
 
-    public void adjustRowHeight(double newHeight) {
-        Platform.runLater(() -> {
-            // Set the fixed height for each row in the table view
-            spreadsheetTableView.setFixedCellSize(newHeight);
-
-            // Force the table to re-layout and apply the new row height
-            spreadsheetTableView.refresh();
-        });
-    }
-
-    public void adjustColumnWidth(int columnIndex, int weight) {
-        Platform.runLater(() -> {
-            TableColumn<ObservableList<CellWrapper>, CellWrapper> column = (TableColumn<ObservableList<CellWrapper>, CellWrapper>) spreadsheetTableView.getColumns().get(columnIndex);
-            column.setPrefWidth(weight);
-            spreadsheetTableView.refresh();
-        });
-    }
-
     //adjust column width for all columns exepect column 0(the column that have row numbers)
-    public void adjustAllColumnWidth(int weight) {
+    public void adjustAllColumnWidth() {
         Platform.runLater(() -> {
+            int weight = 50;
             for (int i = 1; i < spreadsheetTableView.getColumns().size(); i++) {
+                weight=engine.getColumnProperties(i-1).getWidth();
                 TableColumn<ObservableList<CellWrapper>, CellWrapper> column = (TableColumn<ObservableList<CellWrapper>, CellWrapper>) spreadsheetTableView.getColumns().get(i);
                 column.setPrefWidth(weight);
+                column.setMinWidth(weight);
+                column.setMinWidth(weight);
+            }
+            spreadsheetTableView.refresh();
+        });
+    }
+
+    //adjust all column height
+    public void adjustAllColumnHeight() {
+        Platform.runLater(() -> {
+            int height = 50;
+            for (int i = 1; i < spreadsheetTableView.getColumns().size(); i++) {
+                height=engine.getColumnProperties(i-1).getHeight();
+                TableColumn<ObservableList<CellWrapper>, CellWrapper> column = (TableColumn<ObservableList<CellWrapper>, CellWrapper>) spreadsheetTableView.getColumns().get(i);
+                //adjust column height
+                configureCellFactory(column,true);
+
             }
             spreadsheetTableView.refresh();
         });

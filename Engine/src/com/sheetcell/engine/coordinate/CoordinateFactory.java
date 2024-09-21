@@ -138,6 +138,7 @@ public class CoordinateFactory {
         testConvertIndexToColumnLabel();
         testConvertIndexToCellCord();
         testConvertCellIdToIndex();
+        testGetColumnIndexFromLabel();
     }
 
     private static void testFromCaseInsensitiveCellId() {
@@ -226,6 +227,16 @@ public class CoordinateFactory {
             System.out.println("testConvertCellIdToIndex PASSED");
         } else {
             System.out.println("testConvertCellIdToIndex FAILED");
+        }
+    }
+    public static void testGetColumnIndexFromLabel() {
+        if (CoordinateFactory.getColumnIndexFromLabel("Column A") == 0 &&
+                CoordinateFactory.getColumnIndexFromLabel("Column Z") == 25 &&
+                CoordinateFactory.getColumnIndexFromLabel("Column AA") == 26 &&
+                CoordinateFactory.getColumnIndexFromLabel("Column AB") == 27) {
+            System.out.println("testGetColumnIndexFromLabel PASSED");
+        } else {
+            System.out.println("testGetColumnIndexFromLabel FAILED");
         }
     }
 }
