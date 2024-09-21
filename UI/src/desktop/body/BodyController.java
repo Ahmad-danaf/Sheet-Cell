@@ -18,6 +18,7 @@ import desktop.utils.parameters.FilterParameters;
 import desktop.utils.parameters.MultiColFilterParameters;
 import desktop.utils.parameters.SortParameters;
 import desktop.utils.parsing.ParsingUtils;
+import desktop.utils.sheet.SheetDisplayHelper;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -338,7 +339,7 @@ public class BodyController {
             SheetReadActions versionSheet = engine.getSheetVersion(selectedVersion);
 
             // Pass the versioned sheet to the SheetController to display in a popup
-            spreadsheetGridController.displayVersionInPopup(versionSheet, selectedVersion);
+            SheetDisplayHelper.displayVersionInPopup(versionSheet, selectedVersion);
             
         } catch (Exception e) {
             UIHelper.showError("Error displaying version", e.getMessage());

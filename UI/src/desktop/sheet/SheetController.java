@@ -2,11 +2,14 @@ package desktop.sheet;
 
 import com.sheetcell.engine.Engine;
 import com.sheetcell.engine.coordinate.Coordinate;
+import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.cell.EffectiveValue;
 import com.sheetcell.engine.cell.CellType;
 import com.sheetcell.engine.utils.RangeValidator;
+import desktop.utils.sheet.SheetDisplayHelper;
+import desktop.utils.sheet.SheetUtils;
 import desktop.utils.cell.CellRange;
 import desktop.utils.cell.CellWrapper;
 import desktop.body.BodyController;
@@ -37,7 +40,6 @@ public class SheetController {
     private ObservableList<ObservableList<CellWrapper>> originalData;
     private SheetReadActions sheetData;
 
-
     public void setEngine(Engine engine) {
         this.engine = engine;
     }
@@ -63,7 +65,7 @@ public class SheetController {
                 int dataColumnIndex = column - 1;
 
                 // Get cell address
-                String cellAddress = getColumnName(dataColumnIndex) + (row + 1);
+                String cellAddress = CoordinateFactory.convertIndexToColumnLabel(dataColumnIndex) + (row + 1);
 
                 // Get the selected cell
                 ObservableList<CellWrapper> rowData = spreadsheetTableView.getItems().get(row);
@@ -104,7 +106,6 @@ public class SheetController {
             }
         });
     }
-
 
     private void highlightPrecedentsAndDependents(int row, int column) {
         // Clear previous highlights
@@ -153,14 +154,11 @@ public class SheetController {
     }
 
     private void highlightEmptyCell(int row,int column, String style) {
-
         // Get the cell wrapper and apply style
         ObservableList<CellWrapper> rowData = spreadsheetTableView.getItems().get(row);
         CellWrapper cellWrapper = rowData.get(column);
         cellWrapper.setHighlightStyle(style);
     }
-
-
 
     public void setBodyController(BodyController bodyController) {
         this.bodyController = bodyController;
@@ -168,7 +166,6 @@ public class SheetController {
 
     public void refreshSpreadsheet() {
         // Clear and reload data
-
         sheetData= engine.getReadOnlySheet();
         displaySheet(sheetData);
     }
@@ -203,13 +200,10 @@ public class SheetController {
         });
     }
 
-
-
     private void createColumns(int maxColumns) {
         for (int colIndex = 0; colIndex < maxColumns; colIndex++) {
-            String columnName = getColumnName(colIndex);
+            String columnName = CoordinateFactory.convertIndexToColumnLabel(colIndex);
             TableColumn<ObservableList<CellWrapper>, CellWrapper> column = new TableColumn<>(columnName);
-
             final int col = colIndex;
 
             column.setCellValueFactory(cellData -> {
@@ -235,7 +229,6 @@ public class SheetController {
         }
     }
 
-
     private void populateRows(int maxRows, int maxColumns) {
         ObservableList<ObservableList<CellWrapper>> data = FXCollections.observableArrayList();
 
@@ -253,29 +246,6 @@ public class SheetController {
         originalData = FXCollections.observableArrayList(data);
 
         spreadsheetTableView.setItems(data);
-    }
-
-    private Object getSortableValue(CellWrapper cellWrapper) {
-        if (cellWrapper == null || cellWrapper.getCell() == null) {
-            return null;
-        }
-        EffectiveValue effectiveValue = cellWrapper.getCell().getEffectiveValue();
-        if (effectiveValue != null) {
-            return effectiveValue.getValue();
-        }
-        return null;
-    }
-
-
-    public String getColumnName(int colIndex) {
-        // Convert column index to column name (e.g., 0 -> "A", 1 -> "B", ...)
-        StringBuilder columnName = new StringBuilder();
-        int tempIndex = colIndex;
-        while (tempIndex >= 0) {
-            columnName.insert(0, (char) ('A' + (tempIndex % 26)));
-            tempIndex = (tempIndex / 26) - 1;
-        }
-        return columnName.toString();
     }
 
     private void configureCellFactory(TableColumn<ObservableList<CellWrapper>, CellWrapper> column, Pos alignment, boolean wrapText) {
@@ -349,7 +319,6 @@ public class SheetController {
         });
     }
 
-
     private void clearHighlights() {
         for (ObservableList<CellWrapper> rowData : spreadsheetTableView.getItems()) {
             for (CellWrapper cellWrapper : rowData) {
@@ -359,46 +328,25 @@ public class SheetController {
         spreadsheetTableView.refresh();
     }
 
-    // Context menu for column settings
     private void addColumnContextMenu(TableColumn<ObservableList<CellWrapper>, CellWrapper> column) {
-        ContextMenu contextMenu = new ContextMenu();
-
-        // Alignment menu
-        Menu alignmentMenu = new Menu("Alignment");
+        // Create ToggleGroups and RadioMenuItems
         ToggleGroup alignmentGroup = new ToggleGroup();
-
         RadioMenuItem leftAlign = new RadioMenuItem("Left");
-        leftAlign.setToggleGroup(alignmentGroup);
         RadioMenuItem centerAlign = new RadioMenuItem("Center");
-        centerAlign.setToggleGroup(alignmentGroup);
         RadioMenuItem rightAlign = new RadioMenuItem("Right");
-        rightAlign.setToggleGroup(alignmentGroup);
-        centerAlign.setSelected(true); // Default alignment
-
-        alignmentMenu.getItems().addAll(leftAlign, centerAlign, rightAlign);
-
-        // Wrap/Clip menu
-        Menu wrapMenu = new Menu("Text Handling");
         ToggleGroup wrapGroup = new ToggleGroup();
-
         RadioMenuItem wrapText = new RadioMenuItem("Wrap");
-        wrapText.setToggleGroup(wrapGroup);
         RadioMenuItem clipText = new RadioMenuItem("Clip");
-        clipText.setToggleGroup(wrapGroup);
-        wrapText.setSelected(true); // Default to wrap
 
-        wrapMenu.getItems().addAll(wrapText, clipText);
+        // Use SheetUtils to create the context menu
+        ContextMenu contextMenu = SheetUtils.createColumnContextMenu(alignmentGroup, wrapGroup,
+                leftAlign, centerAlign, rightAlign,
+                wrapText, clipText);
 
-        // Event handlers
+        // Event handlers for alignment and wrap changes
         alignmentGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
             if (newToggle != null) {
-                Pos alignment = Pos.CENTER;
-                if (newToggle == leftAlign) {
-                    alignment = Pos.CENTER_LEFT;
-                } else if (newToggle == rightAlign) {
-                    alignment = Pos.CENTER_RIGHT;
-                }
-                // Update cell factory with new alignment
+                Pos alignment = SheetUtils.getAlignmentFromToggle(newToggle, leftAlign, centerAlign, rightAlign);
                 configureCellFactory(column, alignment, wrapText.isSelected());
                 spreadsheetTableView.refresh();
             }
@@ -406,32 +354,13 @@ public class SheetController {
 
         wrapGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
             if (newToggle != null) {
-                boolean wrap = newToggle == wrapText;
-                // Update cell factory with new wrap setting
-                configureCellFactory(column, getCurrentAlignment(alignmentGroup), wrap);
+                boolean wrap = SheetUtils.isWrapTextSelected(newToggle, wrapText);
+                configureCellFactory(column, SheetUtils.getAlignmentFromToggle(alignmentGroup.getSelectedToggle(), leftAlign, centerAlign, rightAlign), wrap);
                 spreadsheetTableView.refresh();
             }
         });
-
-        contextMenu.getItems().addAll(alignmentMenu, wrapMenu);
-
-        // Set context menu on column header
+        // Set the context menu on the column header
         column.setContextMenu(contextMenu);
-    }
-
-    private Pos getCurrentAlignment(ToggleGroup alignmentGroup) {
-        RadioMenuItem selected = (RadioMenuItem) alignmentGroup.getSelectedToggle();
-        if (selected != null) {
-            switch (selected.getText()) {
-                case "Left":
-                    return Pos.CENTER_LEFT;
-                case "Right":
-                    return Pos.CENTER_RIGHT;
-                default:
-                    return Pos.CENTER;
-            }
-        }
-        return Pos.CENTER;
     }
 
     public void applyCellStyle(int row, int column, String style) {
@@ -447,136 +376,9 @@ public class SheetController {
     public void showSortedData(CellRange range, List<Integer> sortColumns) {
         Platform.runLater(() -> {
             ObservableList<ObservableList<CellWrapper>> data = spreadsheetTableView.getItems();
-            List<ObservableList<CellWrapper>> dataToSort = new ArrayList<>();
-            for (int i = range.startRow; i <= range.endRow; i++) {
-                ObservableList<CellWrapper> originalRow = data.get(i);
-                ObservableList<CellWrapper> rowCopy = FXCollections.observableArrayList();
-
-                for (int j = range.startCol; j <= range.endCol; j++) {
-                    CellWrapper originalCell = originalRow.get(j);
-                    CellWrapper cellCopy = new CellWrapper(originalCell.getCell(), originalCell.getOriginalRow(), originalCell.getColumn());
-                    cellCopy.setStyle(originalCell.getStyle());
-                    rowCopy.add(cellCopy);
-                }
-                dataToSort.add(rowCopy);
-            }
-
-            Collections.sort(dataToSort, new Comparator<ObservableList<CellWrapper>>() {
-                @Override
-                public int compare(ObservableList<CellWrapper> row1, ObservableList<CellWrapper> row2) {
-                    for (int colIndex : sortColumns) {
-                        if (colIndex < range.startCol || colIndex > range.endCol) {
-                            continue;
-                        }
-
-                        Object value1 = getSortableValue(row1.get(colIndex - range.startCol));
-                        Object value2 = getSortableValue(row2.get(colIndex - range.startCol));
-
-                        if (!(value1 instanceof Number) || !(value2 instanceof Number)) {
-                            continue;
-                        }
-
-                        int cmp = Double.compare(((Number) value1).doubleValue(), ((Number) value2).doubleValue());
-                        if (cmp != 0) {
-                            return cmp;
-                        }
-                    }
-                    return 0;
-                }
-            });
-
-            displaySortedDataInPopup(dataToSort, range);
-        });
+            SheetUtils.showSortedDataHalper(range, sortColumns, data);
+    });
     }
-
-
-    private void displaySortedDataInPopup(List<ObservableList<CellWrapper>> sortedData, CellRange range) {
-        // Create a new TableView to display the sorted data
-        TableView<ObservableList<CellWrapper>> sortedTableView = new TableView<>();
-        sortedTableView.setEditable(false);
-
-        // Add row number column
-        TableColumn<ObservableList<CellWrapper>, Number> rowNumberCol = new TableColumn<>("#");
-        rowNumberCol.setCellValueFactory(cellData -> {
-            int originalRowIndex = cellData.getValue().get(0).getOriginalRow();
-            return new ReadOnlyObjectWrapper<>(originalRowIndex + 1);
-        });
-        rowNumberCol.setSortable(false);
-        rowNumberCol.setPrefWidth(50);
-        sortedTableView.getColumns().add(rowNumberCol);
-
-        // Create columns based on the range
-        for (int colIndex = range.startCol; colIndex <= range.endCol; colIndex++) {
-            String columnName = getColumnName(colIndex);
-            TableColumn<ObservableList<CellWrapper>, CellWrapper> column = new TableColumn<>(columnName);
-
-            final int col = colIndex - range.startCol;
-
-            column.setCellValueFactory(cellData -> {
-                ObservableList<CellWrapper> row = cellData.getValue();
-                CellWrapper cellWrapper = row.get(col);
-                return new ReadOnlyObjectWrapper<>(cellWrapper);
-            });
-
-            // Configure cell factory
-            configureCellFactoryForPopup(column);
-
-            // Disable sorting on the columns in the pop-up
-            column.setSortable(false);
-
-            sortedTableView.getColumns().add(column);
-        }
-
-        // Set the sorted data to the TableView
-        sortedTableView.setItems(FXCollections.observableArrayList(sortedData));
-
-        // Create a new Stage (window) to display the sorted TableView
-        Stage popupStage = new Stage();
-        popupStage.setTitle("Sorted Data");
-        popupStage.initModality(Modality.APPLICATION_MODAL);
-
-        // Add a close button
-        Button closeButton = new Button("Close");
-        closeButton.setOnAction(e -> popupStage.close());
-
-        VBox vbox = new VBox(sortedTableView, closeButton);
-        Scene scene = new Scene(vbox);
-
-        popupStage.setScene(scene);
-        popupStage.show();
-    }
-
-
-    private void configureCellFactoryForPopup(TableColumn<ObservableList<CellWrapper>, CellWrapper> column) {
-        column.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(CellWrapper cellWrapper, boolean empty) {
-                super.updateItem(cellWrapper, empty);
-                if (empty || cellWrapper == null || cellWrapper.getCell() == null) {
-                    setText(null);
-                    setGraphic(null);
-                    setStyle("");
-                } else {
-                    EffectiveValue effectiveValue = cellWrapper.getCell().getEffectiveValue();
-                    Object value = effectiveValue != null ? effectiveValue.getValue() : null;
-                    String displayText = value != null ? value.toString() : "";
-
-                    // Handle boolean values
-                    if (effectiveValue != null && effectiveValue.getCellType() == CellType.BOOLEAN) {
-                        displayText = displayText.toUpperCase();
-                    }
-
-                    setText(displayText);
-                    setGraphic(null);
-
-                    // Apply cell styling
-                    String style = cellWrapper.getStyle();
-                    setStyle(style);
-                }
-            }
-        });
-    }
-
 
     public List<String> getUniqueValuesInColumn(int columnIndex) {
         Set<String> uniqueValues = new HashSet<>();
@@ -604,102 +406,8 @@ public class SheetController {
     public void showFilteredData(CellRange range, int filterColumnIndex, List<String> selectedValues) {
         Platform.runLater(() -> {
             ObservableList<ObservableList<CellWrapper>> data = spreadsheetTableView.getItems();
-            List<ObservableList<CellWrapper>> filteredData = new ArrayList<>();
-
-            // Loop through each row within the range
-            for (int i = range.startRow; i <= range.endRow; i++) {
-                ObservableList<CellWrapper> originalRow = data.get(i);
-                CellWrapper cellToFilter = originalRow.get(filterColumnIndex);
-
-                if (cellToFilter != null && cellToFilter.getCell() != null) {
-                    EffectiveValue effectiveValue = cellToFilter.getCell().getEffectiveValue();
-                    if (effectiveValue != null) {
-                        String cellValue = effectiveValue.getValue().toString();
-
-                        // Check if the cell value is one of the selected values
-                        if (selectedValues.contains(cellValue)) {
-                            // Create a copy of the row with its styles
-                            ObservableList<CellWrapper> rowCopy = FXCollections.observableArrayList();
-                            for (int j = range.startCol; j <= range.endCol; j++) {
-                                CellWrapper originalCell = originalRow.get(j);
-                                CellWrapper cellCopy = new CellWrapper(originalCell.getCell(), originalCell.getOriginalRow(), originalCell.getColumn());
-                                cellCopy.setStyle(originalCell.getStyle());
-                                rowCopy.add(cellCopy);
-                            }
-                            filteredData.add(rowCopy);
-                        }
-                    }
-                }
-            }
-
-            // Display the filtered data in a popup
-            displayFilteredDataInPopup(filteredData, range);
+            SheetUtils.showFilteredDataHalper(range, filterColumnIndex, selectedValues, data);
         });
-    }
-
-    private void displayFilteredDataInPopup(List<ObservableList<CellWrapper>> filteredData, CellRange range) {
-        // Create a new TableView to display the filtered data
-        TableView<ObservableList<CellWrapper>> filteredTableView = new TableView<>();
-        filteredTableView.setEditable(false);
-
-        // Add row number column
-        TableColumn<ObservableList<CellWrapper>, Number> rowNumberCol = new TableColumn<>("#");
-        rowNumberCol.setCellValueFactory(cellData -> {
-            int originalRowIndex = cellData.getValue().get(0).getOriginalRow();
-            return new ReadOnlyObjectWrapper<>(originalRowIndex + 1);
-        });
-        rowNumberCol.setSortable(false);
-        rowNumberCol.setPrefWidth(50);
-        filteredTableView.getColumns().add(rowNumberCol);
-
-        // Create columns based on the range
-        for (int colIndex = range.startCol; colIndex <= range.endCol; colIndex++) {
-            String columnName = getColumnName(colIndex);
-            TableColumn<ObservableList<CellWrapper>, CellWrapper> column = new TableColumn<>(columnName);
-
-            final int col = colIndex - range.startCol;
-
-            column.setCellValueFactory(cellData -> {
-                ObservableList<CellWrapper> row = cellData.getValue();
-                if (col < row.size()) { // Ensure we don't go out of bounds
-                    CellWrapper cellWrapper = row.get(col);
-                    return new ReadOnlyObjectWrapper<>(cellWrapper);
-                }
-                return null;
-            });
-
-            // Configure cell factory
-            configureCellFactoryForPopup(column);
-
-            // Disable sorting on the columns in the pop-up
-            column.setSortable(false);
-
-            filteredTableView.getColumns().add(column);
-        }
-
-        // Set the filtered data to the TableView
-        if (filteredData.isEmpty()) {
-            System.out.println("No rows matched the filter criteria.");
-        } else {
-            System.out.println("Filtered rows: " + filteredData.size());
-        }
-
-        filteredTableView.setItems(FXCollections.observableArrayList(filteredData));
-
-        // Create a new Stage (window) to display the filtered TableView
-        Stage popupStage = new Stage();
-        popupStage.setTitle("Filtered Data");
-        popupStage.initModality(Modality.APPLICATION_MODAL);
-
-        // Add a close button
-        Button closeButton = new Button("Close");
-        closeButton.setOnAction(e -> popupStage.close());
-
-        VBox vbox = new VBox(filteredTableView, closeButton);
-        Scene scene = new Scene(vbox);
-
-        popupStage.setScene(scene);
-        popupStage.show();
     }
 
     public void resetCellStyle(int row, int column) {
@@ -800,70 +508,9 @@ public class SheetController {
         });
     }
 
-
-    public void displayVersionInPopup(SheetReadActions versionSheet, int versionNumber) {
-        Stage versionStage = new Stage();
-        versionStage.setTitle("Version " + versionNumber);
-
-        TableView<ObservableList<CellWrapper>> versionTableView = new TableView<>();
-        versionTableView.setEditable(false);
-
-        // Add columns and populate rows as in displaySheet method
-        // No styling, raw content only
-        Platform.runLater(() -> {
-            int maxRows = versionSheet.getMaxRows();
-            int maxColumns = versionSheet.getMaxColumns();
-
-            // Create columns
-            for (int colIndex = 0; colIndex < maxColumns; colIndex++) {
-                String columnName = getColumnName(colIndex);
-                TableColumn<ObservableList<CellWrapper>, CellWrapper> column = new TableColumn<>(columnName);
-
-                final int col = colIndex;
-                column.setCellValueFactory(cellData -> {
-                    ObservableList<CellWrapper> row = cellData.getValue();
-                    CellWrapper cellWrapper = row.get(col);
-                    return new ReadOnlyObjectWrapper<>(cellWrapper);
-                });
-                versionTableView.getColumns().add(column);
-            }
-
-            // Populate rows
-            ObservableList<ObservableList<CellWrapper>> data = FXCollections.observableArrayList();
-            for (int rowIndex = 0; rowIndex < maxRows; rowIndex++) {
-                ObservableList<CellWrapper> rowData = FXCollections.observableArrayList();
-                for (int colIndex = 0; colIndex < maxColumns; colIndex++) {
-                    Cell cell = versionSheet.getCell(rowIndex, colIndex);
-                    CellWrapper cellWrapper = new CellWrapper(cell, rowIndex, colIndex);
-                    rowData.add(cellWrapper);
-                }
-                data.add(rowData);
-            }
-            versionTableView.setItems(data);
-        });
-
-        Scene versionScene = new Scene(new VBox(versionTableView));
-        versionStage.setScene(versionScene);
-        versionStage.show();
-    }
-
     public void applyMultiColumnFilter(String range, Map<Integer, List<String>> filterCriteria) {
-        System.out.println("In applyMultiColumnFilter");
-        System.out.println("Range: " + range);
-        System.out.println("Filter criteria: ");
-        // Print out the filter criteria
-        for (Map.Entry<Integer, List<String>> entry : filterCriteria.entrySet()) {
-            int key = entry.getKey();
-            List<String> value = entry.getValue();
-            System.out.println("Key: " + key + " Value: " + value);
-        }
-
         RangeValidator rangeValidator = new RangeValidator(engine.getReadOnlySheet().getMaxRows(), engine.getReadOnlySheet().getMaxColumns());
         Coordinate[] rangeCoords = rangeValidator.parseRange(range);
-
-        // Print the coordinates
-        System.out.println("Start row: " + rangeCoords[0].getRow() + " Start column: " + rangeCoords[0].getColumn());
-        System.out.println("End row: " + rangeCoords[1].getRow() + " End column: " + rangeCoords[1].getColumn());
 
         int startRow = rangeCoords[0].getRow();
         int startCol = rangeCoords[0].getColumn();
@@ -904,7 +551,7 @@ public class SheetController {
         }
 
         CellRange cellRange = new CellRange(startRow, startCol, endRow, endCol);
-        displayFilteredDataInPopup(filteredData, cellRange);
+        SheetDisplayHelper.displayFilteredDataInPopup(filteredData, cellRange);
     }
 
 }
