@@ -1,5 +1,6 @@
 package desktop.dialogs;
 
+import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.utils.RangeValidator;
 import desktop.sheet.SheetController;
 import desktop.utils.parameters.FilterParameters;
@@ -45,7 +46,7 @@ public class FilterDialog {
 
         // Populate the choice box with column names (A, B, C, etc.)
         for (int i = 0; i < maxCols; i++) {
-            columnChoiceBox.getItems().add(spreadsheetGridController.getColumnName(i)); // Assuming getColumnName(i) exists in SheetController
+            columnChoiceBox.getItems().add(CoordinateFactory.convertIndexToColumnLabel(i)); // Assuming getColumnName(i) exists in SheetController
         }
 
         // Set the first column as default
@@ -168,7 +169,7 @@ public class FilterDialog {
                 valueSelectionList.setPrefHeight(100); // Set a reasonable height for the ListView
 
                 // Label for the column
-                Label columnLabel = new Label("Select values for column " + spreadsheetGridController.getColumnName(colIndex));
+                Label columnLabel = new Label("Select values for column " + CoordinateFactory.convertIndexToColumnLabel(colIndex));
 
                 // Add the column label and value selection list to the dialog
                 VBox columnFilterSection = new VBox(5, columnLabel, valueSelectionList);
