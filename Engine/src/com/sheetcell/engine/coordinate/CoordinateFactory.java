@@ -109,6 +109,25 @@ public class CoordinateFactory {
         return cellId.substring(i);
     }
 
+    // Convert cell address like "A1" to a column index (zero-based)
+    public static int getColumnIndex(String cellAddress) {
+        String colPart = cellAddress.replaceAll("\\d", "");  // Extract letters
+        return CoordinateFactory.convertColumnLabelToIndex(colPart);
+    }
+
+    // Convert column label "Column A" to index (zero-based)
+    public static int getColumnIndexFromLabel(String columnLabel) {
+        // Remove the "Column " prefix
+        String columnName = columnLabel.replace("Column ", "").trim();
+        return CoordinateFactory.convertColumnLabelToIndex(columnName);
+    }
+
+    // Convert cell address like "A1" to a row index (zero-based)
+    public static int getRowIndex(String cellAddress) {
+        String rowPart = cellAddress.replaceAll("[^\\d]", "");  // Extract digits
+        return Integer.parseInt(rowPart) - 1;  // Return zero-based index
+    }
+
     //*******************************tests**********************************//
     public static void main(String[] args) {
         testFromCaseInsensitiveCellId();

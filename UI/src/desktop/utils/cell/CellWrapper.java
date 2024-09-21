@@ -1,4 +1,4 @@
-package desktop.utils;
+package desktop.utils.cell;
 
 import com.sheetcell.engine.cell.Cell;
 

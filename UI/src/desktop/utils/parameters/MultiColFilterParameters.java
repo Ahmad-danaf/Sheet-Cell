@@ -1,4 +1,4 @@
-package desktop.utils;
+package desktop.utils.parameters;
 
 import java.util.List;
 import java.util.Map;

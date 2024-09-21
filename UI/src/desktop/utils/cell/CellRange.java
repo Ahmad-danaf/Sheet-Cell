@@ -1,4 +1,4 @@
-package desktop.utils;
+package desktop.utils.cell;
 
 public class CellRange {
     public final int startRow;
