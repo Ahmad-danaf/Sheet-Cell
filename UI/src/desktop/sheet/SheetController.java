@@ -111,7 +111,6 @@ public class SheetController {
             }
         });
     }
-
     private void highlightPrecedentsAndDependents(int row, int column) {
         // Clear previous highlights
         clearHighlights();

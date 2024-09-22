@@ -7,6 +7,7 @@ import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.utils.SheetUpdateResult;
+import desktop.utils.AnimationManager;
 import desktop.utils.dialogs.FilterDialog;
 import desktop.utils.dialogs.SortDialog;
 import desktop.utils.UIHelper;
@@ -24,6 +25,7 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -98,6 +100,7 @@ public class BodyController {
     private VBox rowControls;
 
     boolean isSheetLoaded = false;
+    private AnimationManager animationManager = new AnimationManager();
 
     @FXML
     private void initialize() {
@@ -136,7 +139,7 @@ public class BodyController {
         });
 
         themeSelector.setValue("Light");
-        animationToggle.setValue("Off");
+        animationToggle.setValue("On");
     }
 
     public void setSpreadsheetGridController(SheetController spreadsheetGridController) {
@@ -175,13 +178,10 @@ public class BodyController {
     public void handleAnimationToggle() {
         String animationState = animationToggle.getValue();
         if ("On".equals(animationState)) {
-            if (!isSheetLoaded){
-                UIHelper.showAlert("No sheet loaded", "Please load a spreadsheet file to enable animations.");
-                animationToggle.setValue("Off");
-            } else {
-                System.out.println("Animations enabled");
-            }
+            animationManager.setAnimationsEnabled(true);
+            System.out.println("Animations enabled");
         } else {
+            animationManager.setAnimationsEnabled(false);
             System.out.println("Animations disabled");
         }
     }
@@ -219,6 +219,7 @@ public class BodyController {
 
                         // Update the file path field on the UI thread
                         Platform.runLater(() -> {
+                            animationManager.playAnimationsOnLoad(mainPane);
                             filePathField.setText(file.getAbsolutePath());
                             populateColumnChoiceBox();
                             populateRowChoiceBox();
@@ -407,7 +408,6 @@ public class BodyController {
                 versionSelector.getSelectionModel().selectLast();
             });
             spreadsheetGridController.reselectCell(row, column);
-            UIHelper.showAlert("Cell Updated", "Cell value updated successfully.");
         } catch (Exception e) {
             UIHelper.showAlert("Error updating cell", e.getMessage());
         }
