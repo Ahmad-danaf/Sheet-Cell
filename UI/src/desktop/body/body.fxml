@@ -146,6 +146,12 @@
                               <Tooltip text="Filter the table data by multiple columns" />
                            </tooltip>
                         </Button>
+                        <Button fx:id="createGraphButton" mnemonicParsing="false" onAction="#handleCreateGraph" text="Create Graph">
+                           <tooltip>
+                              <Tooltip text="Create a graph based on data" />
+                           </tooltip>
+                        </Button>
+
                      </children>
                   </VBox>
                </TitledPane>

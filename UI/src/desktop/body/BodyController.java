@@ -14,9 +14,11 @@ import desktop.utils.ValidationUtils;
 import desktop.utils.cell.CellRange;
 import desktop.utils.color.ColorUtils;
 import desktop.utils.parameters.FilterParameters;
+import desktop.utils.parameters.GraphParameters;
 import desktop.utils.parameters.MultiColFilterParameters;
 import desktop.utils.parameters.SortParameters;
 import desktop.utils.parsing.ParsingUtils;
+import desktop.utils.sheet.GraphGenerator;
 import desktop.utils.sheet.SheetDisplayHelper;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -100,8 +102,7 @@ public class BodyController {
     @FXML
     private void initialize() {
         engine = new EngineImpl();
-        if(spreadsheetGridController != null)
-        {
+        if (spreadsheetGridController != null) {
             spreadsheetGridController.setEngine(engine);
             spreadsheetGridController.setBodyController(this);
         }
@@ -111,7 +112,7 @@ public class BodyController {
             if (newValue != null && !newValue.isEmpty()) {
                 // Parse the selected version number
                 int selectedVersion = ParsingUtils.extractNewVersionSheet(newValue);
-                int currentVersion = engine.getReadOnlySheet()!=null ? engine.getReadOnlySheet().getVersion() : 0;
+                int currentVersion = engine.getReadOnlySheet() != null ? engine.getReadOnlySheet().getVersion() : 0;
 
                 // Only display the popup if a past version is selected
                 if (selectedVersion < currentVersion && selectedVersion > 0) {
@@ -174,7 +175,12 @@ public class BodyController {
     public void handleAnimationToggle() {
         String animationState = animationToggle.getValue();
         if ("On".equals(animationState)) {
-            System.out.println("Animations enabled");
+            if (!isSheetLoaded){
+                UIHelper.showAlert("No sheet loaded", "Please load a spreadsheet file to enable animations.");
+                animationToggle.setValue("Off");
+            } else {
+                System.out.println("Animations enabled");
+            }
         } else {
             System.out.println("Animations disabled");
         }
@@ -207,7 +213,7 @@ public class BodyController {
                         isSheetLoaded = true;
                         Platform.runLater(() -> {
                             versionSelector.getItems().clear();
-                            versionSelector.getItems().add("Version 1"+ " Cells Changed: "+engine.getReadOnlySheet().getCellChangeCount());
+                            versionSelector.getItems().add("Version 1" + " Cells Changed: " + engine.getReadOnlySheet().getCellChangeCount());
                             versionSelector.getSelectionModel().select(0); // Select the first version
                         });
 
@@ -271,9 +277,9 @@ public class BodyController {
     @FXML
     private void handleRowSelection(ActionEvent event) {
         Integer selectedRow = rowChoiceBox.getValue();
-        if(selectedRow != null) {
+        if (selectedRow != null) {
             rowControls.setVisible(true);
-            rowHeightField.setText(String.valueOf(engine.getRowProperties(selectedRow-1).getHeight()));
+            rowHeightField.setText(String.valueOf(engine.getRowProperties(selectedRow - 1).getHeight()));
         } else {
             rowControls.setVisible(false);
         }
@@ -290,8 +296,8 @@ public class BodyController {
 
             // Apply the new row height
             if (selectedRow != null && newRowHeight > 0) {
-                engine.setRowHeight(selectedRow-1, newRowHeight);
-                spreadsheetGridController.adjustRowHeight(selectedRow-1, newRowHeight);
+                engine.setRowHeight(selectedRow - 1, newRowHeight);
+                spreadsheetGridController.adjustRowHeight(selectedRow - 1, newRowHeight);
             } else {
                 UIHelper.showError("Invalid Input", "Please enter a valid row height.");
             }
@@ -303,7 +309,7 @@ public class BodyController {
 
     private void populateColumnChoiceBox() {
         // Clear existing choices
-        if (columnChoiceBox!= null && columnChoiceBox.getItems() != null) {
+        if (columnChoiceBox != null && columnChoiceBox.getItems() != null) {
             columnChoiceBox.getItems().clear();
         }
 
@@ -322,7 +328,7 @@ public class BodyController {
         }
         int maxRows = engine.getReadOnlySheet().getMaxRows();
         for (int i = 0; i < maxRows; i++) {
-            rowChoiceBox.getItems().add(i+1);  // Display row number starting from 1
+            rowChoiceBox.getItems().add(i + 1);  // Display row number starting from 1
         }
         rowControls.setVisible(false);  // Hide the controls until a row is selected
     }
@@ -341,8 +347,8 @@ public class BodyController {
 
         if (result.isPresent()) {
             SortParameters params = result.get();
-            String rangeInput=params.getRangeInput().trim().toUpperCase();
-            String columnsInput=params.getColumnsInput().trim().toUpperCase();
+            String rangeInput = params.getRangeInput().trim().toUpperCase();
+            String columnsInput = params.getColumnsInput().trim().toUpperCase();
 
             try {
                 ValidationUtils.validateSortInput(rangeInput, columnsInput, engine.getReadOnlySheet().getMaxRows(), engine.getReadOnlySheet().getMaxColumns());
@@ -377,14 +383,14 @@ public class BodyController {
         int row = CoordinateFactory.getRowIndex(cellAddress);
         int column = CoordinateFactory.getColumnIndex(cellAddress);
 
-        try{
+        try {
             engine.doesCellIdVaild(cellAddress);
             SheetUpdateResult result = engine.setCellValue(cellAddress, newValue);
             if (result.isNoActionNeeded()) {
                 UIHelper.showAlert(result.getErrorMessage());
                 return;
             } else if (result.hasError()) {
-                UIHelper.showError("Update failed: ",result.getErrorMessage());
+                UIHelper.showError("Update failed: ", result.getErrorMessage());
                 return;
             } else {
                 System.out.println("Cell " + cellAddress + " updated successfully.");
@@ -397,7 +403,7 @@ public class BodyController {
             }
             int newVersionSheet = engine.getReadOnlySheet().getVersion();
             Platform.runLater(() -> {
-                versionSelector.getItems().add("Version " + newVersionSheet + " Cells Changed: "+engine.getReadOnlySheet().getCellChangeCount());
+                versionSelector.getItems().add("Version " + newVersionSheet + " Cells Changed: " + engine.getReadOnlySheet().getCellChangeCount());
                 versionSelector.getSelectionModel().selectLast();
             });
             spreadsheetGridController.reselectCell(row, column);
@@ -440,7 +446,7 @@ public class BodyController {
 
             // Pass the versioned sheet to the SheetController to display in a popup
             SheetDisplayHelper.displayVersionInPopup(versionSheet, selectedVersion);
-            
+
         } catch (Exception e) {
             UIHelper.showError("Error displaying version", e.getMessage());
         }
@@ -591,7 +597,7 @@ public class BodyController {
             int filterColumnIndex = CoordinateFactory.convertColumnLabelToIndex(selectedColumn.trim().toUpperCase());
 
             // Proceed to open the filter dialog with the selected column
-            Dialog<FilterParameters> filterDialog =filterDialogMaker.createFilterDialog(filterColumnIndex);
+            Dialog<FilterParameters> filterDialog = filterDialogMaker.createFilterDialog(filterColumnIndex);
             Optional<FilterParameters> filterResult = filterDialog.showAndWait();
 
             if (filterResult.isPresent()) {
@@ -654,10 +660,26 @@ public class BodyController {
                 UIHelper.showError("Error Applying Alignment", e.getMessage());
             }
         }
-        System.out.println("Selected column: " + selectedColumn+ " Column Index: "+column);
+        System.out.println("Selected column: " + selectedColumn + " Column Index: " + column);
         System.out.println("Selected alignment: " + alignmentChoiceBox.getValue());
 
 
+    }
+
+    @FXML
+    private void handleCreateGraph(ActionEvent event) {
+        if (!isSheetLoaded) {
+            UIHelper.showAlert("No sheet loaded", "Please load a spreadsheet file to generate a graph.");
+            return;
+        }
+        Dialog<GraphParameters> dialog = GraphGenerator.createGraphConfigDialog();
+        Optional<GraphParameters> result = dialog.showAndWait();
+
+        if (result.isPresent()) {
+            GraphParameters params = result.get();
+            // Pass the graph parameters to generate the graph
+            spreadsheetGridController.generateGraph(params);
+        }
     }
 
 }

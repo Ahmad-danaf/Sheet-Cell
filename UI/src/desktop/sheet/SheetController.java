@@ -10,6 +10,8 @@ import com.sheetcell.engine.cell.CellType;
 import com.sheetcell.engine.utils.ColumnProperties;
 import com.sheetcell.engine.utils.RangeValidator;
 import com.sheetcell.engine.utils.RowProperties;
+import desktop.utils.parameters.GraphParameters;
+import desktop.utils.sheet.GraphGenerator;
 import desktop.utils.sheet.SheetDisplayHelper;
 import desktop.utils.sheet.SheetUtils;
 import desktop.utils.cell.CellRange;
@@ -605,6 +607,12 @@ public class SheetController {
 
         CellRange cellRange = new CellRange(startRow, startCol, endRow, endCol);
         SheetDisplayHelper.displayFilteredDataInPopup(filteredData, cellRange);
+    }
+
+    public void generateGraph(GraphParameters params) {
+        GraphGenerator graphGenerator = new GraphGenerator(spreadsheetTableView,
+                engine.getReadOnlySheet().getMaxRows(), engine.getReadOnlySheet().getMaxColumns());
+        graphGenerator.generateGraph(params);
     }
 
 }
