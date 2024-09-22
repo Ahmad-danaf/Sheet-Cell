@@ -372,8 +372,11 @@ public class BodyController {
         if (cellAddress != null && !cellAddress.isEmpty()) {
             int row = CoordinateFactory.getRowIndex(cellAddress);
             int column = CoordinateFactory.getColumnIndex(cellAddress);
+            System.out.println("###### IN APPLY STYLE ######");
+            System.out.println("Selected cell: " + cellAddress + " Row: " + row + " Column: " + column);
             String backgroundColor = ColorUtils.colorToHex(backgroundColorPicker.getValue());
             String textColor = ColorUtils.colorToHex(textColorPicker.getValue());
+            System.out.println("Background color: " + backgroundColor + " Text color: " + textColor);
             String style = "-fx-background-color: " + backgroundColor + "; -fx-text-fill: " + textColor + "; -fx-fill: " + textColor + ";";
 
             spreadsheetGridController.applyCellStyle(row, column, style);
@@ -600,8 +603,8 @@ public class BodyController {
         String alignment = alignmentChoiceBox.getValue();
         if (alignment != null && !alignment.isEmpty()) {
             try {
-
                 engine.setColumnAlignment(column, alignment);
+                spreadsheetGridController.adjustColumnAlignment(column);
             } catch (Exception e) {
                 UIHelper.showError("Error Applying Alignment", e.getMessage());
             }

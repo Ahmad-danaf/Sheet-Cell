@@ -20,6 +20,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
@@ -220,13 +221,10 @@ public class SheetController {
             column.setSortable(false);
 
             // Configure cell factory with default alignment and wrapping
-            configureCellFactory(column, true);
+            configureCellFactory(column);
 
             // Allow users to adjust column width
             column.setResizable(false);
-
-            // Allow users to set alignment and wrapping/clipping
-            addColumnContextMenu(column);
 
             // Add column to the table
             spreadsheetTableView.getColumns().add(column);
@@ -252,7 +250,7 @@ public class SheetController {
         spreadsheetTableView.setItems(data);
     }
 
-    private void configureCellFactory(TableColumn<ObservableList<CellWrapper>, CellWrapper> column, boolean wrapText) {
+    private void configureCellFactory(TableColumn<ObservableList<CellWrapper>, CellWrapper> column) {
         column.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(CellWrapper cellWrapper, boolean empty) {
@@ -271,17 +269,14 @@ public class SheetController {
                     // Get and display the value inside the cell
                     EffectiveValue effectiveValue = cellWrapper.getCell() != null ? cellWrapper.getCell().getEffectiveValue() : null;
                     String displayText = getDisplayText(effectiveValue);
-
-                    if (wrapText) {
-                        // Handle text wrapping
-                        applyWrappedText(displayText, column);
-                    } else {
-                        setText(displayText);
-                        setGraphic(null);  // Clear any graphics
-                    }
-
-                    // Apply alignment based on column properties
+                    // Apply alignment and padding
                     applyAlignment(cellWrapper);
+                    setPadding(new Insets(0));  // Ensure there's no padding to push the text
+                    setGraphic(null);  // Ensure no graphic is interfering
+                    setText(displayText);
+                    String currentStyle = getStyle();  // Get the existing style
+                    String newStyle = cellWrapper.getStyle() + "-fx-text-overrun: ellipsis;";
+                    setStyle(currentStyle + newStyle);
                 }
             }
 
@@ -387,7 +382,6 @@ public class SheetController {
     }
 
 
-
     private void clearHighlights() {
         for (ObservableList<CellWrapper> rowData : spreadsheetTableView.getItems()) {
             for (CellWrapper cellWrapper : rowData) {
@@ -395,41 +389,6 @@ public class SheetController {
             }
         }
         spreadsheetTableView.refresh();
-    }
-
-    private void addColumnContextMenu(TableColumn<ObservableList<CellWrapper>, CellWrapper> column) {
-        // Create ToggleGroups and RadioMenuItems
-        ToggleGroup alignmentGroup = new ToggleGroup();
-        RadioMenuItem leftAlign = new RadioMenuItem("Left");
-        RadioMenuItem centerAlign = new RadioMenuItem("Center");
-        RadioMenuItem rightAlign = new RadioMenuItem("Right");
-        ToggleGroup wrapGroup = new ToggleGroup();
-        RadioMenuItem wrapText = new RadioMenuItem("Wrap");
-        RadioMenuItem clipText = new RadioMenuItem("Clip");
-
-        // Use SheetUtils to create the context menu
-        ContextMenu contextMenu = SheetUtils.createColumnContextMenu(alignmentGroup, wrapGroup,
-                leftAlign, centerAlign, rightAlign,
-                wrapText, clipText);
-
-        // Event handlers for alignment and wrap changes
-        alignmentGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
-            if (newToggle != null) {
-                Pos alignment = SheetUtils.getAlignmentFromToggle(newToggle, leftAlign, centerAlign, rightAlign);
-                configureCellFactory(column, wrapText.isSelected());
-                spreadsheetTableView.refresh();
-            }
-        });
-
-        wrapGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
-            if (newToggle != null) {
-                boolean wrap = SheetUtils.isWrapTextSelected(newToggle, wrapText);
-                configureCellFactory(column, wrap);
-                spreadsheetTableView.refresh();
-            }
-        });
-        // Set the context menu on the column header
-        column.setContextMenu(contextMenu);
     }
 
     public void applyCellStyle(int row, int column, String style) {
@@ -524,15 +483,14 @@ public class SheetController {
 
     public void adjustColumnWidthByLabel(String columnLabel, int newWidth) {
         Platform.runLater(() -> {
-            // Loop through all columns in the TableView
             for (TableColumn<ObservableList<CellWrapper>, ?> column : spreadsheetTableView.getColumns()) {
                 // Check if the column label matches the provided label
                 if (column.getText().trim().equals(columnLabel)) {
                     // Set the width for the matching column
                     column.setPrefWidth(newWidth);
                     column.setMinWidth(newWidth);
-                    column.setMaxWidth(newWidth);  // Optional: if you want the column to be non-resizable
-                    break;  // Exit the loop once the matching column is found
+                    column.setMaxWidth(newWidth);
+                    break;
                 }
             }
             // Refresh the table view to apply the updated width
@@ -543,14 +501,21 @@ public class SheetController {
 
     //adjust all row height
     public void adjustAllRowHeight() {
-        System.out.println("Adjusting all row heights");
-        System.out.println("Number of rows: " + spreadsheetTableView.getItems().size());
         Platform.runLater(() -> {
             for (int i = 0; i < spreadsheetTableView.getItems().size(); i++) {
                 int height = engine.getRowProperties(i).getHeight();
                 adjustRowHeight(i, height);
             }
     });
+    }
+
+    //adjust alignment for single column
+    public void adjustColumnAlignment(int columnIndex) {
+        Platform.runLater(() -> {
+            TableColumn<ObservableList<CellWrapper>, CellWrapper> column = (TableColumn<ObservableList<CellWrapper>, CellWrapper>) spreadsheetTableView.getColumns().get(columnIndex + 1);
+            configureCellFactory(column);
+            spreadsheetTableView.refresh();
+        });
     }
 
     public void highlightRange(Set<Coordinate> rangeCoordinates) {
