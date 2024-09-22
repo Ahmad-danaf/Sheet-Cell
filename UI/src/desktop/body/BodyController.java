@@ -31,6 +31,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.net.URL;
 import java.util.*;
 
 public class BodyController {
@@ -42,6 +43,10 @@ public class BodyController {
     @FXML
     private BorderPane mainPane;
     // Top section components
+    @FXML
+    private ChoiceBox<String> themeSelector;
+    @FXML
+    private ChoiceBox<String> animationToggle;
     @FXML
     private Button loadFileButton;
     @FXML
@@ -101,6 +106,7 @@ public class BodyController {
             spreadsheetGridController.setBodyController(this);
         }
 
+
         versionSelector.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null && !newValue.isEmpty()) {
                 // Parse the selected version number
@@ -127,12 +133,51 @@ public class BodyController {
                 columnWidthField.setText(oldValue); // Revert to the old value if input is invalid
             }
         });
+
+        themeSelector.setValue("Light");
+        animationToggle.setValue("Off");
     }
 
     public void setSpreadsheetGridController(SheetController spreadsheetGridController) {
         this.spreadsheetGridController = spreadsheetGridController;
         spreadsheetGridController.setEngine(engine);
         spreadsheetGridController.setBodyController(this);
+    }
+
+    @FXML
+    public void handleThemeChange() {
+        String selectedTheme = themeSelector.getValue();
+        Platform.runLater(() -> {
+            if (mainPane.getScene() != null) {
+                mainPane.getScene().getStylesheets().clear();
+                try {
+                    if ("Light".equals(selectedTheme)) {
+                        System.out.println("Light theme selected");
+                        mainPane.getScene().getStylesheets().add(getClass().getResource("light-theme.css").toExternalForm());
+                    } else if ("Dark".equals(selectedTheme)) {
+                        System.out.println("Dark theme selected");
+                        mainPane.getScene().getStylesheets().add(getClass().getResource("dark-theme.css").toExternalForm());
+                    } else if ("Twilight".equals(selectedTheme)) {
+                        System.out.println("Twilight theme selected");
+                        mainPane.getScene().getStylesheets().add(getClass().getResource("twilight-theme.css").toExternalForm());
+                    }
+                } catch (NullPointerException e) {
+                    System.out.println("Error: Theme file not found.");
+                }
+            } else {
+                System.out.println("Error: Scene is not ready.");
+            }
+        });
+    }
+
+    @FXML
+    public void handleAnimationToggle() {
+        String animationState = animationToggle.getValue();
+        if ("On".equals(animationState)) {
+            System.out.println("Animations enabled");
+        } else {
+            System.out.println("Animations disabled");
+        }
     }
 
     @FXML

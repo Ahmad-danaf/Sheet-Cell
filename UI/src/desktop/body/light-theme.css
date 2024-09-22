@@ -11,7 +11,7 @@
     -fx-font-weight: bold;
     -fx-text-fill: #2d2d2d; /* Darker text for better contrast */
     -fx-padding: 15 0 10 0; /* More space around the title */
-    -fx-alignment: center; /* Center the title */
+    -fx-alignment: center;
 }
 
 /* Top Bar Styling */
@@ -20,11 +20,12 @@
     -fx-padding: 10 0 10 0; /* More padding for a spacious feel */
 }
 
+/* Button Styling */
 .load-button {
     -fx-background-color: #4caf50; /* Brighter green for call to action */
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-padding: 8 15 8 15; /* More padding for a bigger button */
+    -fx-padding: 10 20 10 20; /* Consistent padding for all buttons */
     -fx-border-radius: 5;
 }
 
@@ -32,6 +33,7 @@
     -fx-background-color: #388e3c; /* Darker green on hover */
 }
 
+/* File Path Field Styling */
 .file-path {
     -fx-pref-width: 300px;
     -fx-min-width: 100px;
@@ -49,6 +51,7 @@
     -fx-padding: 10 0 10 0; /* Uniform padding */
 }
 
+/* Text Field Styling */
 .text-field {
     -fx-pref-width: 120px; /* Slightly wider by default */
     -fx-background-color: white;
@@ -57,11 +60,12 @@
     -fx-padding: 5;
 }
 
+/* Update Button Styling */
 .update-button {
     -fx-background-color: #4285f4; /* Brighter blue */
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-padding: 8 15 8 15; /* More padding for a bigger button */
+    -fx-padding: 10 20 10 20; /* Consistent padding for all buttons */
     -fx-border-radius: 5;
 }
 
@@ -69,11 +73,12 @@
     -fx-background-color: #3367d6; /* Darker blue on hover */
 }
 
+/* Version Selector */
 .version-selector {
     -fx-pref-width: 150px;
 }
 
-/* Commands and Ranges Section */
+/* Commands and Ranges Section Styling */
 .section-container {
     -fx-background-color: #ffffff; /* White background for contrast */
     -fx-padding: 15;
@@ -90,19 +95,21 @@
     -fx-border-radius: 3;
     -fx-text-fill: #333333;
     -fx-font-size: 13px;
-    -fx-padding: 6 12 6 12; /* Consistent button size */
+    -fx-padding: 10 20 10 20; /* Consistent button size */
 }
 
 .section-container Button:hover {
     -fx-background-color: #e0e0e0; /* Darker grey on hover */
 }
 
+/* Commands Section */
 #commandsSection {
     -fx-background-color: #e3f2fd; /* Light blue background */
     -fx-border-color: #90caf9;
     -fx-border-radius: 5;
 }
 
+/* Ranges Section */
 #rangesSection {
     -fx-background-color: #fff3e0; /* Light orange background */
     -fx-border-color: #ffcc80;
@@ -115,6 +122,19 @@
     -fx-padding: 5 5 5 5;
     -fx-border-color: #cccccc;
     -fx-border-radius: 3;
+}
+
+.color-picker > .color-picker-label {
+    -fx-text-fill: #333333; /* Dark text to contrast with light theme */
+}
+
+/* Drop-down Styling for ColorPicker */
+.color-picker-popup {
+    -fx-background-color: #ffffff; /* White background for color selection pop-up */
+}
+
+.color-picker-popup .label {
+    -fx-text-fill: #333333; /* Dark text in the color picker pop-up */
 }
 
 /* Slider Styling */
@@ -145,9 +165,52 @@
 
 /* Tooltip Styling */
 .tooltip {
-    -fx-background-color: #333333;
+    -fx-background-color: #444444; /* Slightly lighter for better visibility */
     -fx-text-fill: white;
     -fx-font-size: 12px;
     -fx-padding: 5;
     -fx-background-radius: 5;
 }
+
+/* General HBox Styling */
+.hbox {
+    -fx-spacing: 20;
+    -fx-alignment: center;
+    -fx-padding: 10;
+    -fx-background-color: #f9f9f9; /* Light background color */
+    -fx-border-color: #e0e0e0; /* Light gray border */
+    -fx-border-radius: 5;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0.0, 0, 1); /* Subtle shadow */
+}
+
+/* Label Styling */
+.label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333; /* Darker text for contrast */
+    -fx-font-weight: bold;
+    -fx-padding: 0 10 0 0;
+}
+
+/* ChoiceBox Styling */
+.choice-box {
+    -fx-background-color: white; /* White background */
+    -fx-border-color: #cccccc; /* Light gray border */
+    -fx-border-radius: 4;
+    -fx-padding: 5;
+    -fx-text-fill: #333333; /* Dark text */
+}
+
+.choice-box:hover {
+    -fx-border-color: #999999; /* Darker border on hover */
+}
+
+.choice-box .list-cell {
+    -fx-background-color: white;
+    -fx-text-fill: #333333; /* Text color in drop-down */
+}
+
+.choice-box:focused {
+    -fx-border-color: #4285f4; /* Blue border when focused */
+    -fx-background-color: #f9f9f9;
+}
+

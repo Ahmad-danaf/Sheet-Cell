@@ -7,7 +7,6 @@
 <?import javafx.scene.control.ColorPicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.Tooltip?>
@@ -16,17 +15,57 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-
 <ScrollPane xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="desktop.body.BodyController">
-      <BorderPane fx:id="mainPane"  stylesheets="@body.css">
+      <BorderPane fx:id="mainPane" styleClass="root">
          <top>
-            <VBox fx:id="mainContainer" alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
+            <!-- Main container for the top section -->
+            <VBox alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
                <children>
-                  <Label fx:id="applicationTitle" styleClass="title-label" text="ShtiCell">
-                     <font>
-                        <Font name="System Bold" size="18.0" />
-                     </font>
-                  </Label>
+                  <!-- First HBox for title, theme selector, and animation toggle -->
+                  <HBox alignment="CENTER" spacing="20">
+                     <children>
+                        <!-- Left: Animation toggle -->
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                           <children>
+                              <Label text="Animations:" />
+                              <ChoiceBox fx:id="animationToggle" prefWidth="100" onAction="#handleAnimationToggle">
+                                 <items>
+                                    <FXCollections fx:factory="observableArrayList">
+                                       <String fx:value="On" />
+                                       <String fx:value="Off" />
+                                    </FXCollections>
+                                 </items>
+                              </ChoiceBox>
+                           </children>
+                        </HBox>
+
+                        <!-- Center: Application title -->
+                        <Label fx:id="applicationTitle" styleClass="title-label" text="ShtiCell">
+                           <font>
+                              <Font name="System Bold" size="18.0" />
+                           </font>
+                        </Label>
+
+                        <!-- Right: Theme selector -->
+                        <HBox alignment="CENTER_RIGHT" spacing="10">
+                           <children>
+                              <Label text="Theme:" />
+                              <ChoiceBox fx:id="themeSelector" prefWidth="150" onAction="#handleThemeChange">
+                                 <items>
+                                    <FXCollections fx:factory="observableArrayList">
+                                       <String fx:value="Light" />
+                                       <String fx:value="Dark" />
+                                       <String fx:value="Twilight" />
+                                    </FXCollections>
+                                 </items>
+                              </ChoiceBox>
+                           </children>
+                        </HBox>
+                     </children>
+                  </HBox>
+
+
+                  <!-- Existing file load section -->
                   <HBox alignment="CENTER_LEFT" spacing="10.0">
                      <children>
                         <Button fx:id="loadFileButton" mnemonicParsing="false" onAction="#handleLoadFile" styleClass="load-button" text="Load File">
@@ -37,20 +76,24 @@
                         <TextField fx:id="filePathField" editable="false" prefWidth="200.0" styleClass="file-path" HBox.hgrow="ALWAYS" />
                      </children>
                   </HBox>
-                  <HBox alignment="TOP_CENTER" spacing="10.0">
+
+                  <!-- Action line for cell updates and value handling -->
+                  <HBox alignment="TOP_CENTER" spacing="10.0" styleClass="action-line">
                      <children>
                         <TextField fx:id="selectedCellId" editable="false" promptText="Selected Cell ID" />
                         <TextField fx:id="originalCellValue" promptText="Original Cell value" />
-                        <Button fx:id="updateValueButton" mnemonicParsing="false" onAction="#handleUpdateValue" text="Update value">
+                        <Button fx:id="updateValueButton" mnemonicParsing="false" onAction="#handleUpdateValue" styleClass="update-button" text="Update value">
                            <tooltip>
                               <Tooltip text="Update the selected cell value" />
                            </tooltip>
                         </Button>
                         <TextField fx:id="lastUpdateCellVersion" editable="false" promptText="Last update cell version" />
-                        <ChoiceBox fx:id="versionSelector" accessibleHelp="version selection" accessibleText="version selection" prefWidth="150.0" />
+                        <ChoiceBox fx:id="versionSelector" accessibleHelp="version selection" accessibleText="version selection" prefWidth="150.0" styleClass="version-selector" />
                      </children>
                   </HBox>
-                  <HBox spacing="10">
+
+                  <!-- Color picker and styling options -->
+                  <HBox spacing="10" styleClass="color-picker">
                      <children>
                         <ColorPicker fx:id="backgroundColorPicker">
                            <tooltip>
@@ -62,12 +105,12 @@
                               <Tooltip text="Select text color" />
                            </tooltip>
                         </ColorPicker>
-                        <Button fx:id="applyStyleButton" onAction="#handleApplyStyle" text="Apply Style">
+                        <Button fx:id="applyStyleButton" onAction="#handleApplyStyle" styleClass="color-picker" text="Apply Style">
                            <tooltip>
                               <Tooltip text="Apply selected style to the cell" />
                            </tooltip>
                         </Button>
-                        <Button fx:id="resetStyleButton" onAction="#handleResetStyle" text="Reset Style">
+                        <Button fx:id="resetStyleButton" onAction="#handleResetStyle" styleClass="color-picker" text="Reset Style">
                            <tooltip>
                               <Tooltip text="Reset cell style to default" />
                            </tooltip>
@@ -85,7 +128,7 @@
          <left>
             <VBox spacing="10.0" BorderPane.alignment="CENTER">
                <!-- Table Commands Section -->
-               <TitledPane expanded="false" text="Table Commands">
+               <TitledPane expanded="false" text="Table Commands" styleClass="title">
                   <VBox fx:id="commandsSection" spacing="5.0" styleClass="section-container">
                      <children>
                         <Button fx:id="sortButton" onAction="#handleSort" text="Sort">
@@ -108,7 +151,7 @@
                </TitledPane>
       
                <!-- Table Settings Section -->
-               <TitledPane expanded="false" text="Table Settings">
+               <TitledPane expanded="false" text="Table Settings" styleClass="title">
                   <VBox fx:id="tableSettingsSection" spacing="5.0" styleClass="section-container">
                      <children>
                         <!-- Select Column -->
@@ -192,7 +235,7 @@
 
 
                <!-- Range Actions Section -->
-               <TitledPane expanded="false" text="Range Actions">
+               <TitledPane expanded="false" text="Range Actions" styleClass="title">
                   <VBox fx:id="rangesSection" spacing="5.0" styleClass="section-container">
                      <children>
                         <Button fx:id="addRangeButton" mnemonicParsing="false" onAction="#handleAddRange" text="Add Range">

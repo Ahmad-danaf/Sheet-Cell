@@ -1,0 +1,169 @@
+/* General Window Style */
+.root {
+    -fx-background-color: #4a4a56; /* Softer twilight background color */
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-size: 16px;
+}
+
+/* Label Styling */
+.label {
+    -fx-text-fill: #ececec; /* Light text for visibility */
+    -fx-font-family: "Arial", sans-serif; /* Clear, modern font */
+    -fx-font-size: 16px; /* Consistent font size */
+}
+
+/* Styling for the application title */
+.title-label {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff; /* Bright white text for the title */
+}
+
+/* Button Styling */
+.button {
+    -fx-background-color: #65657d; /* Twilight purple-gray background */
+    -fx-text-fill: #ffffff; /* Light text */
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-padding: 10 20 10 20;
+    -fx-border-radius: 5;
+}
+
+.button:hover {
+    -fx-background-color: #7b7b91; /* Slightly lighter background on hover */
+}
+
+/* Text Field Styling */
+.text-field {
+    -fx-background-color: #595970; /* Dim twilight background */
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #7a7a85; /* Softer border */
+    -fx-font-size: 14px;
+}
+
+/* TitledPane Styling */
+.titled-pane > .title {
+    -fx-background-color: #5a5a67; /* Twilight-style pane title */
+    -fx-text-fill: #ececec; /* Light text for readability */
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+}
+
+.titled-pane > .content {
+    -fx-background-color: #464655; /* Twilight background for content */
+}
+
+/* Tooltip Styling */
+.tooltip {
+    -fx-background-color: #5e5e6b; /* Twilight background for tooltips */
+    -fx-text-fill: #ffffff; /* Light text */
+    -fx-font-size: 12px;
+    -fx-padding: 5;
+    -fx-background-radius: 5;
+}
+
+/* ChoiceBox Styling */
+/* General styling for the ChoiceBox in twilight mode */
+.choice-box {
+    -fx-background-color: #5a5a67; /* Twilight background for the closed choice box */
+    -fx-border-color: #777777; /* Border color */
+    -fx-border-radius: 5;
+    -fx-text-fill: #ececec; /* Light text inside the closed choice box */
+}
+
+/* Hover effect for the ChoiceBox */
+.choice-box:hover {
+    -fx-border-color: #888888; /* Lighter border on hover */
+}
+
+/* Drop-down list for the ChoiceBox */
+.choice-box .list-view {
+    -fx-background-color: #595970; /* Twilight background for the drop-down */
+    -fx-text-fill: #ffffff; /* Light text for visibility */
+}
+
+/* Styling for individual items in the drop-down */
+.choice-box .list-cell {
+    -fx-background-color: #595970; /* Twilight background for each list item */
+    -fx-text-fill: #ffffff; /* Light text */
+}
+
+.choice-box .list-cell:filled:selected, 
+.choice-box .list-cell:selected {
+    -fx-background-color: #7979a3; /* Soft blue for the selected item */
+    -fx-text-fill: #ffffff;
+}
+
+.choice-box:focused {
+    -fx-border-color: #7979a3; /* Soft blue border when focused */
+}
+
+/* Slider Styling */
+.slider {
+    -fx-pref-width: 150;
+    -fx-background-color: #77778a;
+}
+
+.slider .track {
+    -fx-background-color: #67677a;
+}
+
+.slider .thumb {
+    -fx-background-color: #6c6caf;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 2, 0.0, 0, 1);
+}
+
+/* Color Picker Styling */
+.color-picker {
+    -fx-background-color: #595970; /* Twilight background for the color picker */
+    -fx-border-color: #7979a3;
+}
+
+.color-picker > .color-picker-label {
+    -fx-text-fill: #ffffff; /* Light text color for the color name */
+}
+
+/* Drop-down styling when selecting colors */
+.color-picker-popup {
+    -fx-background-color: #595970; /* Twilight background for color selection pop-up */
+}
+
+.color-picker-popup .color-picker-content {
+    -fx-background-color: #595970;
+    -fx-text-fill: #ffffff;
+}
+
+.color-picker-popup .label {
+    -fx-text-fill: #ffffff; /* Light text inside the color picker */
+}
+
+.color-picker > .text-field {
+    -fx-background-color: #595970; /* Darker background for the text field */
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #7979a3; /* Soft border color */
+}
+
+/* ScrollPane */
+#gridScrollPane {
+    -fx-background-color: #464655; /* Twilight background for ScrollPane */
+    -fx-border-color: transparent;
+}
+
+/* BorderPane background color (inside the ScrollPane) */
+#mainPane {
+    -fx-background-color: #4a4a56; /* Twilight background */
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: #464655; /* Twilight background for the ScrollPane's viewport */
+}
+
+/* TableView column headers */
+.spreadsheet-table .column-header {
+    -fx-background-color: #595970; /* Twilight background for the headers */
+    -fx-text-fill: #ffffff; /* Light text color */
+    -fx-font-weight: bold;
+    -fx-border-color: #444455; /* Dark border between headers */
+}
+
+

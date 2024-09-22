@@ -1,0 +1,175 @@
+/* General Window Style */
+.root {
+    -fx-background-color: #1e1e1e; /* Dark background for the entire screen */
+    -fx-font-family: "Segoe UI", sans-serif; /* Font for the entire screen */
+    -fx-font-size: 16px; /* Slightly larger font for readability */
+}
+
+/* Label Styling */
+.label {
+    -fx-text-fill: #f1f1f1; /* Light text for readability */
+    -fx-font-family: "Arial", sans-serif; /* Set a clear, modern font */
+    -fx-font-size: 16px; /* Set consistent font size for labels */
+}
+
+/* Styling for the application title */
+.title-label {
+    -fx-font-size: 28px; /* Larger font for the title */
+    -fx-font-weight: bold;
+    -fx-text-fill: #f1f1f1; /* Light color for the title to contrast with dark background */
+}
+
+/* Button Styling */
+.button {
+    -fx-background-color: #3a3a3a; /* Dark background for buttons */
+    -fx-text-fill: #ffffff; /* Light text for buttons */
+    -fx-font-weight: bold; /* Make button text bold */
+    -fx-font-size: 14px; /* Set font size for buttons */
+    -fx-padding: 10 20 10 20; /* Add padding to make the buttons larger */
+    -fx-border-radius: 5;
+}
+
+.button:hover {
+    -fx-background-color: #575757; /* Lighter background on hover */
+}
+
+/* Text Field Styling */
+.text-field {
+    -fx-background-color: #333333; /* Darker background for text fields */
+    -fx-text-fill: #ffffff; /* Light text */
+    -fx-border-color: #555555; /* Border for better visibility */
+    -fx-padding: 10;
+    -fx-font-size: 14px;
+}
+
+/* TitledPane Styling */
+.titled-pane > .title {
+    -fx-background-color: #424242; /* Darker pane title */
+    -fx-text-fill: #f1f1f1; /* Light title text for better visibility */
+    -fx-font-weight: bold;
+    -fx-font-size: 16px; /* Increase font size for readability */
+    -fx-padding: 5;
+}
+
+.titled-pane > .content {
+    -fx-background-color: #2b2b2b; /* Darker content background */
+}
+
+/* Tooltip Styling */
+.tooltip {
+    -fx-background-color: #424242; /* Dark tooltip background */
+    -fx-text-fill: #f1f1f1; /* Light tooltip text */
+    -fx-font-size: 12px;
+    -fx-padding: 5;
+    -fx-background-radius: 5;
+}
+
+/* ChoiceBox Styling */
+/* General styling for the ChoiceBox in dark mode */
+.choice-box {
+    -fx-background-color: #333333; /* Dark background for the closed choice box */
+    -fx-border-color: #555555; /* Border color */
+    -fx-border-radius: 5;
+    -fx-padding: 5;
+    -fx-text-fill: #ffffff; /* Light text inside the closed choice box */
+}
+
+/* Hover effect for the ChoiceBox */
+.choice-box:hover {
+    -fx-border-color: #777777; /* Lighter border on hover */
+}
+
+/* Drop-down list for the ChoiceBox */
+.choice-box .list-view {
+    -fx-background-color: #333333; /* Dark background for the drop-down */
+    -fx-control-inner-background: #333333; /* Ensures background remains dark */
+    -fx-text-fill: #ffffff; /* Light text for visibility */
+}
+
+/* Styling for individual items in the drop-down */
+.choice-box .list-cell {
+    -fx-background-color: #333333; /* Dark background for each list item */
+    -fx-text-fill: #ffffff; /* Light text for each item */
+}
+
+.choice-box .list-cell:filled:selected,
+.choice-box .list-cell:selected {
+    -fx-background-color: #4a90e2; /* Blue background for the selected item */
+    -fx-text-fill: #ffffff; /* White text for the selected item */
+}
+
+.choice-box:focused {
+    -fx-border-color: #4a90e2; /* Blue border when focused */
+    -fx-background-color: #333333; /* Keep the background dark when focused */
+}
+
+
+/* Slider Styling */
+.slider {
+    -fx-pref-width: 150;
+    -fx-background-color: #555555;
+}
+
+.slider .track {
+    -fx-background-color: #444444;
+}
+
+.slider .thumb {
+    -fx-background-color: #1e88e5;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 2, 0.0, 0, 1);
+}
+
+/* Color Picker Styling */
+.color-picker {
+    -fx-background-color: #333333; /* Darker background for the color picker */
+    -fx-border-color: #555555;
+    -fx-border-radius: 3;
+}
+
+.color-picker > .color-picker-label {
+    -fx-text-fill: #ffffff; /* Light text color for the color name */
+}
+
+/* Drop-down styling when selecting colors */
+.color-picker-popup {
+    -fx-background-color: #424242; /* Dark background for color selection pop-up */
+}
+
+.color-picker-popup .color-picker-content {
+    -fx-background-color: #424242;
+    -fx-text-fill: #ffffff; /* Light text for the color picker pop-up */
+}
+
+.color-picker-popup .label {
+    -fx-text-fill: #ffffff; /* Light text inside the color picker */
+}
+
+/* Text field inside the ColorPicker */
+.color-picker > .text-field {
+    -fx-background-color: #333333; /* Darker background for the text field */
+    -fx-text-fill: #ffffff; /* Light text to show color values */
+    -fx-border-color: #555555; /* Border color for better visibility */
+    -fx-font-size: 14px; /* Make text easier to read */
+}
+
+#gridScrollPane {
+    -fx-background-color: #2b2b2b; /* Dark background for ScrollPane */
+    -fx-border-color: transparent; /* Ensure no border conflicts */
+}
+
+/* BorderPane background color (inside the ScrollPane) */
+#mainPane {
+    -fx-background-color: #2b2b2b; /* Dark background for the content */
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: #2b2b2b; /* Dark background for the ScrollPane's viewport */
+}
+
+/* Style for TableView column headers */
+.spreadsheet-table .column-header {
+    -fx-background-color: #333333; /* Keep the header background dark */
+    -fx-text-fill: #f1f1f1; /* Light text color for better readability */
+    -fx-font-weight: bold; /* Make the header text bold for emphasis */
+    -fx-border-color: #444444; /* Dark border between headers */
+}
