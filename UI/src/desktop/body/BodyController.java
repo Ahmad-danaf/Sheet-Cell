@@ -1,5 +1,4 @@
 package desktop.body;
-
 import com.sheetcell.engine.Engine;
 import com.sheetcell.engine.EngineImpl;
 import com.sheetcell.engine.cell.Cell;
@@ -25,7 +24,6 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -33,9 +31,7 @@ import desktop.sheet.SheetController;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
 import java.io.File;
-import java.net.URL;
 import java.util.*;
 
 public class BodyController {
@@ -52,8 +48,6 @@ public class BodyController {
     @FXML
     private ChoiceBox<String> animationToggle;
     @FXML
-    private Button loadFileButton;
-    @FXML
     private TextField filePathField;
     @FXML
     private TextField selectedCellId;
@@ -64,23 +58,9 @@ public class BodyController {
     @FXML
     private TextField originalCellValue;
     @FXML
-    private Button updateValueButton;
-    @FXML
     private TextField lastUpdateCellVersion;
     @FXML
     private ChoiceBox<String> versionSelector;
-
-    // Left section components
-    @FXML
-    private Button sortButton;
-    @FXML
-    private Button filterButton;
-    @FXML
-    private Button addRangeButton;
-    @FXML
-    private Button deleteRangeButton;
-    @FXML
-    private Button ViewRanges;
     // Reference to SheetController
     @FXML
     private SheetController spreadsheetGridController;

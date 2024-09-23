@@ -10,7 +10,7 @@ public class DesktopUI extends Application {
     public void start(Stage primaryStage) {
         try {
             // Load the main FXML file (body.fxml)
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("body/body.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/desktop/body/body.fxml"));
             Scene scene = new Scene(loader.load());
 
             // Set the scene to the stage

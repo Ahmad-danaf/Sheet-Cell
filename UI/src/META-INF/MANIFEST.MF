@@ -1,6 +1,9 @@
 Manifest-Version: 1.0
-Main-Class: console.ConsoleUI
+Main-Class: desktop.DesktopUI
 Class-Path: engine.jar lib/angus-activation.jar lib/jakarta.activation-a
  pi.jar lib/jakarta.xml.bind-api.jar lib/jaxb-core.jar lib/jaxb-impl.jar
-  lib/jaxb-jxc.jar lib/jaxb-xjc.jar
+  lib/jaxb-jxc.jar lib/jaxb-xjc.jar lib/javafx.base.jar lib/javafx.contr
+ ols.jar lib/javafx.fxml.jar lib/javafx.graphics.jar lib/javafx.media.ja
+ r lib/javafx.properties lib/javafx.swing.jar lib/javafx.web.jar lib/jav
+ afx-swt.jar
 
