@@ -23,6 +23,13 @@ public class SumExpression implements RangeExpression {
 
     @Override
     public EffectiveValue eval(SheetReadActions sheet, Cell callingCell) {
+        if (sheet.isOnLoad()) {
+            if (!sheet.isRangeExists(rangeName)) {
+                String message = "Range " + rangeName + " does not exist";
+                String cellId = callingCell != null ? "at cell " + callingCell.getCoordinate() : "";
+                throw new IllegalArgumentException(message + " " + cellId);
+            }
+        }
         Set<Coordinate> coordinates = sheet.getRangeCoordinates(rangeName);
 
         if (coordinates.isEmpty()) {

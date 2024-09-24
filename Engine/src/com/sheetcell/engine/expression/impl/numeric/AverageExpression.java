@@ -24,6 +24,13 @@ public class AverageExpression implements RangeExpression {
 
     @Override
     public EffectiveValue eval(SheetReadActions sheet, Cell callingCell) {
+        if (sheet.isOnLoad()) {
+            if (!sheet.isRangeExists(rangeName)) {
+                String message = "Range " + rangeName + " does not exist";
+                String cellId = callingCell != null ? "at cell " + callingCell.getCoordinate() : "";
+                throw new IllegalArgumentException(message + " " + cellId);
+            }
+        }
         // Retrieve the coordinates of cells in the specified range
         Set<Coordinate> coordinates = sheet.getRangeCoordinates(rangeName);
 

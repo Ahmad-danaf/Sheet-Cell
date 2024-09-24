@@ -17,5 +17,7 @@ public interface SheetReadActions {
     String getSheetName();
     Set<Coordinate> getRangeCoordinates(String rangeName);
     void markRangeAsUsed(String rangeName);
+    boolean isOnLoad();
+    boolean isRangeExists(String rangeName);
 
 }

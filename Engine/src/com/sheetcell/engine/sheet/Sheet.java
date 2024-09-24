@@ -28,6 +28,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
     private int rowHeight;
     private int columnWidth;
     private int CellChangeCount;
+    boolean isOnload;
     RangeFactory rangeFactory;
     private Map<Coordinate, Set<Coordinate>> dependenciesMap;
     private Map<Coordinate, Set<Coordinate>> influencedMap;
@@ -46,6 +47,7 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         rangeFactory = new RangeFactory();
         dependenciesMap = new HashMap<>();
         influencedMap = new HashMap<>();
+        this.isOnload = true;
     }
 
     // Getters
@@ -456,11 +458,17 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         return rangeFactory;
     }
 
-    public void setRowHeight(int height) {
-        this.rowHeight = height;
+    @Override
+    public boolean isRangeExists(String rangeName) {
+        return rangeFactory.rangeExists(rangeName);
     }
 
-    public void setColumnWidth(int width) {
-        this.columnWidth = width;
+    @Override
+    public boolean isOnLoad() {
+        return isOnload;
+    }
+
+    public void setOnload(boolean b) {
+        isOnload = b;
     }
 }

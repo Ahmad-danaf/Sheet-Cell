@@ -36,6 +36,7 @@ public class EngineImpl implements Engine, Serializable {
         xmlSheetProcessor.processSheetFile(filePath);
         this.currentSheet = xmlSheetProcessor.getCurrentSheet();
         this.sheetVersions.clear();
+        this.currentSheet.setOnload(false);
         this.sheetVersions.put(currentSheet.getVersion(), currentSheet);
         this.rangeValidator.setMaxRows(currentSheet.getMaxRows());
         this.rangeValidator.setMaxCols(currentSheet.getMaxColumns());
