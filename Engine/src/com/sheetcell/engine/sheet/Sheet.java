@@ -151,8 +151,8 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         for (Map.Entry<Coordinate, Set<Coordinate>> entry : influencedMap.entrySet()) {
             influencedBackup.put(entry.getKey(), new HashSet<>(entry.getValue()));
         }
-        dependenciesBackup.clear();
-        influencedBackup.clear();
+        dependenciesMap.clear();
+        influencedMap.clear();
 
         Sheet newSheetVersion = copySheet();
         newSheetVersion.resetCellChangeCount();
@@ -241,8 +241,8 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         for (Map.Entry<Coordinate, Set<Coordinate>> entry : influencedMap.entrySet()) {
             influencedBackup.put(entry.getKey(), new HashSet<>(entry.getValue()));
         }
-        dependenciesBackup.clear();
-        influencedBackup.clear();
+        dependenciesMap.clear();
+        influencedMap.clear();
         // Create a new version of the sheet
         Sheet newSheetVersion = copySheet();
         newSheetVersion.resetCellChangeCount();
