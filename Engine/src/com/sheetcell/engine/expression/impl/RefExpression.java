@@ -27,7 +27,7 @@ public class RefExpression implements ReferenceExpression {
         Cell referencedCell  = sheet.getCell(coordinate.getRow(), coordinate.getColumn());
 
         // Check if the cell is null (i.e., not found) or has no effective value
-        if (referencedCell  == null || referencedCell .getEffectiveValue() == null) {
+        if (referencedCell  == null || referencedCell.getEffectiveValue() == null) {
             return new EffectiveValue(CellType.UNKNOWN, null);
         }
 

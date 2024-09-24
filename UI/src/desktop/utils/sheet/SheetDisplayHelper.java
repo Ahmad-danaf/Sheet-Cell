@@ -191,7 +191,17 @@ public class SheetDisplayHelper {
             int maxRows = versionSheet.getMaxRows();
             int maxColumns = versionSheet.getMaxColumns();
 
-            // Create columns
+            // Add row number column
+            TableColumn<ObservableList<CellWrapper>, Number> rowNumberCol = new TableColumn<>("#");
+            rowNumberCol.setCellValueFactory(cellData -> {
+                int index = versionTableView.getItems().indexOf(cellData.getValue());
+                return new ReadOnlyObjectWrapper<>(index + 1);
+            });
+            rowNumberCol.setSortable(false);
+            rowNumberCol.setPrefWidth(50);
+            versionTableView.getColumns().add(rowNumberCol);
+
+            // Create columns for the sheet data
             for (int colIndex = 0; colIndex < maxColumns; colIndex++) {
                 String columnName = CoordinateFactory.convertIndexToColumnLabel(colIndex);
                 TableColumn<ObservableList<CellWrapper>, CellWrapper> column = new TableColumn<>(columnName);

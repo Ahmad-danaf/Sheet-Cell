@@ -31,7 +31,7 @@ public class EffectiveValue implements Serializable {
 
     @Override
     public String toString() {
-        return value != null ? value.toString() : "null";
+        return value != null ? value.toString() : "";
     }
 
     @Override
