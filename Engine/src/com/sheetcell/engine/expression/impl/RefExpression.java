@@ -23,6 +23,11 @@ public class RefExpression implements ReferenceExpression {
 
     @Override
     public EffectiveValue eval(SheetReadActions sheet, Cell callingCell) {
+        if (outOfBounds(coordinate, sheet.getMaxRows(), sheet.getMaxColumns())) {
+            String message = "Reference '" + coordinate + "' is out of bounds" +
+                    (callingCell != null ? " in cell " + callingCell.getCoordinate() : "");
+            throw new IllegalArgumentException(message);
+        }
         // Retrieve the cell from the sheet
         Cell referencedCell  = sheet.getCell(coordinate.getRow(), coordinate.getColumn());
 
@@ -44,5 +49,10 @@ public class RefExpression implements ReferenceExpression {
     @Override
     public CellType getFunctionResultType() {
         return CellType.UNKNOWN;
+    }
+
+    private boolean outOfBounds(Coordinate coordinate, int maxRow, int maxColumn) {
+        return coordinate.getRow() < 0 || coordinate.getColumn() < 0 ||
+                coordinate.getRow() >= maxRow || coordinate.getColumn() >= maxColumn;
     }
 }
