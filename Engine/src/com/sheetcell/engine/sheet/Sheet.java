@@ -398,8 +398,22 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         if (!isCoordinateWithinBounds(from) || !isCoordinateWithinBounds(to)) {
             throw new IllegalArgumentException("Error in"+ rangeName +": Range coordinates are outside the boundaries of the sheet.");
         }
+        validateRangeCoordinates(rangeName, from, to);
         rangeFactory.addRange(rangeName, from, to);
     }
+
+    private void validateRangeCoordinates(String rangeName, Coordinate from, Coordinate to) {
+        int fromRow = from.getRow();
+        int toRow = to.getRow();
+        int fromColumn = from.getColumn();
+        int toColumn = to.getColumn();
+
+        // Ensure that the "from" coordinate is not below or to the right of the "to" coordinate
+        if (fromRow > toRow || fromColumn > toColumn) {
+            throw new IllegalArgumentException("Error in " + rangeName + ": Invalid range. 'From' coordinate must be top-left and 'To' coordinate must be bottom-right.");
+        }
+    }
+
 
     private boolean isCoordinateWithinBounds(Coordinate coord) {
         int maxRows = getMaxRows(); // Method or variable that provides the maximum number of rows in the sheet
