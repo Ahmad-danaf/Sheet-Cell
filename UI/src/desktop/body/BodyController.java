@@ -119,7 +119,7 @@ public class BodyController {
         });
 
         themeSelector.setValue("Light");
-        animationToggle.setValue("On");
+        animationToggle.setValue("Off");
     }
 
     public void setSpreadsheetGridController(SheetController spreadsheetGridController) {
