@@ -123,12 +123,7 @@ public class SheetDisplayHelper {
             filteredTableView.getColumns().add(column);
         }
 
-        // Set the filtered data to the TableView
-        if (filteredData.isEmpty()) {
-            System.out.println("No rows matched the filter criteria.");
-        } else {
-            System.out.println("Filtered rows: " + filteredData.size());
-        }
+
 
         filteredTableView.setItems(FXCollections.observableArrayList(filteredData));
 

@@ -95,9 +95,7 @@ public class SheetController {
                     bodyController.updateSelectedCell(cellAddress, originalValue, versionString);
                 }
 
-                // Highlight precedents and dependents
-                System.out.println("Row: " + row + ", Column: " + dataColumnIndex);
-                System.out.println("Cell: " + cellAddress);
+
                 highlightPrecedentsAndDependents(row,dataColumnIndex);
             } else {
                 // No cell selected; clear selection in BodyController
@@ -531,7 +529,6 @@ public class SheetController {
 
                 // Ensure rowData exists for the given row
                 if (row >= spreadsheetTableView.getItems().size()) {
-                    System.out.println("Row out of bounds: " + row);
                     continue; // Skip if row is out of bounds
                 }
 
@@ -539,7 +536,6 @@ public class SheetController {
 
                 // Ensure CellWrapper exists for the given column
                 if (col >= rowData.size()) {
-                    System.out.println("Column out of bounds: " + col);
                     continue; // Skip if column is out of bounds
                 }
 
@@ -547,13 +543,10 @@ public class SheetController {
 
                 // Handle empty cells (if cellWrapper.getCell() is null)
                 if (cellWrapper.getCell() == null) {
-                    System.out.println("Empty cell at: " + row + "," + col);
                     cellWrapper.setHighlightStyle("-fx-background-color: #FFD699;"); // Highlight empty cell
                 } else {
-                    System.out.println("Highlighting non-empty cell at: " + row + "," + col);
                     cellWrapper.setHighlightStyle("-fx-background-color: #FFD699;");  // Highlight non-empty cell
                 }
-                System.out.println("CellWrapper: " + cellWrapper.getHighlightStyle() + " at row " + row + " col " + col);
 
             }
 
@@ -577,7 +570,6 @@ public class SheetController {
             int colIndex = entry.getKey();
             List<String> selectedValues = entry.getValue();
 
-            System.out.println("Applying filter for column: " + colIndex);
 
             for (int rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
                 ObservableList<CellWrapper> row = spreadsheetTableView.getItems().get(rowIndex);

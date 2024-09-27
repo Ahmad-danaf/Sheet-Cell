@@ -136,20 +136,15 @@ public class BodyController {
                 mainPane.getScene().getStylesheets().clear();
                 try {
                     if ("Light".equals(selectedTheme)) {
-                        System.out.println("Light theme selected");
                         mainPane.getScene().getStylesheets().add(getClass().getResource("light-theme.css").toExternalForm());
                     } else if ("Dark".equals(selectedTheme)) {
-                        System.out.println("Dark theme selected");
                         mainPane.getScene().getStylesheets().add(getClass().getResource("dark-theme.css").toExternalForm());
                     } else if ("Twilight".equals(selectedTheme)) {
-                        System.out.println("Twilight theme selected");
                         mainPane.getScene().getStylesheets().add(getClass().getResource("twilight-theme.css").toExternalForm());
                     }
-                } catch (NullPointerException e) {
-                    System.out.println("Error: Theme file not found.");
+                } catch (NullPointerException ignored) {
+
                 }
-            } else {
-                System.out.println("Error: Scene is not ready.");
             }
         });
     }
@@ -159,10 +154,8 @@ public class BodyController {
         String animationState = animationToggle.getValue();
         if ("On".equals(animationState)) {
             animationManager.setAnimationsEnabled(true);
-            System.out.println("Animations enabled");
         } else {
             animationManager.setAnimationsEnabled(false);
-            System.out.println("Animations disabled");
         }
     }
 
@@ -373,8 +366,6 @@ public class BodyController {
             } else if (result.hasError()) {
                 UIHelper.showError("Update failed: ", result.getErrorMessage());
                 return;
-            } else {
-                System.out.println("Cell " + cellAddress + " updated successfully.");
             }
             spreadsheetGridController.refreshSpreadsheet();
             Cell changedCell = engine.getReadOnlySheet().getCell(row, column);
@@ -403,11 +394,8 @@ public class BodyController {
         if (cellAddress != null && !cellAddress.isEmpty()) {
             int row = CoordinateFactory.getRowIndex(cellAddress);
             int column = CoordinateFactory.getColumnIndex(cellAddress);
-            System.out.println("###### IN APPLY STYLE ######");
-            System.out.println("Selected cell: " + cellAddress + " Row: " + row + " Column: " + column);
             String backgroundColor = ColorUtils.colorToHex(backgroundColorPicker.getValue());
             String textColor = ColorUtils.colorToHex(textColorPicker.getValue());
-            System.out.println("Background color: " + backgroundColor + " Text color: " + textColor);
             String style = "-fx-background-color: " + backgroundColor + "; -fx-text-fill: " + textColor + "; -fx-fill: " + textColor + ";";
 
             spreadsheetGridController.applyCellStyle(row, column, style);
@@ -614,9 +602,7 @@ public class BodyController {
         if (result.isPresent()) {
             MultiColFilterParameters filterParams = result.get();
 
-            // Print the selected range and filter criteria
-            System.out.println("Selected range: " + filterParams.getRangeInput());
-            System.out.println("Filter criteria: " + filterParams.getFilterCriteria());
+
 
             // Pass the filter parameters and range to the SheetController
             spreadsheetGridController.applyMultiColumnFilter(filterParams.getRangeInput(), filterParams.getFilterCriteria());
@@ -640,8 +626,7 @@ public class BodyController {
                 UIHelper.showError("Error Applying Alignment", e.getMessage());
             }
         }
-        System.out.println("Selected column: " + selectedColumn + " Column Index: " + column);
-        System.out.println("Selected alignment: " + alignmentChoiceBox.getValue());
+
 
 
     }

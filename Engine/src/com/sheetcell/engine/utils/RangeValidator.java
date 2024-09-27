@@ -107,24 +107,18 @@ public class RangeValidator {
 
         if (validator.isValidRange(testRange1)) {
             Coordinate[] coords = validator.parseRange(testRange1);
-            System.out.println("Start: " + coords[0] + ", End: " + coords[1]);
         }
 
         if (validator.isValidRange(testRange2)) {
             Coordinate[] coords = validator.parseRange(testRange2);
-            System.out.println("Start: " + coords[0] + ", End: " + coords[1]);
         }
 
         if (validator.isValidRange(testRange3)) {
             Coordinate[] coords = validator.parseRange(testRange3);
-            System.out.println("Start: " + coords[0] + ", End: " + coords[1]);
         }
         if (validator.isValidRange(testRange4)) {
             Coordinate[] coords = validator.parseRange(testRange4);
-            System.out.println("Start: " + coords[0] + ", End: " + coords[1]);
         }
-        else {
-            System.out.println(testRange4 + " is not a valid range");
-        }
+
     }
 }
