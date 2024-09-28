@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane fx:id="gridScrollPane" fitToHeight="true" fitToWidth="true" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="desktop.sheet.SheetController">
+   <content>
+      <VBox>
+         <TableView fx:id="spreadsheetTableView" editable="true" VBox.vgrow="ALWAYS" styleClass="spreadsheet-table" />
+      </VBox>
+   </content>
+</ScrollPane>
