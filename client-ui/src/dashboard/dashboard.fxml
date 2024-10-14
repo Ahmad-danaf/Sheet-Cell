@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<GridPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="dashboard.DashboardController">
+    <Label text="Welcome, User!" fx:id="welcomeLabel" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+    <Button text="Log Out" onAction="#logoutButtonClicked" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+    <!-- Add more buttons, tables, or components for user actions -->
+
+</GridPane>
