@@ -1,0 +1,81 @@
+/* Global styles for the dashboard */
+.main-grid {
+    -fx-background-color: #f0f4f8; /* Light background color */
+    -fx-padding: 15;
+}
+
+/* Header styling for the logo and username */
+.header-box {
+    -fx-background-color: #4CAF50; /* Green background for header */
+    -fx-padding: 10;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+}
+
+.logo-label {
+    -fx-font-size: 24px; /* Large font size for the logo text */
+    -fx-text-fill: white; /* White text */
+    -fx-font-weight: bold;
+    -fx-font-family: "Arial Black", Gadget, sans-serif; /* Use a bold, professional font */
+}
+
+.header-label {
+    -fx-font-size: 18px;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+/* Button styling */
+.load-button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-padding: 10;
+    -fx-font-size: 14px;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+}
+
+.load-button:hover {
+    -fx-background-color: #45a049;
+}
+
+/* TableView styling */
+.available-table, .permissions-table {
+    -fx-background-color: white;
+    -fx-border-color: #ccc;
+    -fx-border-width: 1px;
+    -fx-padding: 10;
+    -fx-font-size: 14px;
+}
+
+.available-table .table-column, .permissions-table .table-column {
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+}
+
+/* Command Pane */
+.commands-pane {
+    -fx-background-color: #f7f7f7;
+    -fx-border-color: #ccc;
+    -fx-padding: 15;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+}
+
+.commands-vbox {
+    -fx-spacing: 15;
+}
+
+/* Command Buttons */
+.command-button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-padding: 10;
+    -fx-font-size: 14px;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+}
+
+.command-button:hover {
+    -fx-background-color: #45a049;
+}

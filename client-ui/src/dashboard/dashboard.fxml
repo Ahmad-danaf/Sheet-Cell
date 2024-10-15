@@ -1,11 +1,75 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Button?>
-<GridPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="dashboard.DashboardController">
-    <Label text="Welcome, User!" fx:id="welcomeLabel" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-    <Button text="Log Out" onAction="#logoutButtonClicked" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-    <!-- Add more buttons, tables, or components for user actions -->
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
 
-</GridPane>
+
+<ScrollPane xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="dashboard.DashboardController"
+            fitToWidth="true" fitToHeight="true">
+   <content>
+      <GridPane hgap="10" maxHeight="800" minHeight="400" prefHeight="600" styleClass="main-grid" stylesheets="@dashboard.css" vgap="10">
+          <columnConstraints>
+              <ColumnConstraints hgrow="ALWAYS" minWidth="400" />
+              <ColumnConstraints hgrow="NEVER" />
+          </columnConstraints>
+          <VBox GridPane.columnSpan="2" styleClass="header-box">
+              <!-- Centered Title -->
+              <VBox alignment="CENTER">
+                  <Label contentDisplay="CENTER" styleClass="logo-label" text="ShtiCell" textAlignment="CENTER" />
+              </VBox>
+
+              <!-- Left-Aligned Username -->
+              <VBox alignment="TOP_LEFT">
+                  <Label fx:id="usernameLabel" styleClass="header-label" text="Welcome, [Username]" />
+              </VBox>
+          </VBox>
+      
+          <!-- Load Sheet Button -->
+          <Button styleClass="load-button" text="Load Sheet File" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+      
+          <!-- Available Sheets Table -->
+          <TableView fx:id="availableSheetsTable" styleClass="available-table" GridPane.columnIndex="0" GridPane.rowIndex="2">
+              <columns>
+                  <TableColumn fx:id="sheetNameColumn" prefWidth="150" text="Sheet Name" />
+                  <TableColumn fx:id="ownerColumn" prefWidth="100" text="Owner" />
+                  <TableColumn fx:id="sizeColumn" prefWidth="75" text="Size" />
+              </columns>
+          </TableView>
+      
+          <!-- Permissions Table (for selected sheet) -->
+          <TableView fx:id="permissionsTable" styleClass="permissions-table" GridPane.columnIndex="0" GridPane.rowIndex="3" >
+              <columns>
+                  <TableColumn fx:id="usernameColumn" prefWidth="150" text="Username" />
+                  <TableColumn fx:id="permissionTypeColumn" prefWidth="150" text="Permission Type" />
+                  <TableColumn fx:id="statusColumn" prefWidth="100" text="Status" />
+              </columns>
+          </TableView>
+      
+          <!-- Command Section -->
+          <TitledPane expanded="false" styleClass="commands-pane" text="Commands" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.rowSpan="2">
+              <content>
+                  <VBox alignment="CENTER" spacing="10" styleClass="commands-vbox">
+                      <Button styleClass="command-button" text="View Sheet" />
+                      <Button styleClass="command-button" text="Request Permission" />
+                      <Button styleClass="command-button" text="Acknowledge/Deny Permission" />
+                  </VBox>
+              </content>
+          </TitledPane>
+          <rowConstraints>
+              <RowConstraints vgrow="ALWAYS" />
+              <RowConstraints vgrow="ALWAYS" />
+              <RowConstraints vgrow="ALWAYS" />
+              <RowConstraints vgrow="ALWAYS" />
+          </rowConstraints>
+      
+      </GridPane>
+   </content>
+</ScrollPane>
