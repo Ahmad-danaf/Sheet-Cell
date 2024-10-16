@@ -14,6 +14,7 @@ import jaxb.schema.generatedFiles.*;
 
 
 import java.io.File;
+import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +44,12 @@ public class XMLSheetProcessor {
         STLSheet importedSheet = parseXMLToSTLSheet(xmlFile);
         mapSTLSheetToSheet(importedSheet);
     }
+    public void processSheetContent(String xmlContent) throws JAXBException {
+        // Parse XML content into an STLSheet object
+        STLSheet importedSheet = parseXMLToSTLSheet(xmlContent);
+        mapSTLSheetToSheet(importedSheet);
+    }
+
 
 
     private STLSheet parseXMLToSTLSheet(File xmlFile) throws JAXBException {
@@ -54,6 +61,20 @@ public class XMLSheetProcessor {
             throw new JAXBException("Error parsing XML file: " + xmlFile.getPath(), e);
         }
     }
+
+    private STLSheet parseXMLToSTLSheet(String xmlContent) throws JAXBException {
+        try {
+            JAXBContext jaxbContext = JAXBContext.newInstance(STLSheet.class);
+            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+
+            // Unmarshal the XML content from a StringReader
+            StringReader reader = new StringReader(xmlContent);
+            return (STLSheet) jaxbUnmarshaller.unmarshal(reader);
+        } catch (JAXBException e) {
+            throw new JAXBException("Error parsing XML content", e);
+        }
+    }
+
 
     private void mapSTLSheetToSheet(STLSheet stlSheet) {
         String sheetName = stlSheet.getName();

@@ -33,7 +33,7 @@
           </VBox>
       
           <!-- Load Sheet Button -->
-          <Button styleClass="load-button" text="Load Sheet File" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+          <Button styleClass="load-button" text="Load Sheet File" GridPane.columnIndex="0" GridPane.rowIndex="1" onAction="#handleLoadFile"/>
       
           <!-- Available Sheets Table -->
           <TableView fx:id="availableSheetsTable" styleClass="available-table" GridPane.columnIndex="0" GridPane.rowIndex="2">

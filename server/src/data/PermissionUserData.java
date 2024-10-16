@@ -1,4 +1,4 @@
-package dashboard;
+package data;
 
 public class PermissionUserData {
     private String username;

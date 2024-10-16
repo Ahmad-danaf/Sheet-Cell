@@ -44,6 +44,20 @@ public class EngineImpl implements Engine, Serializable {
         this.columnRowPropertyManager.initAllProperties(currentSheet.getMaxRows(),currentSheet.getMaxColumns(), currentSheet.getRowHeight(), currentSheet.getColumnWidth());
     }
 
+    @Override
+    public void loadSheetFromContentXML(String fileContent) throws Exception {
+        XMLSheetProcessor xmlSheetProcessor = new XMLSheetProcessor();
+        xmlSheetProcessor.processSheetContent(fileContent);
+        this.currentSheet = xmlSheetProcessor.getCurrentSheet();
+        this.sheetVersions.clear();
+        this.currentSheet.setOnload(false);
+        this.sheetVersions.put(currentSheet.getVersion(), currentSheet);
+        this.rangeValidator.setMaxRows(currentSheet.getMaxRows());
+        this.rangeValidator.setMaxCols(currentSheet.getMaxColumns());
+        this.columnRowPropertyManager.clearAllProperties();
+        this.columnRowPropertyManager.initAllProperties(currentSheet.getMaxRows(),currentSheet.getMaxColumns(), currentSheet.getRowHeight(), currentSheet.getColumnWidth());
+    }
+
 
     @Override
     public void saveSheet(String filePath) throws IOException {
