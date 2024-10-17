@@ -18,11 +18,6 @@ public class UIHelper {
         alert.showAndWait();
     }
 
-    public static void showAlert(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
 
     public static void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION); // Choose the type of alert
@@ -30,6 +25,13 @@ public class UIHelper {
         alert.setHeaderText(title);
         alert.setContentText(message);
 
+        alert.showAndWait();
+    }
+
+    public static void showAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Info");
+        alert.setContentText(message);
         alert.showAndWait();
     }
 }

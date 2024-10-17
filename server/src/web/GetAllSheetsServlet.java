@@ -10,7 +10,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import users.UserManager;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
 
 @WebServlet("/getAllSheets") // This defines the URL endpoint

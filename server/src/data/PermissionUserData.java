@@ -1,11 +1,14 @@
 package data;
 
-public class PermissionUserData {
-    private String username;
-    private String permissionType;
-    private String status;
+import java.util.Objects;
 
-    public PermissionUserData(String username, String permissionType, String status) {
+public class PermissionUserData {
+
+    private String username;
+    private PermissionType permissionType;
+    private PermissionStatus status;
+
+    public PermissionUserData(String username, PermissionType permissionType, PermissionStatus status) {
         this.username = username;
         this.permissionType = permissionType;
         this.status = status;
@@ -15,11 +18,32 @@ public class PermissionUserData {
         return username;
     }
 
-    public String getPermissionType() {
+    public PermissionType getPermissionType() {
         return permissionType;
     }
 
-    public String getStatus() {
+    public PermissionStatus getStatus() {
         return status;
+    }
+
+    public void setStatus(PermissionStatus status) {
+        this.status = status;
+    }
+
+    public void setPermissionType(PermissionType permissionType) {
+        this.permissionType = permissionType;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PermissionUserData that = (PermissionUserData) o;
+        return Objects.equals(username, that.username);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(username);
     }
 }

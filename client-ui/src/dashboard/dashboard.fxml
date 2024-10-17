@@ -41,6 +41,8 @@
                   <TableColumn fx:id="sheetNameColumn" prefWidth="150" text="Sheet Name" />
                   <TableColumn fx:id="ownerColumn" prefWidth="100" text="Owner" />
                   <TableColumn fx:id="sizeColumn" prefWidth="75" text="Size" />
+                  <TableColumn fx:id="permissionTypeColumn" prefWidth="150" text="Permission" />
+
               </columns>
           </TableView>
       
@@ -48,8 +50,9 @@
           <TableView fx:id="permissionsTable" styleClass="permissions-table" GridPane.columnIndex="0" GridPane.rowIndex="3" >
               <columns>
                   <TableColumn fx:id="usernameColumn" prefWidth="150" text="Username" />
-                  <TableColumn fx:id="permissionTypeColumn" prefWidth="150" text="Permission Type" />
+                  <TableColumn fx:id="userPermissionTypeColumn" prefWidth="150" text="Permission Type" />
                   <TableColumn fx:id="statusColumn" prefWidth="100" text="Status" />
+
               </columns>
           </TableView>
       
@@ -58,8 +61,8 @@
               <content>
                   <VBox alignment="CENTER" spacing="10" styleClass="commands-vbox">
                       <Button styleClass="command-button" text="View Sheet" />
-                      <Button styleClass="command-button" text="Request Permission" />
-                      <Button styleClass="command-button" text="Acknowledge/Deny Permission" />
+                      <Button styleClass="command-button" text="Request Permission" onAction="#handleRequestPermission" />
+                      <Button styleClass="command-button" text="Acknowledge/Deny Permission" onAction="#handleAcknowledgeDenyPermission" />
                   </VBox>
               </content>
           </TitledPane>

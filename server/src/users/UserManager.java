@@ -1,5 +1,6 @@
 package users;
 
+import data.PermissionType;
 import data.SheetUserData;
 
 import java.util.HashMap;
@@ -10,7 +11,7 @@ import java.util.Set;
 public class UserManager {
 
     private final Set<String> usersSet;
-    private Map<String, Set<SheetUserData>> userToSheetData; //map every user to list of his sheets
+    private Map<String, Set<SheetUserData>> userToSheetData;  // Maps userId -> Set of SheetUserData
 
     public UserManager() {
         usersSet = new HashSet<>();
@@ -38,6 +39,7 @@ public class UserManager {
             userToSheetData.put(username, new HashSet<>());
         }
         userToSheetData.get(username).add(sheetData);
+
     }
     public boolean isSheetExists(String sheetName){
         for (String user : userToSheetData.keySet()) {
@@ -56,6 +58,18 @@ public class UserManager {
             allSheets.addAll(sheets);
         }
         return allSheets;
+    }
+
+    public SheetUserData getSheetByName(String sheetName) {
+        // Logic to retrieve the SheetUserData by name
+        for (Set<SheetUserData> sheets : userToSheetData.values()) {
+            for (SheetUserData sheetData : sheets) {
+                if (sheetData.getSheetName().equals(sheetName)) {
+                    return sheetData;
+                }
+            }
+        }
+        return null;
     }
 
 

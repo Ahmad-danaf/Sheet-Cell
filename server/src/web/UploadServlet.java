@@ -1,6 +1,7 @@
 package web;
 
 import com.google.gson.Gson;
+import data.PermissionType;
 import data.SheetUserData;
 import engine.EngineManager;
 import engine.UserSheetEngine;
@@ -19,8 +20,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
-@WebServlet("/upload") // This defines the URL endpoint
-@MultipartConfig // This tells the servlet to handle file uploads
+@WebServlet("/upload")
+@MultipartConfig
 public class UploadServlet extends HttpServlet {
 
     private static final Gson gson = new Gson();
@@ -96,7 +97,7 @@ public class UploadServlet extends HttpServlet {
                 jsonResponse.put("maxRows", maxRows);
                 // size is nXm where n is the number of columns and m is the number of rows
                 String size = maxColumns + "x" + maxRows;
-                SheetUserData sheetUserData = new SheetUserData(fileName, userId, size);
+                SheetUserData sheetUserData = new SheetUserData(fileName, userId, size, PermissionType.OWNER);
                 userManager.addSheetToUser(userId, sheetUserData);
                 jsonResponse.put("sheets", userManager.getAllSheets());
                 jsonResponse.put("message", "File uploaded and processed successfully.");
