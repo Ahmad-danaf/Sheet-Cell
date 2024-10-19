@@ -8,9 +8,14 @@ import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.utils.SheetUpdateResult;
+import data.SheetUserData;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -29,6 +34,7 @@ import utils.parsing.ParsingUtils;
 import utils.sheet.GraphGenerator;
 import utils.sheet.SheetDisplayHelper;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -44,7 +50,7 @@ public class SheetDisplayController {
     @FXML
     private Label usernameLabel;
     @FXML
-    private TextField filePathField;
+    private TextField sheetNameField;
     @FXML
     private TextField selectedCellId;
     @FXML
@@ -118,11 +124,56 @@ public class SheetDisplayController {
 
     }
 
+    public void initializeSheetView(SheetUserData sheetData) {
+        // Set the sheet name
+        sheetNameField.setText(sheetData.getSheetName());
+
+        // Initialize the version selector
+        //initializeVersionSelector(sheetData);
+
+        // Initialize cell styles
+        //initializeCellStyling();
+
+        // Load the sheet data into the spreadsheet grid
+        loadSheetIntoGrid(sheetData);
+
+        // Mark the sheet as loaded
+        isSheetLoaded = true;
+    }
+
+    private void loadSheetIntoGrid(SheetUserData sheetData) {
+        // Assuming SheetUserData has a method to get the sheet's data
+        // Pass the data to the spreadsheetGridController
+       // spreadsheetGridController.loadSheetData(sheetData);
+    }
+
     public void setSpreadsheetGridController(SheetController spreadsheetGridController) {
         this.spreadsheetGridController = spreadsheetGridController;
         spreadsheetGridController.setEngine(engine);
         spreadsheetGridController.setSheetDisplayController(this);
     }
+
+    @FXML
+    private void handleBackToDashboard(ActionEvent event) {
+        try {
+            // Load the dashboard FXML file
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/dashboard/dashboard.fxml"));
+            Parent dashboardParent = loader.load();
+
+            // Get the current stage (window) using the event source
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            // Set the scene to the dashboard and show it
+            stage.setScene(new Scene(dashboardParent));
+            stage.show();
+
+        } catch (IOException e) {
+            // Handle any exceptions, such as file not found or FXML loading errors
+            e.printStackTrace();
+            UIHelper.showError("Error", "Failed to load the dashboard. Please try again.");
+        }
+    }
+
 
 
     @FXML

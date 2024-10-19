@@ -13,6 +13,10 @@ import javafx.concurrent.ScheduledService;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
@@ -20,6 +24,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
+import sheetDisplay.SheetDisplayController;
 import utils.UIHelper;
 import utils.http.HttpClientUtil;
 
@@ -495,6 +500,33 @@ public class DashboardController {
         }
     }
 
+    @FXML
+    private void handleViewSheet(ActionEvent event) {
+        // Ensure that a sheet is selected from the available sheets table
+        if (selectedSheet == null) {
+            showError("No sheet selected. Please select a sheet to view.");
+            return;
+        }
+
+        try {
+            // Load the FXML for the sheet display view
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetDisplay/sheetDisplay.fxml"));
+            Parent sheetDisplayParent = loader.load();
+
+            // Get the controller for the sheet display and initialize it with the selected sheet data
+            SheetDisplayController sheetDisplayController = loader.getController();
+            sheetDisplayController.initializeSheetView(selectedSheet); // Passing the selected sheet to the next controller
+
+            // Set up the new scene
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(sheetDisplayParent));
+            stage.show();
+
+        } catch (IOException e) {
+            showError("Failed to load the sheet display view: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
 
 

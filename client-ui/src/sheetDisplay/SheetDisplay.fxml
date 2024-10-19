@@ -21,37 +21,43 @@
             <!-- Main container for the top section -->
             <VBox alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
                 <!-- First HBox for title, theme selector, and animation toggle -->
-                <HBox alignment="CENTER" spacing="20"><!-- Center: Application title -->
-                <Label fx:id="applicationTitle" styleClass="title-label" text="ShtiCell">
-                    <font>
-                        <Font name="System Bold" size="18.0"/>
-                    </font>
-                </Label>
+                <HBox alignment="CENTER" spacing="20">
+                    <!-- Center: Application title -->
+                    <Label fx:id="applicationTitle" styleClass="title-label" text="ShtiCell">
+                        <font>
+                            <Font name="System Bold" size="18.0"/>
+                        </font>
+                    </Label>
+
+
                 </HBox>
 
                 <!-- Existing file load section -->
-                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="top-bar">
                     <Label fx:id="usernameLabel" styleClass="header-label" text="Welcome, [Username]" />
-                    <TextField fx:id="sheetNameField" editable="false" prefWidth="150.0"
-                               styleClass="file-name" HBox.hgrow="ALWAYS"/>
+                    <TextField fx:id="sheetNameField" editable="false" prefWidth="150.0" styleClass="file-name" HBox.hgrow="ALWAYS"/>
+
+                    <!-- Go Back to Dashboard Button -->
+                    <Button fx:id="backToDashboardButton" text="Back to Dashboard" onAction="#handleBackToDashboard" styleClass="back-button">
+                        <tooltip>
+                            <Tooltip text="Go back to the dashboard"/>
+                        </tooltip>
+                    </Button>
                 </HBox>
+
 
                 <!-- Action line for cell updates and value handling -->
                 <HBox alignment="TOP_CENTER" spacing="10.0" styleClass="action-line">
                     <children>
                         <TextField fx:id="selectedCellId" editable="false" promptText="Selected Cell ID"/>
                         <TextField fx:id="originalCellValue" promptText="Original Cell value"/>
-                        <Button fx:id="updateValueButton" mnemonicParsing="false" onAction="#handleUpdateValue"
-                                styleClass="update-button" text="Update value">
+                        <Button fx:id="updateValueButton" mnemonicParsing="false" onAction="#handleUpdateValue" styleClass="update-button" text="Update value">
                             <tooltip>
                                 <Tooltip text="Update the selected cell value"/>
                             </tooltip>
                         </Button>
-                        <TextField fx:id="lastUpdateCellVersion" editable="false"
-                                   promptText="Last update cell version"/>
-                        <ChoiceBox fx:id="versionSelector" accessibleHelp="version selection"
-                                   accessibleText="version selection" prefWidth="150.0"
-                                   styleClass="version-selector"/>
+                        <TextField fx:id="lastUpdateCellVersion" editable="false" promptText="Last update cell version"/>
+                        <ChoiceBox fx:id="versionSelector" accessibleHelp="version selection" accessibleText="version selection" prefWidth="150.0" styleClass="version-selector"/>
                     </children>
                 </HBox>
 
@@ -68,14 +74,12 @@
                                 <Tooltip text="Select text color"/>
                             </tooltip>
                         </ColorPicker>
-                        <Button fx:id="applyStyleButton" onAction="#handleApplyStyle" styleClass="color-picker"
-                                text="Apply Style">
+                        <Button fx:id="applyStyleButton" onAction="#handleApplyStyle" styleClass="color-picker" text="Apply Style">
                             <tooltip>
                                 <Tooltip text="Apply selected style to the cell"/>
                             </tooltip>
                         </Button>
-                        <Button fx:id="resetStyleButton" onAction="#handleResetStyle" styleClass="color-picker"
-                                text="Reset Style">
+                        <Button fx:id="resetStyleButton" onAction="#handleResetStyle" styleClass="color-picker" text="Reset Style">
                             <tooltip>
                                 <Tooltip text="Reset cell style to default"/>
                             </tooltip>

@@ -220,3 +220,46 @@
     -fx-background-color: #f9f9f9;
 }
 
+/* Styling for the top bar (HBox container) */
+.top-bar {
+    -fx-background-color: #f0f0f0;
+    -fx-padding: 10;
+    -fx-border-color: #ccc;
+    -fx-border-width: 0 0 1px 0;
+}
+
+/* Styling for the header label (usernameLabel) */
+.header-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+}
+
+/* Styling for the sheet name text field (sheetNameField) */
+.file-name {
+    -fx-font-size: 14px;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #ccc;
+    -fx-border-radius: 5;
+    -fx-padding: 5;
+}
+
+/* Styling for the back-to-dashboard button */
+.back-button {
+    -fx-background-color: #007bff;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 8 15;
+    -fx-border-radius: 5;
+    -fx-cursor: hand;
+}
+
+.back-button:hover {
+    -fx-background-color: #0056b3; /* Darker blue on hover */
+}
+
+.back-button:pressed {
+    -fx-background-color: #003f7f; /* Even darker when pressed */
+}
+
+

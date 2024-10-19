@@ -60,7 +60,7 @@
           <TitledPane expanded="false" styleClass="commands-pane" text="Commands" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.rowSpan="2">
               <content>
                   <VBox alignment="CENTER" spacing="10" styleClass="commands-vbox">
-                      <Button styleClass="command-button" text="View Sheet" />
+                      <Button styleClass="command-button" text="View Sheet" onAction="#handleViewSheet"/>
                       <Button styleClass="command-button" text="Request Permission" onAction="#handleRequestPermission" />
                       <Button styleClass="command-button" text="Acknowledge/Deny Permission" onAction="#handleAcknowledgeDenyPermission" />
                   </VBox>
