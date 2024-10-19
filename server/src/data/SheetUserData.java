@@ -49,15 +49,29 @@ public class SheetUserData {
 
     // Add or update a permission for a user, including status (ACKNOWLEDGED, PENDING, etc.)
     public void addPermissionForUser(String userId, PermissionType permissionType, PermissionStatus status) {
+        System.out.println("addPermissionForUser");
+        System.out.println("################################################################");
         PermissionUserData permissionData = getPermissionForUser(userId);
         if (permissionData == null) {
-            // If permission doesn't exist, create a new one
+            System.out.println("permissionData is null");
             permissionData = new PermissionUserData(userId, permissionType, status);
             userPermissions.add(permissionData);
         } else {
-            // If permission already exists, update it
+            System.out.println("permissionData is not null");
+            System.out.println("permissionData: " + permissionData);
+            System.out.println("permissionType: " + permissionData.getPermissionType());
+            System.out.println("prev permissionType: " + permissionData.getPrevAcknowledgedPermission());
+            System.out.println("status: " + permissionData.getStatus());
+
+            // If a request is acknowledged, update the prevAcknowledgedPermission
+            if (permissionData.getStatus() == PermissionStatus.ACKNOWLEDGED) {
+                permissionData.setPrevAcknowledgedPermission(permissionData.getPermissionType());
+            }
             permissionData.setPermissionType(permissionType);
             permissionData.setStatus(status);
+            System.out.println("new permissionType: " + permissionData.getPermissionType());
+            System.out.println("new prev permissionType: " + permissionData.getPrevAcknowledgedPermission());
+            System.out.println("new status: " + permissionData.getStatus());
         }
     }
 
@@ -65,7 +79,10 @@ public class SheetUserData {
     public void acknowledgePermissionForUser(String userId) {
         userPermissions.stream()
                 .filter(permission -> permission.getUsername().equals(userId))
-                .forEach(permission -> permission.setStatus(PermissionStatus.ACKNOWLEDGED)); // Mark as acknowledged
+                .forEach(permission -> {
+                    permission.setPrevAcknowledgedPermission(permission.getPermissionType());
+                    permission.setStatus(PermissionStatus.ACKNOWLEDGED);
+                });
     }
 
     @Override

@@ -9,12 +9,15 @@ import engine.EngineManager;
 import com.google.gson.Gson;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.concurrent.ScheduledService;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 import utils.UIHelper;
@@ -52,6 +55,8 @@ public class DashboardController {
     private EngineManager engineManager;
     private String currentUserId;
     private SheetUserData selectedSheet;
+    private ScheduledService<Void> pollingService;
+
 
     @FXML
     public void initialize() {
@@ -63,20 +68,23 @@ public class DashboardController {
         permissionTypeColumn.setCellValueFactory(cellData -> {
             SheetUserData sheetData = cellData.getValue();
 
-            // Find the PermissionUserData for the current user
-            PermissionUserData permissionData = sheetData.getUserPermissions().stream()
-                    .filter(permission -> permission.getUsername().equals(currentUserId))
-                    .findFirst()
-                    .orElse(null);
-
-            // Check if permission data exists and the status of the permission
+            PermissionUserData permissionData = sheetData.getPermissionForUser(currentUserId);
+            System.out.println("#####################################################################");
             if (permissionData != null) {
-                if (Objects.requireNonNull(permissionData.getStatus()) == PermissionStatus.ACKNOWLEDGED) {
+                System.out.println("PermissionData: " + permissionData);
+                System.out.println("permissionData is not null");
+                if (permissionData.getStatus() == PermissionStatus.ACKNOWLEDGED) {
                     return new SimpleStringProperty(permissionData.getPermissionType().name());
+                } else{
+                    System.out.println("PermissionData status is not acknowledged");
+                    System.out.println("PermissionData prevAcknowledgedPermission: " + permissionData.getPrevAcknowledgedPermission());
+                    System.out.println("PermissionData status: " + permissionData.getStatus());
+                    // Show the previous acknowledged permission if a request is pending or deny
+                    return new SimpleStringProperty(permissionData.getPrevAcknowledgedPermission().name());
                 }
-                return new SimpleStringProperty(PermissionType.NONE.name());
-            }
 
+            }
+            System.out.println("PermissionData is null");
             // Default to NONE if no permission is found
             return new SimpleStringProperty(PermissionType.NONE.name());
         });
@@ -107,6 +115,35 @@ public class DashboardController {
                     }
                 }
         );
+
+        startPollingService();
+    }
+
+    private void startPollingService() {
+        pollingService = new ScheduledService<>() {
+            @Override
+            protected Task<Void> createTask() {
+                return new Task<>() {
+                    @Override
+                    protected Void call() {
+                        // Fetch the updated data from the server
+                        Platform.runLater(() -> {
+                            fetchAllSheetsFromServer();
+                            if (selectedSheet != null) {
+                                fetchPermissionsForSelectedSheet(selectedSheet.getSheetName());
+                            }
+                        });
+                        return null;
+                    }
+                };
+            }
+        };
+
+        // Set the polling interval to 1 second (adjust as needed)
+        pollingService.setPeriod(Duration.seconds(2));
+
+        // Start the polling service
+        pollingService.start();
     }
 
     public void setStage(Stage stage) {
@@ -160,25 +197,26 @@ public class DashboardController {
 
                 @Override
                 public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                    String responseBody = response.body().string();
-                    Map<String, Object> jsonResponse = gson.fromJson(responseBody, HashMap.class);
+                    try (ResponseBody responseBody = response.body()) {  // Automatically close response body
+                        if (responseBody == null || !response.isSuccessful()) {
+                            Platform.runLater(() -> showError("File upload failed."));
+                            return;
+                        }
 
-                    if (response.isSuccessful()) {
-                        // If the upload was successful, update the table
+                        String responseBodyString = responseBody.string();
+                        Map<String, Object> jsonResponse = gson.fromJson(responseBodyString, HashMap.class);
+
                         Platform.runLater(() -> {
                             showSuccess((String) jsonResponse.get("message"));
-                            // Retrieve the "sheets" from the response, handling nulls gracefully
+                            // Retrieve the "sheets" from the response
                             Set<SheetUserData> sheets = gson.fromJson(
                                     gson.toJson(jsonResponse.get("sheets")),
                                     new TypeToken<Set<SheetUserData>>(){}.getType()
                             );
                             updateAvailableSheetsTable(sheets);
                         });
-                    }  else {
-                        // Show error message
-                        Platform.runLater(() -> {
-                            showError((String) jsonResponse.get("error"));
-                        });
+                    } catch (Exception e) {
+                        Platform.runLater(() -> showError("An error occurred while processing response: " + e.getMessage()));
                     }
                 }
             });
@@ -187,6 +225,7 @@ public class DashboardController {
             showError("An error occurred: " + e.getMessage());
         }
     }
+
 
     private void fetchAllSheetsFromServer() {
         Request request = new Request.Builder()
@@ -202,22 +241,46 @@ public class DashboardController {
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                String responseBody = response.body().string();
-                Set<SheetUserData> sheets = gson.fromJson(responseBody, new TypeToken<Set<SheetUserData>>(){}.getType());
+                try (ResponseBody responseBody = response.body()) {  // Automatically close response body
+                    if (responseBody == null || !response.isSuccessful()) {
+                        Platform.runLater(() -> showError("Failed to retrieve sheets from server."));
+                        return;
+                    }
 
-                Platform.runLater(() -> updateAvailableSheetsTable(sheets));
+                    String responseBodyString = responseBody.string();
+                    Set<SheetUserData> sheets = gson.fromJson(responseBodyString, new TypeToken<Set<SheetUserData>>(){}.getType());
+
+                    Platform.runLater(() -> updateAvailableSheetsTable(sheets));
+                } catch (Exception e) {
+                    Platform.runLater(() -> showError("An error occurred while processing response: " + e.getMessage()));
+                }
             }
         });
     }
 
 
+
     private void updateAvailableSheetsTable(Set<SheetUserData> sheets) {
+        // Preserve the selected sheet
+        SheetUserData selectedSheet = availableSheetsTable.getSelectionModel().getSelectedItem();
+
         // Clear the existing items in the table
         availableSheetsTable.getItems().clear();
 
-        // Add each sheet directly to the table
+        // Add the new items
         availableSheetsTable.getItems().addAll(sheets);
+
+        // Restore the selected sheet if it is still in the updated list
+        if (selectedSheet != null) {
+            for (SheetUserData sheet : availableSheetsTable.getItems()) {
+                if (sheet.getSheetName().equals(selectedSheet.getSheetName())) {
+                    availableSheetsTable.getSelectionModel().select(sheet);
+                    break;
+                }
+            }
+        }
     }
+
 
     private void fetchPermissionsForSelectedSheet(String sheetName) {
         // Build the request to get permissions for the selected sheet
@@ -236,16 +299,20 @@ public class DashboardController {
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                if (response.isSuccessful()) {
+                try (ResponseBody responseBody = response.body()) {  // Ensure response body is closed
+                    if (responseBody == null || !response.isSuccessful()) {
+                        Platform.runLater(() -> showError("Failed to retrieve permissions: Server error"));
+                        return;
+                    }
+
                     // Parse the response body to get the list of PermissionUserData objects
-                    String responseBody = response.body().string();
-                    Set<PermissionUserData> permissions = gson.fromJson(responseBody, new TypeToken<Set<PermissionUserData>>() {}.getType());
+                    String responseBodyString = responseBody.string();
+                    Set<PermissionUserData> permissions = gson.fromJson(responseBodyString, new TypeToken<Set<PermissionUserData>>() {}.getType());
 
                     // Update the UI (permissions table) on the JavaFX thread
                     Platform.runLater(() -> updatePermissionsTable(new ArrayList<>(permissions)));
-                } else {
-                    // Handle non-successful responses
-                    Platform.runLater(() -> showError("Failed to retrieve permissions: Server error"));
+                } catch (Exception e) {
+                    Platform.runLater(() -> showError("Error processing permissions: " + e.getMessage()));
                 }
             }
         });
@@ -253,16 +320,39 @@ public class DashboardController {
 
 
 
+
     private void updatePermissionsTable(List<PermissionUserData> permissions) {
+        // Preserve the selected permission
+        PermissionUserData selectedPermission = permissionsTable.getSelectionModel().getSelectedItem();
+
+        // Clear the existing items in the table
         permissionsTable.getItems().clear();
+
+        // Add the new items
         permissionsTable.getItems().addAll(permissions);
+
+        // Restore the selected permission if it is still in the updated list
+        if (selectedPermission != null) {
+            for (PermissionUserData permission : permissionsTable.getItems()) {
+                if (permission.getUsername().equals(selectedPermission.getUsername())) {
+                    permissionsTable.getSelectionModel().select(permission);
+                    break;
+                }
+            }
+        }
     }
+
 
     @FXML
     private void handleRequestPermission(ActionEvent event) {
         if (selectedSheet != null) {
+            if (selectedSheet.getOwner().equals(currentUserId)) {
+                showError("You are the owner of this sheet.");
+                return;
+            }
             // Allow the user to choose the requested permission (e.g., READER or WRITER)
-            ChoiceDialog<PermissionType> permissionDialog = new ChoiceDialog<>(PermissionType.READER, PermissionType.values());
+            ChoiceDialog<PermissionType> permissionDialog = new ChoiceDialog<>(PermissionType.READER,
+                    EnumSet.of(PermissionType.READER, PermissionType.WRITER));
             permissionDialog.setTitle("Request Permission");
             permissionDialog.setHeaderText("Choose the permission you want to request:");
             Optional<PermissionType> result = permissionDialog.showAndWait();
@@ -286,10 +376,15 @@ public class DashboardController {
 
                     @Override
                     public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                        if (response.isSuccessful()) {
+                        try (ResponseBody responseBody = response.body()) {  // Ensure response body is closed
+                            if (responseBody == null || !response.isSuccessful()) {
+                                Platform.runLater(() -> showError("Failed to request permission."));
+                                return;
+                            }
+
                             Platform.runLater(() -> showSuccess("Permission request sent."));
-                        } else {
-                            Platform.runLater(() -> showError("Failed to request permission."));
+                        } catch (Exception e) {
+                            Platform.runLater(() -> showError("Error processing permission request: " + e.getMessage()));
                         }
                     }
                 });
@@ -298,11 +393,13 @@ public class DashboardController {
     }
 
 
+
     @FXML
     private void handleAcknowledgeDenyPermission(ActionEvent event) {
         if (selectedSheet != null && currentUserId.equals(selectedSheet.getOwner())) {
             PermissionUserData selectedPermission = permissionsTable.getSelectionModel().getSelectedItem();
             if (selectedPermission != null) {
+
                 // Allow the owner to choose to acknowledge (approve) or deny the request
                 Alert decisionAlert = new Alert(Alert.AlertType.CONFIRMATION);
                 decisionAlert.setTitle("Acknowledge or Deny Permission");
@@ -342,11 +439,16 @@ public class DashboardController {
 
                             @Override
                             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                                if (response.isSuccessful()) {
+                                try (ResponseBody responseBody = response.body()) {  // Ensure response body is closed
+                                    if (responseBody == null || !response.isSuccessful()) {
+                                        Platform.runLater(() -> showError("Failed to update permission."));
+                                        return;
+                                    }
+
                                     Platform.runLater(() -> showSuccess("Permission updated."));
                                     fetchPermissionsForSelectedSheet(selectedSheet.getSheetName());
-                                } else {
-                                    Platform.runLater(() -> showError("Failed to update permission."));
+                                } catch (Exception e) {
+                                    Platform.runLater(() -> showError("Error updating permission: " + e.getMessage()));
                                 }
                             }
                         });
@@ -371,11 +473,16 @@ public class DashboardController {
 
                         @Override
                         public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                            if (response.isSuccessful()) {
+                            try (ResponseBody responseBody = response.body()) {  // Ensure response body is closed
+                                if (responseBody == null || !response.isSuccessful()) {
+                                    Platform.runLater(() -> showError("Failed to deny permission."));
+                                    return;
+                                }
+
                                 Platform.runLater(() -> showSuccess("Permission request denied."));
                                 fetchPermissionsForSelectedSheet(selectedSheet.getSheetName());
-                            } else {
-                                Platform.runLater(() -> showError("Failed to deny permission."));
+                            } catch (Exception e) {
+                                Platform.runLater(() -> showError("Error denying permission: " + e.getMessage()));
                             }
                         }
                     });
@@ -383,6 +490,7 @@ public class DashboardController {
             }
         }
     }
+
 
 
 

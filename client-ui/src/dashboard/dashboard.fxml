@@ -51,7 +51,7 @@
               <columns>
                   <TableColumn fx:id="usernameColumn" prefWidth="150" text="Username" />
                   <TableColumn fx:id="userPermissionTypeColumn" prefWidth="150" text="Permission Type" />
-                  <TableColumn fx:id="statusColumn" prefWidth="100" text="Status" />
+                  <TableColumn fx:id="statusColumn" prefWidth="150" text="Status" />
 
               </columns>
           </TableView>

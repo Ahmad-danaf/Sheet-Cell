@@ -63,7 +63,7 @@ public class RequestPermissionServlet extends HttpServlet {
             PermissionType permissionType = PermissionType.valueOf(requestedPermission);
             PermissionUserData permissionRequest = new PermissionUserData(requester, permissionType,
                     PermissionStatus.PENDING);
-            sheetData.addPermissionRequest(permissionRequest);
+            sheetData.addPermissionForUser(requester, permissionType, PermissionStatus.PENDING);
 
             // Send success response
             response.setStatus(HttpServletResponse.SC_OK);

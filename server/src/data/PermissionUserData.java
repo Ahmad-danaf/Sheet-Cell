@@ -7,11 +7,13 @@ public class PermissionUserData {
     private String username;
     private PermissionType permissionType;
     private PermissionStatus status;
+    private PermissionType prevAcknowledgedPermission;
 
     public PermissionUserData(String username, PermissionType permissionType, PermissionStatus status) {
         this.username = username;
         this.permissionType = permissionType;
         this.status = status;
+        prevAcknowledgedPermission=PermissionType.NONE;
     }
 
     public String getUsername() {
@@ -26,12 +28,20 @@ public class PermissionUserData {
         return status;
     }
 
+    public PermissionType getPrevAcknowledgedPermission() {
+        return prevAcknowledgedPermission;
+    }
+
     public void setStatus(PermissionStatus status) {
         this.status = status;
     }
 
     public void setPermissionType(PermissionType permissionType) {
         this.permissionType = permissionType;
+    }
+
+    public void setPrevAcknowledgedPermission(PermissionType prevAcknowledgedPermission) {
+        this.prevAcknowledgedPermission = prevAcknowledgedPermission;
     }
 
     @Override
