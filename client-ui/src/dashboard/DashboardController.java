@@ -399,7 +399,11 @@ public class DashboardController {
         if (selectedSheet != null && currentUserId.equals(selectedSheet.getOwner())) {
             PermissionUserData selectedPermission = permissionsTable.getSelectionModel().getSelectedItem();
             if (selectedPermission != null) {
-
+                // for only pending permissions
+                if (selectedPermission.getStatus() != PermissionStatus.PENDING) {
+                    showError("Permission is not pending.");
+                    return;
+                }
                 // Allow the owner to choose to acknowledge (approve) or deny the request
                 Alert decisionAlert = new Alert(Alert.AlertType.CONFIRMATION);
                 decisionAlert.setTitle("Acknowledge or Deny Permission");

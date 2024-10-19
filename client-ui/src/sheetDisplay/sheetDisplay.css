@@ -1,0 +1,222 @@
+/* General Window Style */
+.root {
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-size: 14px;
+    -fx-background-color: #f9f9f9; /* Lighter background for a clean look */
+}
+
+.header-label {
+    -fx-font-size: 18px;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+/* Title Styling */
+.title-label {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2d2d2d; /* Darker text for better contrast */
+    -fx-padding: 15 0 10 0; /* More space around the title */
+    -fx-alignment: center;
+}
+
+/* Top Bar Styling */
+.hbox {
+    -fx-spacing: 15; /* Increased space between child elements */
+    -fx-padding: 10 0 10 0; /* More padding for a spacious feel */
+}
+
+/* Button Styling */
+.load-button {
+    -fx-background-color: #4caf50; /* Brighter green for call to action */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20 10 20; /* Consistent padding for all buttons */
+    -fx-border-radius: 5;
+}
+
+.load-button:hover {
+    -fx-background-color: #388e3c; /* Darker green on hover */
+}
+
+/* File Path Field Styling */
+.file-name {
+    -fx-pref-width: 150px;
+    -fx-min-width: 100px;
+    -fx-max-width: 200px;
+    -fx-background-color: white;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 3;
+    -fx-text-fill: #000000;
+    -fx-padding: 5;
+}
+
+/* Action Line Styling */
+.action-line {
+    -fx-spacing: 15; /* Increased spacing for a cleaner look */
+    -fx-padding: 10 0 10 0; /* Uniform padding */
+}
+
+/* Text Field Styling */
+.text-field {
+    -fx-pref-width: 120px; /* Slightly wider by default */
+    -fx-background-color: white;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 3;
+    -fx-padding: 5;
+}
+
+/* Update Button Styling */
+.update-button {
+    -fx-background-color: #4285f4; /* Brighter blue */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20 10 20; /* Consistent padding for all buttons */
+    -fx-border-radius: 5;
+}
+
+.update-button:hover {
+    -fx-background-color: #3367d6; /* Darker blue on hover */
+}
+
+/* Version Selector */
+.version-selector {
+    -fx-pref-width: 150px;
+}
+
+/* Commands and Ranges Section Styling */
+.section-container {
+    -fx-background-color: #ffffff; /* White background for contrast */
+    -fx-padding: 15;
+    -fx-spacing: 10;
+    -fx-border-color: #dddddd;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0.0, 0, 1); /* Subtle shadow */
+}
+
+.section-container Button {
+    -fx-background-color: #f5f5f5; /* Light grey for subtle buttons */
+    -fx-border-color: #b3b3b3;
+    -fx-border-radius: 3;
+    -fx-text-fill: #333333;
+    -fx-font-size: 13px;
+    -fx-padding: 10 20 10 20; /* Consistent button size */
+}
+
+.section-container Button:hover {
+    -fx-background-color: #e0e0e0; /* Darker grey on hover */
+}
+
+/* Commands Section */
+#commandsSection {
+    -fx-background-color: #e3f2fd; /* Light blue background */
+    -fx-border-color: #90caf9;
+    -fx-border-radius: 5;
+}
+
+/* Ranges Section */
+#rangesSection {
+    -fx-background-color: #fff3e0; /* Light orange background */
+    -fx-border-color: #ffcc80;
+    -fx-border-radius: 5;
+}
+
+/* Color Picker Styling */
+.color-picker {
+    -fx-background-color: transparent; /* Transparent background */
+    -fx-padding: 5 5 5 5;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 3;
+}
+
+.color-picker > .color-picker-label {
+    -fx-text-fill: #333333; /* Dark text to contrast with light theme */
+}
+
+/* Drop-down Styling for ColorPicker */
+.color-picker-popup {
+    -fx-background-color: #ffffff; /* White background for color selection pop-up */
+}
+
+.color-picker-popup .label {
+    -fx-text-fill: #333333; /* Dark text in the color picker pop-up */
+}
+
+/* Slider Styling */
+.slider {
+    -fx-pref-width: 150;
+    -fx-background-color: #e0e0e0;
+}
+
+.slider .track {
+    -fx-background-color: #d0d0d0;
+}
+
+.slider .thumb {
+    -fx-background-color: #4285f4;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 2, 0.0, 0, 1);
+}
+
+/* TitledPane Styling */
+.titled-pane > .title {
+    -fx-background-color: #fafafa;
+    -fx-font-weight: bold;
+    -fx-padding: 5;
+}
+
+.titled-pane > .content {
+    -fx-background-color: #ffffff;
+}
+
+/* Tooltip Styling */
+.tooltip {
+    -fx-background-color: #444444; /* Slightly lighter for better visibility */
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-padding: 5;
+    -fx-background-radius: 5;
+}
+
+/* General HBox Styling */
+.hbox {
+    -fx-spacing: 20;
+    -fx-alignment: center;
+    -fx-padding: 10;
+    -fx-background-color: #f9f9f9; /* Light background color */
+    -fx-border-color: #e0e0e0; /* Light gray border */
+    -fx-border-radius: 5;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0.0, 0, 1); /* Subtle shadow */
+}
+
+/* Label Styling */
+.label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333; /* Darker text for contrast */
+    -fx-font-weight: bold;
+    -fx-padding: 0 10 0 0;
+}
+
+/* ChoiceBox Styling */
+.choice-box {
+    -fx-background-color: white; /* White background */
+    -fx-border-color: #cccccc; /* Light gray border */
+    -fx-border-radius: 4;
+    -fx-padding: 5;
+    -fx-text-fill: #333333; /* Dark text */
+}
+
+.choice-box:hover {
+    -fx-border-color: #999999; /* Darker border on hover */
+}
+
+.choice-box .list-cell {
+    -fx-background-color: white;
+    -fx-text-fill: #333333; /* Text color in drop-down */
+}
+
+.choice-box:focused {
+    -fx-border-color: #4285f4; /* Blue border when focused */
+    -fx-background-color: #f9f9f9;
+}
+

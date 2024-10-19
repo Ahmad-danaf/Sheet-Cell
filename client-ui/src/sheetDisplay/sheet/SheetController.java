@@ -1,5 +1,6 @@
 package sheetDisplay.sheet;
-
+import utils.cell.CellRange;
+import utils.cell.CellWrapper;
 import com.sheetcell.engine.Engine;
 import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.cell.CellType;
@@ -10,13 +11,6 @@ import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.utils.ColumnProperties;
 import com.sheetcell.engine.utils.RangeValidator;
 import com.sheetcell.engine.utils.RowProperties;
-import desktop.body.BodyController;
-import desktop.utils.cell.CellRange;
-import desktop.utils.cell.CellWrapper;
-import desktop.utils.parameters.GraphParameters;
-import desktop.utils.sheet.GraphGenerator;
-import desktop.utils.sheet.SheetDisplayHelper;
-import desktop.utils.sheet.SheetUtils;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
@@ -26,13 +20,18 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.text.Text;
+import sheetDisplay.SheetDisplayController;
+import utils.parameters.GraphParameters;
+import utils.sheet.GraphGenerator;
+import utils.sheet.SheetDisplayHelper;
+import utils.sheet.SheetUtils;
 
 import java.util.*;
 
 public class SheetController {
 
     private Engine engine;
-    @FXML private BodyController bodyController;
+    @FXML private SheetDisplayController sheetDisplayController;
     @FXML
     private ScrollPane gridScrollPane;
     @FXML
@@ -85,17 +84,17 @@ public class SheetController {
 
                 String versionString = version!=0 ? "Version: " + String.valueOf(version) : "";
 
-                // Notify BodyController about the selected cell
-                if (bodyController != null) {
-                    bodyController.updateSelectedCell(cellAddress, originalValue, versionString);
+                // Notify sheetDisplayController about the selected cell
+                if (sheetDisplayController != null) {
+                    sheetDisplayController.updateSelectedCell(cellAddress, originalValue, versionString);
                 }
 
 
                 highlightPrecedentsAndDependents(row,dataColumnIndex);
             } else {
-                // No cell selected; clear selection in BodyController
-                if (bodyController != null) {
-                    bodyController.clearSelectedCell();
+                // No cell selected; clear selection in sheetDisplayController
+                if (sheetDisplayController != null) {
+                    sheetDisplayController.clearSelectedCell();
                 }
 
                 // Clear highlights
@@ -157,8 +156,8 @@ public class SheetController {
         cellWrapper.setHighlightStyle(style);
     }
 
-    public void setBodyController(BodyController bodyController) {
-        this.bodyController = bodyController;
+    public void setSheetDisplayController(SheetDisplayController sheetDisplayController) {
+        this.sheetDisplayController = sheetDisplayController;
     }
 
     public void refreshSpreadsheet() {
