@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<STL-Sheet name="combinedTest" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="shtisel-v2.xsd">
+    <STL-Layout rows="10" columns="10">
+        <STL-Size column-width-units="100" rows-height-units="50"/>
+    </STL-Layout>
+
+    <STL-Ranges>
+        <STL-Range name="effective-grades">
+            <STL-Boundaries from="E3" to="E4"/>
+        </STL-Range>
+        <STL-Range name="weights">
+            <STL-Boundaries from="D3" to="D5"/>
+        </STL-Range>
+        <STL-Range name="grades">
+            <STL-Boundaries from="C3" to="C4"/>
+        </STL-Range>
+        <STL-Range name="rangeB">
+            <STL-Boundaries from="B2" to="B4"/>
+        </STL-Range>
+        <STL-Range name="rangeC">
+            <STL-Boundaries from="C2" to="C4"/>
+        </STL-Range>
+    </STL-Ranges>
+
+    <STL-Cells>
+    <!-- A1: SUM of grades + (C3 * 0) -->
+    <STL-Cell row="1" column="A">
+        <STL-Original-Value>{PLUS,{SUM,grades},{TIMES,{REF,C3},0}}</STL-Original-Value>
+    </STL-Cell>
+
+    <!-- A2: C3 - (D3 / 2) -->
+    <STL-Cell row="2" column="A">
+        <STL-Original-Value>{MINUS,{REF,C3},{DIVIDE,{REF,D3},2}}</STL-Original-Value>
+    </STL-Cell>
+
+    <!-- A3: C4 * (10 + 5) -->
+    <STL-Cell row="3" column="A">
+        <STL-Original-Value>{TIMES,{REF,C4},{PLUS,10,5}}</STL-Original-Value>
+    </STL-Cell>
+
+    <!-- A4: SUM of grades / C5 -->
+    <STL-Cell row="4" column="A">
+        <STL-Original-Value>{DIVIDE,{SUM,grades},{REF,C5}}</STL-Original-Value>
+    </STL-Cell>
+
+    <!-- A5: IF SUM of grades > 150, return (100 + 50), else (50 - 20) -->
+    <STL-Cell row="5" column="A">
+        <STL-Original-Value>{IF,{BIGGER,{SUM,grades},150},{PLUS,100,50},{MINUS,50,20}}</STL-Original-Value>
+    </STL-Cell>
+
+    <!-- A6: MOD((D4 + C3), 7) -->
+    <STL-Cell row="6" column="A">
+        <STL-Original-Value>{MOD,{PLUS,{REF,D4},{REF,C3}},7}</STL-Original-Value>
+    </STL-Cell>
+
+    <!-- A7: C3 ^ 2 -->
+    <STL-Cell row="7" column="A">
+        <STL-Original-Value>{POW,{REF,C3},2}</STL-Original-Value>
+    </STL-Cell>
+
+    <!-- A8: Percentage of C5 out of 100 -->
+    <STL-Cell row="8" column="A">
+        <STL-Original-Value>{PERCENT,{REF,C5},100}</STL-Original-Value>
+    </STL-Cell>
+        <!-- Section from Test 1 -->
+        <STL-Cell row="1" column="B">
+            <STL-Original-Value>exercise</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="1" column="C">
+            <STL-Original-Value>grade</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="1" column="D">
+            <STL-Original-Value>weight</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="1" column="E">
+            <STL-Original-Value>effective</STL-Original-Value>
+        </STL-Cell>
+
+        <STL-Cell row="2" column="B">
+            <STL-Original-Value>ex 1</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="2" column="C">
+            <STL-Original-Value>100</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="2" column="D">
+            <STL-Original-Value>25</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="2" column="E">
+            <STL-Original-Value>{PERCENT,{REF,D2}, {REF,C2}}</STL-Original-Value>
+        </STL-Cell>
+
+        <STL-Cell row="3" column="B">
+            <STL-Original-Value>ex 2</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="3" column="C">
+            <STL-Original-Value>90</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="3" column="D">
+            <STL-Original-Value>35</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="3" column="E">
+            <STL-Original-Value>{PERCENT,{REF,D3}, {REF,C3}}</STL-Original-Value>
+        </STL-Cell>
+
+        <STL-Cell row="4" column="B">
+            <STL-Original-Value>ex 3</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="4" column="C">
+            <STL-Original-Value>80</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="4" column="D">
+            <STL-Original-Value>40</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="4" column="E">
+            <STL-Original-Value>{PERCENT,{REF,D4},{REF,C4}}</STL-Original-Value>
+        </STL-Cell>
+
+        <STL-Cell row="5" column="C">
+            <STL-Original-Value>{AVERAGE,grades}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="5" column="D">
+            <STL-Original-Value>{SUM,grades}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="5" column="E">
+            <STL-Original-Value>{SUM,effective-grades}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="6" column="E">
+            <STL-Original-Value>{IF,{BIGGER,{REF,E5},60},"PASS","FAILED"}</STL-Original-Value>
+        </STL-Cell>
+
+        <!-- Section from Test 2 -->
+        <STL-Cell row="7" column="B">
+            <STL-Original-Value>{PLUS,{TIMES,{MOD,{REF,B2},7},{POW,{REF,B3},2}},{DIVIDE,{ABS,-100},10}}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="7" column="C">
+            <STL-Original-Value>{CONCAT,{SUB,{REF,C2},0,5},{SUB,{REF,C4},0,4}}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="8" column="B">
+            <STL-Original-Value>{IF,{AND,{BIGGER,{REF,B3},{REF,B2}},{LESS,{REF,B2},20}},Pass,Fail}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="8" column="C">
+            <STL-Original-Value>{IF,{OR,{EQUAL,{REF,B2},20},{LESS,{SUM,rangeB},100}},Success,Failure}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="9" column="B">
+            <STL-Original-Value>{IF,{BIGGER,{POW,2,3},5},{IF,{LESS,{MOD,{SUM,rangeB},3},2},Small,Large},Invalid}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="9" column="C">
+            <STL-Original-Value>{SUM,rangeB}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="10" column="B">
+            <STL-Original-Value>{AVERAGE,rangeB}</STL-Original-Value>
+        </STL-Cell>
+
+        <!-- Additional boolean and nested expressions -->
+        <STL-Cell row="6" column="G">
+            <STL-Original-Value>{IF,{AND,TRUE,FALSE},Yes,No}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="7" column="G">
+            <STL-Original-Value>{IF,TRUE,10,20}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="8" column="G">
+            <STL-Original-Value>{SUB,{concat,hel,lo},0,6}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="9" column="G">
+            <STL-Original-Value>{CONCAT,{SUB,spaceastro,0,4},{concat,e,{sub, is the best, 0, 12}}}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="10" column="G">
+            <STL-Original-Value>{CONCAT,{SUB,HelloWorld,0,4},{SUB,WideWorld,4,9}}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="6" column="H">
+            <STL-Original-Value>{PLUS,{TIMES,{MOD,17,5},{POW,2,3}},{DIVIDE,{ABS,-20},4}}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="7" column="H">
+            <STL-Original-Value>{PLUS,{MINUS,10,5},{TIMES,2,3}}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="8" column="H">
+            <STL-Original-Value>{times,hello,5}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="9" column="H">
+            <STL-Original-Value>{AVERAGE,rangeC}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="10" column="H">
+            <STL-Original-Value>{PERCENT,50,200}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="6" column="I">
+            <STL-Original-Value>{NOT,{EQUAL,{REF,B2},20}}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="7" column="I">
+            <STL-Original-Value>{AND,{BIGGER,{SUM,rangeB},50},{LESS,{REF,B2},20}}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="8" column="I">
+            <STL-Original-Value>{OR,{AND,{BIGGER,{SUM,rangeB},50},{LESS,{REF,B2},20}},{LESS,{REF,B2},20}}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="9" column="I">
+            <STL-Original-Value>{IF,{AND,{BIGGER,{SUM,rangeB},50},{LESS,{REF,B2},20}},Above,Below}</STL-Original-Value>
+        </STL-Cell>
+    </STL-Cells>
+</STL-Sheet>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<STL-Sheet name="complexTest" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="shtisel-v2.xsd">
+    <STL-Layout rows="10" columns="10">
+        <STL-Size column-width-units="85" rows-height-units="15"/>
+    </STL-Layout>
+
+    <STL-Ranges>
+        <STL-Range name="testRange">
+            <STL-Boundaries from="B2" to="B5"/>
+        </STL-Range>
+    </STL-Ranges>
+
+    <STL-Cells>
+        <!-- Numeric values for testRange -->
+        <STL-Cell row="2" column="B">
+            <STL-Original-Value>5</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="3" column="B">
+            <STL-Original-Value>10</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="4" column="B">
+            <STL-Original-Value>15</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="5" column="B">
+            <STL-Original-Value>20</STL-Original-Value>
+        </STL-Cell>
+
+        <!-- Simple numeric operation using REF -->
+        <STL-Cell row="6" column="B">
+            <STL-Original-Value>{PLUS,{REF,B2},{TIMES,{REF,B3},{REF,B4}}}</STL-Original-Value>
+        </STL-Cell>
+
+        <!-- SUM operation over a range -->
+        <STL-Cell row="7" column="B">
+            <STL-Original-Value>{SUM,testRange}</STL-Original-Value>
+        </STL-Cell>
+
+        <!-- Complex nested operation combining SUM, MOD, and TIMES -->
+        <STL-Cell row="8" column="B">
+            <STL-Original-Value>{PLUS,{MOD,{SUM,testRange},7},{TIMES,{POW,2,3},3}}</STL-Original-Value>
+        </STL-Cell>
+
+        <!-- String manipulation using CONCAT and SUB -->
+        <STL-Cell row="9" column="B">
+            <STL-Original-Value>{CONCAT,{SUB,Hello World,0,5},{SUB,WideWorld,4,8}}</STL-Original-Value>
+			
+        </STL-Cell>
+
+        <!-- Logical operation with IF and comparison -->
+        <STL-Cell row="10" column="B">
+            <STL-Original-Value>{IF,{BIGGER,{SUM,testRange},40},Above Threshold,Below Threshold}</STL-Original-Value>
+        </STL-Cell>
+    </STL-Cells>
+</STL-Sheet>

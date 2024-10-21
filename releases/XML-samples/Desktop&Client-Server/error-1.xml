@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<STL-Sheet name="beginner" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="shtisel-v2.xsd">
+	<STL-Layout rows="10" columns="20">
+		<STL-Size column-width-units="51" rows-height-units="15"/>
+	</STL-Layout>
+	<STL-Ranges>
+		<STL-Range name="grades">
+			<STL-Boundaries from="a3" to="d10"/>
+		</STL-Range>
+	</STL-Ranges>
+	<STL-Cells>
+			<!-- cycle a1->b3->a1 -->
+		<STL-Cell row="1" column="A">
+			<STL-Original-Value>{ref,B3}</STL-Original-Value>
+		</STL-Cell>
+		<STL-Cell row="2" column="A">
+			<STL-Original-Value>{sum,grades}</STL-Original-Value>
+		</STL-Cell>
+		<STL-Cell row="3" column="B">
+			<STL-Original-Value>{ref,{ref,a1}}}</STL-Original-Value>
+		</STL-Cell>
+	</STL-Cells>
+</STL-Sheet>

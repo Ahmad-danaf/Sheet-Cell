@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<STL-Sheet name="beginner" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="shtisel-v1.xsd">
+	<STL-Layout rows="3" columns="5">
+		<STL-Size column-width-units="15" rows-height-units="3"/>
+	</STL-Layout>
+	<STL-Cells>
+		<STL-Cell row="2" column="B">
+			<STL-Original-Value>Hello</STL-Original-Value>
+		</STL-Cell>
+		<STL-Cell row="2" column="C">
+			<STL-Original-Value>Menash</STL-Original-Value>
+		</STL-Cell>
+		<STL-Cell row="1" column="A">
+			<STL-Original-Value>5</STL-Original-Value>
+		</STL-Cell>
+		<!-- CONCAT should have only 2 args -->
+		<STL-Cell row="2" column="D">
+			<STL-Original-Value>{CONCAT,{REF,C2},hello,world}</STL-Original-Value>
+		</STL-Cell>
+	</STL-Cells>
+</STL-Sheet>

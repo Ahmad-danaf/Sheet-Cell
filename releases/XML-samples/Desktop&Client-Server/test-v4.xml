@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<STL-Sheet name="nestedFunctionsTest" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="shtisel-v2.xsd">
+    <STL-Layout rows="10" columns="10">
+        <STL-Size column-width-units="100" rows-height-units="50"/>
+    </STL-Layout>
+
+    <STL-Ranges>
+        <!-- Range for numeric testing -->
+        <STL-Range name="rangeB">
+            <STL-Boundaries from="B2" to="B4"/>
+        </STL-Range>
+        <!-- Range for string testing -->
+        <STL-Range name="rangeC">
+            <STL-Boundaries from="C2" to="C4"/>
+        </STL-Range>
+        <STL-Range name="rangeD">
+            <STL-Boundaries from="A1" to="A9"/>
+        </STL-Range>
+    </STL-Ranges>
+
+    <STL-Cells>
+        <!-- Numeric cells for testing REF and nested functions -->
+        <STL-Cell row="2" column="B">
+            <STL-Original-Value>15</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="3" column="B">
+            <STL-Original-Value>30</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="4" column="B">
+            <STL-Original-Value>45</STL-Original-Value>
+        </STL-Cell>
+
+        <!-- String cells for testing CONCAT and SUB -->
+        <STL-Cell row="2" column="C">
+            <STL-Original-Value>HelloWorld</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="3" column="C">
+            <STL-Original-Value>WideWorld</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="4" column="C">
+            <STL-Original-Value>BestWorld</STL-Original-Value>
+        </STL-Cell>
+
+        <!-- Nested functions involving numeric operations -->
+        <STL-Cell row="5" column="B">
+            <STL-Original-Value>{PLUS,{TIMES,{MOD,{REF,B2},7},{POW,{REF,B3},2}},{DIVIDE,{ABS,-100},10}}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: PLUS((MOD(15, 7) * POW(30, 2)), ABS(-100) / 10)
+                      = PLUS((1 * 900), 10)
+                      = 900 + 10 = 910 -->
+
+        <!-- CONCAT and SUB with range and nested expressions -->
+        <STL-Cell row="6" column="C">
+            <STL-Original-Value>{CONCAT,{SUB,{REF,C2},0,5},{SUB,{REF,C4},0,4}}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: CONCAT(SUB(HelloWorld, 0, 5), SUB(BestWorld, 0, 4))
+                      = "Hello" + "Best"
+                      = "HelloBest" -->
+
+        <!-- BOOLEAN: IF with AND and OR operations -->
+        <STL-Cell row="7" column="B">
+            <STL-Original-Value>{IF,{AND,{BIGGER,{REF,B3},{REF,B2}},{LESS,{REF,B2},20}},Pass,Fail}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: IF(AND(BIGGER(30, 15), LESS(15, 20)), Pass, Fail)
+                      = IF(AND(TRUE, TRUE), Pass, Fail)
+                      = Pass -->
+
+        <!-- Combining logical and arithmetic operations -->
+        <STL-Cell row="8" column="B">
+            <STL-Original-Value>{IF,{OR,{EQUAL,{REF,B2},20},{LESS,{SUM,rangeB},100}},Success,Failure}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: IF(OR(EQUAL(15, 20), LESS(SUM(rangeB), 100)), Success, Failure)
+                      = IF(OR(FALSE, TRUE), Success, Failure)
+                      = Success -->
+
+        <!-- Test of nested IF with conditions and numeric operations -->
+        <STL-Cell row="9" column="B">
+            <STL-Original-Value>{IF,{BIGGER,{POW,2,3},5},{IF,{LESS,{MOD,{SUM,rangeB},3},2},Small,Large},Invalid}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: IF(BIGGER(POW(2, 3), 5),
+                           IF(LESS(MOD(SUM(rangeB), 3), 2), Small, Large), Invalid)
+                      = IF(TRUE, IF(TRUE, Small, Large), Invalid)
+                      = Small -->
+
+        <!-- Test of SUM and AVERAGE using rangeB -->
+        <STL-Cell row="10" column="B">
+            <STL-Original-Value>{SUM,rangeB}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: SUM(15, 30, 45) = 90 -->
+
+        <STL-Cell row="10" column="C">
+            <STL-Original-Value>{AVERAGE,rangeB}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: AVERAGE(15, 30, 45) = 30 -->
+        <STL-Cell row="1" column="J">
+            <STL-Original-Value>{IF,{AND,TRUE,FALSE},Yes,No}</STL-Original-Value>
+            <!-- no -->
+        </STL-Cell>
+        <STL-Cell row="2" column="J">
+            <STL-Original-Value>{IF,TRUE,10,20}</STL-Original-Value>
+            <!-- 10 -->
+        </STL-Cell>
+        <STL-Cell row="3" column="J">
+            <STL-Original-Value>{SUB,{concat, hel, lo},0,6}</STL-Original-Value>
+             <!-- hel lo -->
+        </STL-Cell>
+        <STL-Cell row="4" column="J">
+            <STL-Original-Value>{CONCAT,{SUB, spaceastro, 0, 4},{concat,e,{sub,  is the best, 0, 12}}}</STL-Original-Value>
+             <!-- space  is the best -->
+        </STL-Cell>
+        <STL-Cell row="5" column="J">
+            <STL-Original-Value>{CONCAT,{SUB, HelloWorld, 0, 4},{SUB, WideWorld, 4, 9}}</STL-Original-Value>
+             <!-- HelleWorld -->
+        </STL-Cell>
+        <STL-Cell row="6" column="J">
+            <STL-Original-Value>{PLUS,{TIMES,{MOD,17,5},{POW,2,3}},{DIVIDE,{ABS,-20},4}}</STL-Original-Value>
+            <!-- 21 -->
+        </STL-Cell>
+        <STL-Cell row="10" column="J">
+            <STL-Original-Value>{plus,{minus,10,5},{times,2,3}}</STL-Original-Value>
+            <!-- 11 -->
+        </STL-Cell>
+        <STL-Cell row="1" column="I">
+            <STL-Original-Value>{times,hello,5}</STL-Original-Value>
+            <!-- Nan -->
+        </STL-Cell>
+        <STL-Cell row="2" column="I">
+            <STL-Original-Value>{AVERAGE,rangeC}</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="3" column="I">
+            <STL-Original-Value>{PERCENT,50,200}</STL-Original-Value>
+            <!-- 50*200/100=100 -->
+        </STL-Cell>
+        <STL-Cell row="4" column="I">
+            <STL-Original-Value>{NOT,{EQUAL,{REF,B2},20}}</STL-Original-Value>
+            <!-- TRUE -->
+        </STL-Cell>
+        <STL-Cell row="5" column="I">
+            <STL-Original-Value>{AND,{BIGGER,{SUM,rangeB},50},{LESS,{REF,B2},20}}</STL-Original-Value>
+            <!-- True -->
+        </STL-Cell>
+        <STL-Cell row="6" column="I">
+            <STL-Original-Value>{OR,{AND,{BIGGER,{SUM,rangeB},50},{LESS,{REF,B2},20}},{LESS,{REF,B2},20}}</STL-Original-Value>
+            <!-- TRUE -->
+        </STL-Cell>
+        <STL-Cell row="7" column="I">
+            <STL-Original-Value>{IF,{AND,{BIGGER,{SUM,rangeB},50},{LESS,{REF,B2},20}},Above,Below}</STL-Original-Value>
+            <!-- Above -->
+        </STL-Cell>
+
+    </STL-Cells>
+</STL-Sheet>
