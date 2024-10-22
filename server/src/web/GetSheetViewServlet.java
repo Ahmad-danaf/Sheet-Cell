@@ -1,9 +1,12 @@
 package web;
 
 import com.google.gson.Gson;
+import com.sheetcell.engine.Engine;
 import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.cell.EffectiveValue;
+import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
+import com.sheetcell.engine.utils.ColumnProperties;
 import engine.EngineManager;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -13,7 +16,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @WebServlet("/getSheetView")
 public class GetSheetViewServlet extends HttpServlet {
@@ -54,6 +59,7 @@ public class GetSheetViewServlet extends HttpServlet {
         sheetData.put("maxRows", sheetReadActions.getMaxRows());
         sheetData.put("maxColumns", sheetReadActions.getMaxColumns());
 
+
         Map<String, Map<String, String>> cellData = new HashMap<>();
         for (int row = 0; row < sheetReadActions.getMaxRows(); row++) {
             for (int col = 0; col < sheetReadActions.getMaxColumns(); col++) {
@@ -84,6 +90,52 @@ public class GetSheetViewServlet extends HttpServlet {
             }
         }
         sheetData.put("cellData", cellData);
+        Engine engine = engineManager.getSheetEngine(userId, sheetName);
+        // Add column properties
+        Map<String, Map<String, Object>> columnProperties = new HashMap<>();
+        for (int col = 0; col < sheetReadActions.getMaxColumns(); col++) {
+            ColumnProperties colProps = engine.getColumnProperties(col);
+            Map<String, Object> colPropMap = new HashMap<>();
+            colPropMap.put("alignment", colProps.getAlignment());
+            colPropMap.put("width", colProps.getWidth());
+            columnProperties.put(String.valueOf(col), colPropMap);
+        }
+        sheetData.put("columnProperties", columnProperties);
+
+        // Add row properties
+        Map<String, Integer> rowProperties = new HashMap<>();
+        for (int row = 0; row < sheetReadActions.getMaxRows(); row++) {
+            int rowHeight = engine.getRowProperties(row).getHeight();
+            rowProperties.put(String.valueOf(row), rowHeight);
+        }
+        sheetData.put("rowProperties", rowProperties);
+
+        // Convert dependencies and influenced maps
+        Map<String, Set<String>> dependenciesMap = new HashMap<>();
+        Map<String, Set<String>> influencedMap = new HashMap<>();
+
+        // Convert coordinates in dependenciesMap
+        for (Map.Entry<Coordinate, Set<Coordinate>> entry : sheetReadActions.getDependenciesMap().entrySet()) {
+            String key = entry.getKey().getRow() + "," + entry.getKey().getColumn();
+            Set<String> dependencies = new HashSet<>();
+            for (Coordinate coord : entry.getValue()) {
+                dependencies.add(coord.getRow() + "," + coord.getColumn());
+            }
+            dependenciesMap.put(key, dependencies);
+        }
+
+        // Convert coordinates in influencedMap
+        for (Map.Entry<Coordinate, Set<Coordinate>> entry : sheetReadActions.getInfluencedMap().entrySet()) {
+            String key = entry.getKey().getRow() + "," + entry.getKey().getColumn();
+            Set<String> influences = new HashSet<>();
+            for (Coordinate coord : entry.getValue()) {
+                influences.add(coord.getRow() + "," + coord.getColumn());
+            }
+            influencedMap.put(key, influences);
+        }
+
+        sheetData.put("dependenciesMap", dependenciesMap);
+        sheetData.put("influencedMap", influencedMap);
 
         response.setStatus(HttpServletResponse.SC_OK);
         response.getWriter().write(gson.toJson(sheetData));

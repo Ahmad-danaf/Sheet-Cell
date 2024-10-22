@@ -111,6 +111,16 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         return getInfluenced(coord);
     }
 
+    @Override
+    public Map<Coordinate, Set<Coordinate>> getDependenciesMap() {
+        return dependenciesMap;
+    }
+
+    @Override
+    public Map<Coordinate, Set<Coordinate>> getInfluencedMap() {
+        return influencedMap;
+    }
+
     public void addDependency(Coordinate callingCoord, Coordinate referencedCoord) {
         dependenciesMap.computeIfAbsent(callingCoord, k -> new HashSet<>()).add(referencedCoord);
         influencedMap.computeIfAbsent(referencedCoord, k -> new HashSet<>()).add(callingCoord);

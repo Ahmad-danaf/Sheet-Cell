@@ -18,6 +18,9 @@ public class UserSheetEngine {
         sheetEngines= new HashMap<>();
     }
 
+    public Engine getSheetEngine(String sheetName) {
+        return sheetEngines.get(sheetName);
+    }
 
     public boolean isSheetNameExists(String sheetName) {
         return sheetEngines.containsKey(sheetName);

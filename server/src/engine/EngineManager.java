@@ -22,18 +22,18 @@ public class EngineManager {
     public SheetReadActions getSheetData(String userId, String sheetName) {
         UserSheetEngine userEngine = userEngines.get(userId);
         if (userEngine == null) {
-            System.out.println("User engine is null");
-            //print all users and their sheets
-            for (Map.Entry<String, UserSheetEngine> entry : userEngines.entrySet()) {
-                System.out.println("User: "+entry.getKey());
-                for (Map.Entry<String, Engine> entry2 : entry.getValue().sheetEngines.entrySet()) {
-                    System.out.println("Sheet: "+entry2.getKey());
-                }
-            }
             return null;
         }
         System.out.println("User engine is not null");
        return userEngine.getSheetData(sheetName);
+    }
+
+    public Engine getSheetEngine(String userId, String sheetName) {
+        UserSheetEngine userEngine = userEngines.get(userId);
+        if (userEngine == null) {
+            return null;
+        }
+       return userEngine.getSheetEngine(sheetName);
     }
 
 

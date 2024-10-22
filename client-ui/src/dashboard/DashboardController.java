@@ -557,11 +557,7 @@ public class DashboardController {
                         String jsonResponse = responseBody.string();
                         Map<String, Object> sheetData = gson.fromJson(jsonResponse, Map.class);
 
-                        System.out.println("IN FETCH SHEET DATA DashboardController");
-                        //print all data
-                        for (Map.Entry<String, Object> entry : sheetData.entrySet()) {
-                            System.out.println(entry.getKey() + " : " + entry.getValue());
-                        }
+
                         // Update the UI (TableView) with the sheet data
                         Platform.runLater(() -> sheetDisplayController.populateTableView(sheetData));
                     }

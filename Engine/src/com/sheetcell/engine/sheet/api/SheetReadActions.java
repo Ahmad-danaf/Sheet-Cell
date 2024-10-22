@@ -3,6 +3,7 @@ package com.sheetcell.engine.sheet.api;
 import com.sheetcell.engine.cell.Cell;
 import com.sheetcell.engine.coordinate.Coordinate;
 
+import java.util.Map;
 import java.util.Set;
 
 public interface SheetReadActions {
@@ -19,5 +20,7 @@ public interface SheetReadActions {
     void markRangeAsUsed(String rangeName);
     boolean isOnLoad();
     boolean isRangeExists(String rangeName);
+     Map<Coordinate, Set<Coordinate>> getDependenciesMap();
+     Map<Coordinate, Set<Coordinate>> getInfluencedMap();
 
 }
