@@ -1,5 +1,7 @@
 package dashboard;
+import com.google.gson.JsonParser;
 
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import data.PermissionStatus;
 import data.PermissionType;
@@ -74,22 +76,15 @@ public class DashboardController {
             SheetUserData sheetData = cellData.getValue();
 
             PermissionUserData permissionData = sheetData.getPermissionForUser(currentUserId);
-            System.out.println("#####################################################################");
             if (permissionData != null) {
-                System.out.println("PermissionData: " + permissionData);
-                System.out.println("permissionData is not null");
                 if (permissionData.getStatus() == PermissionStatus.ACKNOWLEDGED) {
                     return new SimpleStringProperty(permissionData.getPermissionType().name());
                 } else{
-                    System.out.println("PermissionData status is not acknowledged");
-                    System.out.println("PermissionData prevAcknowledgedPermission: " + permissionData.getPrevAcknowledgedPermission());
-                    System.out.println("PermissionData status: " + permissionData.getStatus());
                     // Show the previous acknowledged permission if a request is pending or deny
                     return new SimpleStringProperty(permissionData.getPrevAcknowledgedPermission().name());
                 }
 
             }
-            System.out.println("PermissionData is null");
             // Default to NONE if no permission is found
             return new SimpleStringProperty(PermissionType.NONE.name());
         });
@@ -515,7 +510,8 @@ public class DashboardController {
 
             // Get the controller for the sheet display and initialize it with the selected sheet data
             SheetDisplayController sheetDisplayController = loader.getController();
-            sheetDisplayController.initializeSheetView(selectedSheet); // Passing the selected sheet to the next controller
+            fetchSheetDataFromServer(selectedSheet.getSheetName(), sheetDisplayController);
+            sheetDisplayController.initializeSheetView(selectedSheet,currentUserId); // Passing the selected sheet to the next controller
 
             // Set up the new scene
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -528,6 +524,51 @@ public class DashboardController {
         }
     }
 
+    private void fetchSheetDataFromServer(String sheetName, SheetDisplayController sheetDisplayController) {
+        String url = "http://localhost:8080/webapp/getSheetView?sheetName=" + sheetName+"&username=" + currentUserId;
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        HttpClientUtil.runAsync(request, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Platform.runLater(() -> showError("Failed to retrieve sheet data: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    Platform.runLater(() -> showError("Failed to retrieve sheet data from server."));
+                    String errorBody = response.body() != null ? response.body().string() : "UE";
+                    // Parse the JSON error response
+                    Map<String, String> errorResponse = gson.fromJson(errorBody, Map.class);
+                    String errorMessage = errorResponse.getOrDefault("error", "UE");
+                    System.out.println(("Error: " + errorMessage));
+
+                    return;
+                }
+
+                try (ResponseBody responseBody = response.body()) {
+                    if (responseBody != null) {
+                        // Parse the JSON response into a map
+                        String jsonResponse = responseBody.string();
+                        Map<String, Object> sheetData = gson.fromJson(jsonResponse, Map.class);
+
+                        System.out.println("IN FETCH SHEET DATA DashboardController");
+                        //print all data
+                        for (Map.Entry<String, Object> entry : sheetData.entrySet()) {
+                            System.out.println(entry.getKey() + " : " + entry.getValue());
+                        }
+                        // Update the UI (TableView) with the sheet data
+                        Platform.runLater(() -> sheetDisplayController.populateTableView(sheetData));
+                    }
+                }
+            }
+        });
+    }
 
 
     private void showError(String message) {

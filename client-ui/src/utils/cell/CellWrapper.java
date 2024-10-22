@@ -1,20 +1,23 @@
 package utils.cell;
 
-import com.sheetcell.engine.cell.Cell;
 
 public class CellWrapper {
-    private Cell cell;
+    private String originalValue;
+    private String effectiveValue;
     private int originalRow;
     private int column;
     private String style = "";
     private String highlightStyle = "";
     private int height;
+    private int version;
 
 
-    public CellWrapper(Cell cell, int row, int column) {
-        this.cell = cell;
+    public CellWrapper(String originalValue, String effectiveValue,int version ,int row, int column) {
+        this.originalValue = originalValue;
+        this.effectiveValue = effectiveValue;
         this.originalRow  = row;
         this.column = column;
+        this.version = version;
     }
 
     public void setHeight(int height) {
@@ -29,8 +32,16 @@ public class CellWrapper {
         return highlightStyle;
     }
 
-    public Cell getCell() {
-        return cell;
+    public String getOriginalValue() {
+        return originalValue;
+    }
+
+    public String getEffectiveValue() {
+        return effectiveValue;
+    }
+
+    public int getVersion() {
+        return version;
     }
 
     public String getStyle() {
@@ -56,7 +67,7 @@ public class CellWrapper {
 
     @Override
     public String toString() {
-        String value = cell != null && cell.getEffectiveValue()!=null ? cell.getEffectiveValue().toString() : "" ;
+        String value = effectiveValue != null ? effectiveValue : "" ;
         if (value.isEmpty()){
             return "";
         }

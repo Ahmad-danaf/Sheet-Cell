@@ -41,5 +41,15 @@ public class UserSheetEngine {
         return new int[]{sheet.getMaxColumns(), sheet.getMaxRows()};
     }
 
+    public SheetReadActions getSheetData(String sheetName) {
+        Engine engine = sheetEngines.get(sheetName);
+        if (engine == null) {
+            System.out.println("Engine is null");
+            return null;
+        }
+        System.out.println("Engine is not null");
+        return engine.getReadOnlySheet();
+    }
+
     // Other sheet-related operations (e.g., save, edit, etc.)
 }
