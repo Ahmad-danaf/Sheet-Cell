@@ -5,15 +5,23 @@ import utils.cell.CellRange;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ParsingUtils {
 
-    public static int extractNewVersionSheet(String input) {
-        // Use split method to break the string at "Version " and " Cells Changed:"
-        String[] parts = input.split("Version | Cells Changed:");
+    public static int parseVersion(String versionString) {
+        // Define the regular expression pattern to match the version
+        String pattern = "Version\\s+(\\d+)\\s+\\(\\d+\\s+changes\\)";
+        Pattern compiledPattern = Pattern.compile(pattern);
+        Matcher matcher = compiledPattern.matcher(versionString);
 
-        // The newVersionSheet will be in the second part of the split array
-        return Integer.parseInt(parts[1].trim());
+        if (matcher.find()) {
+            // Extract and return the version as an integer
+            return Integer.parseInt(matcher.group(1));
+        } else {
+            return -1; // Return -1 if no match is found
+        }
     }
 
     // Parse comma-separated column letters into list of integers (column indices)
@@ -43,6 +51,12 @@ public class ParsingUtils {
         int endCol = CoordinateFactory.getColumnIndex(endCell);
 
         return new CellRange(startRow, startCol, endRow, endCol);
+    }
+
+    public static void main(String[] args) {
+        String versionString = "Version 2 (45 changes)";
+        int version = parseVersion(versionString);
+        System.out.println(version); // Output: 2
     }
 
 }

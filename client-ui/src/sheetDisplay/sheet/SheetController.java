@@ -153,6 +153,7 @@ public class SheetController {
             Double height = rowProperties.get(key);
             columnRowPropertyManager.setRowProperties(rowIndex, height.intValue());
         }
+        sheetDisplayController.setColumnRowPropertyManager(columnRowPropertyManager,maxColumns,maxRows);
     }
 
     public void populateDependenciesAndInfluenced(Map<String, Object> sheetData) {

@@ -15,10 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @WebServlet("/getSheetView")
 public class GetSheetViewServlet extends HttpServlet {
@@ -136,6 +133,21 @@ public class GetSheetViewServlet extends HttpServlet {
 
         sheetData.put("dependenciesMap", dependenciesMap);
         sheetData.put("influencedMap", influencedMap);
+
+        // Add sheet versions (Map<Integer, Integer> -> List<Map<String, Object>> for JSON)
+        Map<Integer, Integer> versionsMap = engine.getSheetVersions();
+        List<Map<String, Object>> versionsList = new ArrayList<>();
+        for (Map.Entry<Integer, Integer> entry : versionsMap.entrySet()) {
+            Map<String, Object> versionEntry = new HashMap<>();
+            versionEntry.put("version", entry.getKey());
+            versionEntry.put("cellChanges", entry.getValue());
+            versionsList.add(versionEntry);
+        }
+        sheetData.put("versions", versionsList);
+
+        // Add current version
+        int currentVersion = sheetReadActions.getVersion();
+        sheetData.put("currentVersion", currentVersion);
 
         response.setStatus(HttpServletResponse.SC_OK);
         response.getWriter().write(gson.toJson(sheetData));
