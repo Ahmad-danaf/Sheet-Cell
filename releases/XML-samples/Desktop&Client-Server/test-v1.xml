@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<STL-Sheet name="allFunctionsTest" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="shtisel-v2.xsd">
+    <STL-Layout rows="10" columns="10">
+        <STL-Size column-width-units="85" rows-height-units="200"/>
+    </STL-Layout>
+
+    <STL-Ranges>
+        <!-- Range for testing range-based operations -->
+        <STL-Range name="rangeA">
+            <STL-Boundaries from="A2" to="A5"/>
+        </STL-Range>
+    </STL-Ranges>
+
+    <STL-Cells>
+        <!-- Simple numeric cells for REF and RANGE testing -->
+        <STL-Cell row="2" column="A">
+            <STL-Original-Value>10</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="3" column="A">
+            <STL-Original-Value>20</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="4" column="A">
+            <STL-Original-Value>30</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="5" column="A">
+            <STL-Original-Value>40</STL-Original-Value>
+        </STL-Cell>
+
+        <!-- Using all functions in complex and nested expressions -->
+
+        <!-- PLUS, MINUS, TIMES, DIVIDE -->
+        <STL-Cell row="2" column="B">
+            <STL-Original-Value>{PLUS,{TIMES,{REF,A2},{DIVIDE,100,5}},{MINUS,50,20}}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: (10 * (100 / 5)) + (50 - 20) = (10 * 20) + 30 = 230 -->
+
+        <!-- MOD, POW, ABS -->
+        <STL-Cell row="3" column="B">
+            <STL-Original-Value>{PLUS,{MOD,{SUM,rangeA},7},{POW,2,3}}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: MOD(10+20+30+40, 7) + POW(2, 3) = MOD(100, 7) + 8 = 2 + 8 = 10 -->
+
+        <!-- CONCAT and SUB -->
+        <STL-Cell row="4" column="B">
+            <STL-Original-Value>{CONCAT,{SUB,HelloWorld,0,4},{SUB,WideWorld,4,9}}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: "Hell" + "World" = "HellWorld" -->
+
+        <!-- EQUAL, NOT -->
+        <STL-Cell row="5" column="B">
+            <STL-Original-Value>{NOT,{EQUAL,{REF,A2},10}}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: NOT(EQUAL(10, 10)) = FALSE -->
+
+        <!-- BIGGER, LESS, IF, AND, OR -->
+        <STL-Cell row="6" column="B">
+            <STL-Original-Value>{IF,{AND,{BIGGER,{SUM,rangeA},50},{LESS,{REF,A2},20}},Above, Below}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: IF(AND(SUM(rangeA) > 50, A2 < 20), Above, Below) = "Above" (true for both conditions) -->
+
+        <!-- SUM and AVERAGE over range -->
+        <STL-Cell row="7" column="B">
+            <STL-Original-Value>{SUM,rangeA}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: SUM(10 + 20 + 30 + 40) = 100 -->
+
+        <STL-Cell row="8" column="B">
+            <STL-Original-Value>{AVERAGE,rangeA}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: AVERAGE(10, 20, 30, 40) = 25 -->
+
+        <!-- PERCENT -->
+        <STL-Cell row="9" column="B">
+            <STL-Original-Value>{PERCENT,50,200}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: 50 * 200 / 100 = 100 -->
+
+        <!-- Logical AND and OR -->
+        <STL-Cell row="10" column="B">
+            <STL-Original-Value>{OR,{AND,TRUE,FALSE},{LESS,10,20}}</STL-Original-Value>
+        </STL-Cell>
+        <!-- Expected: OR(AND(TRUE, FALSE), LESS(10, 20)) = OR(FALSE, TRUE) = TRUE -->
+
+         <STL-Cell row="10" column="c">
+            <STL-Original-Value>faLse</STL-Original-Value>
+        </STL-Cell>
+        <STL-Cell row="4" column="c">
+            <STL-Original-Value>{ref,d2}</STL-Original-Value>
+        </STL-Cell>
+    </STL-Cells>
+</STL-Sheet>
