@@ -2,64 +2,61 @@ package web;
 
 import com.google.gson.Gson;
 import com.sheetcell.engine.Engine;
-import com.sheetcell.engine.cell.Cell;
-import com.sheetcell.engine.cell.EffectiveValue;
-import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
-import com.sheetcell.engine.utils.ColumnProperties;
 import engine.EngineManager;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import utils.SheetDataUtils;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Map;
 
-@WebServlet("/getSheetView")
-public class GetSheetViewServlet extends HttpServlet {
+@WebServlet("/addRange")
+public class AddRangeServlet extends HttpServlet {
     private static final Gson gson = new Gson();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("application/json");
 
         String sheetName = request.getParameter("sheetName");
-        //String userId = (String) request.getSession().getAttribute("username");
-        String userId = (String) request.getParameter("username");
+        String rangeName = request.getParameter("rangeName");
+        String rangeDefinition = request.getParameter("rangeDefinition");
 
-        if (sheetName == null || sheetName.isEmpty() || userId == null) {
+        if (sheetName == null || rangeName == null || rangeDefinition == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write(gson.toJson(Map.of("error", "Missing required parameters.")));
             return;
         }
 
         EngineManager engineManager = (EngineManager) getServletContext().getAttribute("engineManager");
+
         if (engineManager == null) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(gson.toJson(Map.of("error", "EngineManager not initialized.")));
             return;
         }
-        SheetReadActions sheetReadActions = engineManager.getSheetData(userId, sheetName);
-        Engine engine = engineManager.getSheetEngine(userId, sheetName);
-        if (sheetReadActions == null) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.getWriter().write(gson.toJson(Map.of("error", "Sheet not found.")));
-            return;
-        }
+
+        // Get the sheet data from the engine for the provided version
+        Engine engine = engineManager.getSheetEngine(sheetName);
         if (engine == null) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().write(gson.toJson(Map.of("error", "Sheet not found.")));
             return;
         }
 
-        // Prepare data to be sent
-        Map<String, Object> sheetData = SheetDataUtils.getSheetData(sheetReadActions, engine,sheetReadActions.getVersion());
+        try {
+            // Add the range to the sheet
+            engine.addRange(rangeName, rangeDefinition);
 
-
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().write(gson.toJson(sheetData));
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.getWriter().write(gson.toJson(Map.of("message", "Range added successfully.")));
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(gson.toJson(Map.of("error", "Failed to add range: " + e.getMessage())));
+        }
     }
 }
+

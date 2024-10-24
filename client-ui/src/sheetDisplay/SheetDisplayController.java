@@ -1,11 +1,14 @@
 package sheetDisplay;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.utils.ColumnRowPropertyManager;
 import dashboard.DashboardController;
 import data.SheetUserData;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -15,13 +18,19 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import org.jetbrains.annotations.NotNull;
 import sheetDisplay.sheet.SheetController;
 import utils.UIHelper;
+import utils.ValidationUtils;
 import utils.color.ColorUtils;
+import utils.http.HttpClientUtil;
+import utils.http.RequestUtils;
 import utils.parsing.ParsingUtils;
-
+import okhttp3.*;
 import java.io.IOException;
 import java.util.*;
+
+import static utils.UIHelper.showError;
 
 public class SheetDisplayController {
 
@@ -69,6 +78,7 @@ public class SheetDisplayController {
     boolean isSheetLoaded = false;
     String UserName;
     int currentVersion;
+    int latestVersion;
     @FXML
     private void initialize() {
         if (spreadsheetGridController != null) {
@@ -83,7 +93,7 @@ public class SheetDisplayController {
                 //int currentVersion = engine.getReadOnlySheet() != null ? engine.getReadOnlySheet().getVersion() : 0;
 
                 // Only display the popup if a past version is selected
-                if (selectedVersion < currentVersion && selectedVersion > 0) {
+                if (selectedVersion != currentVersion && selectedVersion > 0) {
                     handleVersionSelection(selectedVersion);
                 }
             }
@@ -106,7 +116,7 @@ public class SheetDisplayController {
     }
 
     public void populateTableView(Map<String, Object> sheetData){
-        spreadsheetGridController.populateTableView(sheetData);
+        spreadsheetGridController.displaySheet(sheetData);
         initializeVersionSelector(sheetData);
     }
 
@@ -172,24 +182,31 @@ public class SheetDisplayController {
         // Extract current version
         int currentVersion = ((Number) sheetData.get("currentVersion")).intValue();
         this.currentVersion = currentVersion;
-        initPopulateVersionSelector(sheetVersions, currentVersion);
+        populateVersionSelector(sheetVersions, currentVersion);
     }
 
-    private void initPopulateVersionSelector(Map<Integer, Integer> sheetVersions, int currentVersion) {
+    private void populateVersionSelector(Map<Integer, Integer> sheetVersions, int currentVersion) {
         // Clear existing choices
         if (versionSelector != null && versionSelector.getItems() != null) {
             versionSelector.getItems().clear();
         }
+        int tempMaxVersion = currentVersion;
         String currentVersionString = "Version " + currentVersion + " (" + sheetVersions.get(currentVersion) + " changes)";
         versionSelector.getItems().add(currentVersionString);
-        // Add the past versions
-        for (Map.Entry<Integer, Integer> entry : sheetVersions.entrySet()) {
+        TreeMap<Integer, Integer> sortedVersions = new TreeMap<>(sheetVersions);
+
+        // Add the past versions in order
+        for (Map.Entry<Integer, Integer> entry : sortedVersions.entrySet()) {
             int version = entry.getKey();
-            if (version < currentVersion) {
+            if (version > tempMaxVersion) {
+                tempMaxVersion = version;
+            }
+            if (version != currentVersion) {
                 versionSelector.getItems().add("Version " + version + " (" + entry.getValue() + " changes)");
             }
         }
         versionSelector.setValue(currentVersionString);
+        this.latestVersion = tempMaxVersion;
     }
 
     private void loadSheetIntoGrid(SheetUserData sheetData) {
@@ -221,7 +238,7 @@ public class SheetDisplayController {
         } catch (IOException e) {
             // Handle any exceptions, such as file not found or FXML loading errors
             e.printStackTrace();
-            UIHelper.showError("Error", "Failed to load the dashboard. Please try again.");
+            showError("Error", "Failed to load the dashboard. Please try again.");
         }
     }
     public void updateSelectedCell(String cellAddress, String originalValue, String versionString) {
@@ -275,6 +292,10 @@ public class SheetDisplayController {
 
     @FXML
     private void handleVersionSelection(int selectedVersion) {
+        System.out.println("IN HANDLE VERSION SELECTION");
+        //check if i in the latest version->so no popup & Update the sheet if latest version!=current one!!
+        //check if i in version smaller then latest version-> so popup
+        //currentVersion=selectedVersion;
     }
 
     @FXML
@@ -287,10 +308,6 @@ public class SheetDisplayController {
         // Implementation here
     }
 
-    @FXML
-    public void handleMultiColumnFilter() {
-        // Implementation here
-    }
 
     @FXML
     private void handleColumnSelection(ActionEvent event) {
@@ -319,7 +336,7 @@ public class SheetDisplayController {
                 //engine.setColumnAlignment(column, alignment);
                 spreadsheetGridController.adjustColumnAlignment(column);
             } catch (Exception e) {
-                UIHelper.showError("Error Applying Alignment", e.getMessage());
+                showError("Error Applying Alignment", e.getMessage());
             }
         }
 
@@ -348,10 +365,10 @@ public class SheetDisplayController {
                 //engine.setRowHeight(selectedRow - 1, newRowHeight);
                 spreadsheetGridController.adjustRowHeight(selectedRow - 1, newRowHeight);
             } else {
-                UIHelper.showError("Invalid Input", "Please enter a valid row height.");
+                showError("Invalid Input", "Please enter a valid row height.");
             }
         } catch (NumberFormatException e) {
-            UIHelper.showError("Invalid Input", "Row height must be a number.");
+            showError("Invalid Input", "Row height must be a number.");
         }
     }
 
@@ -359,18 +376,159 @@ public class SheetDisplayController {
 
     @FXML
     public void handleAddRange() {
-        // Implementation here
+        if (!ValidationUtils.canUpdateSpreadsheet(isSheetLoaded, currentVersion, latestVersion)) {
+            return; // Early exit if validation fails
+        }
+
+        // Create a dialog to input range name and definition
+        TextInputDialog rangeDialog = new TextInputDialog();
+        rangeDialog.setTitle("Add New Range");
+        rangeDialog.setHeaderText("Define a New Range");
+        rangeDialog.setContentText("Enter range name (unique):");
+
+        // Create input fields for range definition
+        TextField rangeNameField = new TextField();
+        rangeNameField.setPromptText("Unique Range Name");
+
+        TextField rangeDefinitionField = new TextField();
+        rangeDefinitionField.setPromptText("Range Definition (e.g., A1..A4)");
+
+        VBox dialogContent = new VBox();
+        dialogContent.getChildren().addAll(
+                new Label("Range Name:"), rangeNameField,
+                new Label("Range Definition:"), rangeDefinitionField
+        );
+        rangeDialog.getDialogPane().setContent(dialogContent);
+
+        Optional<String> result = rangeDialog.showAndWait();
+
+        if (result.isPresent()) {
+            String rangeName = rangeNameField.getText().trim();
+            String rangeDefinition = rangeDefinitionField.getText().trim();
+
+            if (!rangeName.isEmpty() && !rangeDefinition.isEmpty()) {
+                // Send range data to the server
+                RequestUtils.addRange(sheetNameField.getText(), rangeName, rangeDefinition);
+            } else {
+                showError("Input Error", "Range name or definition cannot be empty.");
+            }
+        }
     }
+
 
     @FXML
     public void handleDeleteRange() {
-        // Implementation here
+        // Check if the user is allowed to update (only on the latest version)
+        if (!ValidationUtils.canUpdateSpreadsheet(isSheetLoaded, currentVersion, latestVersion)) {
+            return; // Early exit if validation fails
+        }
+
+        // Fetch all ranges from the server
+        Request request = new Request.Builder()
+                .url("http://localhost:8080/webapp/getRanges?sheetName=" + sheetNameField.getText()) // Adjust the URL as needed
+                .get()
+                .build();
+
+        HttpClientUtil.runAsync(request, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Platform.runLater(() -> showError("Failed to retrieve ranges: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String responseBody = response.body() != null ? response.body().string() : "";
+                    Set<String> ranges = gson.fromJson(responseBody, new TypeToken<Set<String>>() {}.getType());
+
+                    Platform.runLater(() -> {
+                        // If no ranges are available, show an alert
+                        if (ranges.isEmpty()) {
+                            UIHelper.showAlert("No ranges defined", "There are no ranges currently defined to delete.");
+                            return;
+                        }
+
+                        // Show the ChoiceDialog to select a range to delete
+                        List<String> rangeList = new ArrayList<>(ranges);
+                        ChoiceDialog<String> deleteDialog = new ChoiceDialog<>(rangeList.isEmpty() ? null : rangeList.get(0), rangeList);
+                        deleteDialog.setTitle("Delete Range");
+                        deleteDialog.setHeaderText("Select a Range to Delete");
+                        deleteDialog.setContentText("Choose a range:");
+
+                        Optional<String> result = deleteDialog.showAndWait();
+
+                        result.ifPresent(rangeName -> {
+                            // Send a request to delete the selected range
+                            RequestUtils.deleteRange(sheetNameField.getText(), rangeName);
+                        });
+                    });
+                } else {
+                    Platform.runLater(() -> showError("Failed to retrieve ranges: Server error"));
+                }
+                response.close(); // Ensure the response is closed to prevent leaks
+            }
+        });
     }
+
 
     @FXML
     public void handleViewRange() {
-        // Implementation here
+        if (!isSheetLoaded) {
+            UIHelper.showAlert("No sheet loaded", "Please load a spreadsheet file to view ranges.");
+            return;
+        }
+        if (currentVersion <= 0) {
+            UIHelper.showAlert("Invalid version", "The current version is invalid.");
+            return;
+        }
+
+        // Fetch available ranges from the server for the selected sheet and current version
+        Request request = new Request.Builder()
+                .url("http://localhost:8080/webapp/getSheetRanges?sheetName=" + sheetNameField.getText()
+                        + "&currentVersion=" + currentVersion)
+                .get()
+                .build();
+
+        HttpClientUtil.runAsync(request, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Platform.runLater(() -> showError("Failed to retrieve ranges: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    // Parse the response as a Map of range names to lists of Coordinate objects
+                    String responseBody = response.body().string();
+                    Map<String, List<Coordinate>> ranges = gson.fromJson(responseBody, new TypeToken<Map<String, List<Coordinate>>>(){}.getType());
+
+                    Platform.runLater(() -> {
+                        if (ranges.isEmpty()) {
+                            UIHelper.showAlert("No ranges defined", "There are no ranges currently defined to view.");
+                            return;
+                        }
+                        // Create a Choice Dialog to select a range
+                        ChoiceDialog<String> dialog = new ChoiceDialog<>(ranges.keySet().iterator().next(), ranges.keySet());
+                        dialog.setTitle("View Range");
+                        dialog.setHeaderText("Select a range to view:");
+                        dialog.setContentText("Available Ranges:");
+
+                        Optional<String> result = dialog.showAndWait();
+                        result.ifPresent(rangeName -> {
+                            // Get the list of Coordinate objects for the selected range
+                            List<Coordinate> rangeCoordinates = ranges.get(rangeName);
+                            spreadsheetGridController.highlightRange(new HashSet<>(rangeCoordinates));
+                        });
+                    });
+                } else {
+                    Platform.runLater(() -> showError("Failed to retrieve ranges: Server error"));
+                }
+                response.close();
+            }
+
+        });
     }
+
 
 
 

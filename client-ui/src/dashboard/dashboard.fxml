@@ -57,7 +57,7 @@
           </TableView>
       
           <!-- Command Section -->
-          <TitledPane expanded="false" styleClass="commands-pane" text="Commands" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.rowSpan="2">
+          <TitledPane styleClass="commands-pane" text="Commands" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.rowSpan="2">
               <content>
                   <VBox alignment="CENTER" spacing="10" styleClass="commands-vbox">
                       <Button styleClass="command-button" text="View Sheet" onAction="#handleViewSheet"/>

@@ -1,25 +1,22 @@
 package web;
 
 import com.google.gson.Gson;
-import com.sheetcell.engine.Engine;
-import com.sheetcell.engine.cell.Cell;
-import com.sheetcell.engine.cell.EffectiveValue;
 import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
-import com.sheetcell.engine.utils.ColumnProperties;
 import engine.EngineManager;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import utils.SheetDataUtils;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
-@WebServlet("/getSheetView")
-public class GetSheetViewServlet extends HttpServlet {
+@WebServlet("/getSheetRanges")
+public class GetSheetRangesServlet extends HttpServlet {
     private static final Gson gson = new Gson();
 
     @Override
@@ -27,12 +24,20 @@ public class GetSheetViewServlet extends HttpServlet {
         response.setContentType("application/json");
 
         String sheetName = request.getParameter("sheetName");
-        //String userId = (String) request.getSession().getAttribute("username");
-        String userId = (String) request.getParameter("username");
+        String versionParam = request.getParameter("currentVersion");
 
-        if (sheetName == null || sheetName.isEmpty() || userId == null) {
+        if (sheetName == null || sheetName.isEmpty() || versionParam == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write(gson.toJson(Map.of("error", "Missing required parameters.")));
+            return;
+        }
+
+        int currentVersion;
+        try {
+            currentVersion = Integer.parseInt(versionParam);  // Parse the current version
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(gson.toJson(Map.of("error", "Invalid version number.")));
             return;
         }
 
@@ -42,24 +47,25 @@ public class GetSheetViewServlet extends HttpServlet {
             response.getWriter().write(gson.toJson(Map.of("error", "EngineManager not initialized.")));
             return;
         }
-        SheetReadActions sheetReadActions = engineManager.getSheetData(userId, sheetName);
-        Engine engine = engineManager.getSheetEngine(userId, sheetName);
+
+        // Get the ranges for the specified version from the engine
+        SheetReadActions sheetReadActions = engineManager.getSheetDataVersion(sheetName, currentVersion);
         if (sheetReadActions == null) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.getWriter().write(gson.toJson(Map.of("error", "Sheet not found.")));
-            return;
-        }
-        if (engine == null) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.getWriter().write(gson.toJson(Map.of("error", "Sheet not found.")));
+            response.getWriter().write(gson.toJson(Map.of("error", "Sheet or version not found.")));
             return;
         }
 
-        // Prepare data to be sent
-        Map<String, Object> sheetData = SheetDataUtils.getSheetData(sheetReadActions, engine,sheetReadActions.getVersion());
+        // Retrieve ranges and their coordinates
+        Set<String> rangeNames = sheetReadActions.getRanges();
+        Map<String, Set<Coordinate>> ranges = new HashMap<>();
+        for (String rangeName : rangeNames) {
+            ranges.put(rangeName, sheetReadActions.getRangeCoordinates(rangeName));
+        }
 
-
+        // Send the ranges and their coordinates as a JSON response
         response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().write(gson.toJson(sheetData));
+        response.getWriter().write(gson.toJson(ranges));
     }
 }
+

@@ -47,12 +47,18 @@ public class UserSheetEngine {
     public SheetReadActions getSheetData(String sheetName) {
         Engine engine = sheetEngines.get(sheetName);
         if (engine == null) {
-            System.out.println("Engine is null");
             return null;
         }
-        System.out.println("Engine is not null");
         return engine.getReadOnlySheet();
     }
 
-    // Other sheet-related operations (e.g., save, edit, etc.)
+    public SheetReadActions getSheetDataVersion(String sheetName, int version) {
+        Engine engine = sheetEngines.get(sheetName);
+        if (engine == null) {
+            return null;
+        }
+        return engine.getSheetVersion(version);
+    }
+
+        // Other sheet-related operations (e.g., save, edit, etc.)
 }

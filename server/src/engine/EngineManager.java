@@ -28,12 +28,32 @@ public class EngineManager {
        return userEngine.getSheetData(sheetName);
     }
 
+    public SheetReadActions getSheetDataVersion(String sheetName, int version) {
+        for (UserSheetEngine userEngine : userEngines.values()) {
+            SheetReadActions sheetReadActions = userEngine.getSheetDataVersion(sheetName,version);
+            if (sheetReadActions != null && sheetReadActions.getVersion() == version) {
+                return sheetReadActions;
+            }
+        }
+        return null;
+    }
+
     public Engine getSheetEngine(String userId, String sheetName) {
         UserSheetEngine userEngine = userEngines.get(userId);
         if (userEngine == null) {
             return null;
         }
        return userEngine.getSheetEngine(sheetName);
+    }
+
+    public Engine getSheetEngine(String sheetName) {
+        for (UserSheetEngine userEngine : userEngines.values()) {
+            Engine engine = userEngine.getSheetEngine(sheetName);
+            if (engine != null) {
+                return engine;
+            }
+        }
+        return null;
     }
 
 

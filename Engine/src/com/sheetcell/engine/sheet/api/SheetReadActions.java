@@ -22,5 +22,6 @@ public interface SheetReadActions {
     boolean isRangeExists(String rangeName);
      Map<Coordinate, Set<Coordinate>> getDependenciesMap();
      Map<Coordinate, Set<Coordinate>> getInfluencedMap();
+     Set<String> getRanges();
 
 }

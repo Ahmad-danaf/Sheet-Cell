@@ -208,18 +208,8 @@ public class SheetController {
     }
 
 
-    public void populateTableView(Map<String, Object> sheetData) {
-        int maxRows = ((Double) sheetData.get("maxRows")).intValue();
-        int maxColumns = ((Double) sheetData.get("maxColumns")).intValue();
-        Map<String, Map<String, String>> cellData = (Map<String, Map<String, String>>) sheetData.get("cellData");
-
-        // Clear the existing data in the TableView
-        this.clearTableView();
-
-        displaySheet(sheetData);
-    }
-
     public void displaySheet(Map<String, Object> sheetData) {
+        this.clearTableView();
         int maxRows = ((Double) sheetData.get("maxRows")).intValue();
         int maxColumns = ((Double) sheetData.get("maxColumns")).intValue();
         populateColumnRowPropertyManager(sheetData);

@@ -50,4 +50,19 @@ public class ValidationUtils {
             throw new IllegalArgumentException("Please select at least one value to filter.");
         }
     }
+    public static boolean canUpdateSpreadsheet(boolean isSheetLoaded, int currentVersion, int latestVersion) {
+        if (!isSheetLoaded) {
+            UIHelper.showAlert("No sheet loaded", "Please load a spreadsheet file to add ranges.");
+            return false;
+        }
+        if (currentVersion <= 0) {
+            UIHelper.showAlert("Invalid version", "The current version is invalid.");
+            return false;
+        }
+        if (currentVersion != latestVersion) {
+            UIHelper.showAlert("Invalid version", "The current version is not the latest version. Please select the latest version to add ranges.");
+            return false;
+        }
+        return true; // Validation passed
+    }
 }
