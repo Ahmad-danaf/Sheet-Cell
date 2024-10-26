@@ -5,7 +5,9 @@ import com.google.gson.reflect.TypeToken;
 import javafx.application.Platform;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
+import sheetDisplay.SheetDisplayController;
 import utils.UIHelper;
+import utils.sheet.SheetPopupUtils;
 
 import java.io.IOException;
 import java.util.Map;
@@ -110,6 +112,88 @@ public class RequestUtils {
                     Platform.runLater(() -> showError(finalErrorMessage));
                 }
                 response.close(); // Ensure the response is closed to prevent leaks
+            }
+        });
+    }
+
+    public static void fetchSheetDataFromServer(String sheetName, SheetDisplayController sheetDisplayController) {
+        String url = "http://localhost:8080/webapp/getSheetView?sheetName=" + sheetName;
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        HttpClientUtil.runAsync(request, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Platform.runLater(() -> showError("Failed to retrieve sheet data: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    Platform.runLater(() -> showError("Failed to retrieve sheet data from server."));
+                    String errorBody = response.body() != null ? response.body().string() : "UE";
+                    // Parse the JSON error response
+                    Map<String, String> errorResponse = gson.fromJson(errorBody, Map.class);
+                    String errorMessage = errorResponse.getOrDefault("error", "UE");
+                    System.out.println(("Error: " + errorMessage));
+
+                    return;
+                }
+
+                try (ResponseBody responseBody = response.body()) {
+                    if (responseBody != null) {
+                        // Parse the JSON response into a map
+                        String jsonResponse = responseBody.string();
+                        Map<String, Object> sheetData = gson.fromJson(jsonResponse, Map.class);
+
+
+                        // Update the UI (TableView) with the sheet data
+                        Platform.runLater(() -> sheetDisplayController.populateTableView(sheetData));
+                    }
+                }
+            }
+        });
+    }
+
+    public static void displayVersionSheetData(String sheetName, int version) {
+        String url = "http://localhost:8080/webapp/getSheetVersionView?sheetName=" + sheetName + "&version=" + version;
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        HttpClientUtil.runAsync(request, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Platform.runLater(() -> showError("Failed to retrieve sheet data: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    Platform.runLater(() -> showError("Failed to retrieve sheet data from server."));
+                    String errorBody = response.body() != null ? response.body().string() : "UE";
+                    // Parse the JSON error response
+                    Map<String, String> errorResponse = gson.fromJson(errorBody, Map.class);
+                    String errorMessage = errorResponse.getOrDefault("error", "UE");
+                    System.out.println(("Error: " + errorMessage));
+
+                    return;
+                }
+
+                try (ResponseBody responseBody = response.body()) {
+                    if (responseBody != null) {
+                        // Parse the JSON response into a map
+                        String jsonResponse = responseBody.string();
+                        Map<String, Object> sheetData = gson.fromJson(jsonResponse, Map.class);
+
+                        SheetPopupUtils.displayVersionInPopup(sheetData);
+                    }
+                }
             }
         });
     }

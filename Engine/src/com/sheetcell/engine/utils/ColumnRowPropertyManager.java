@@ -7,6 +7,8 @@ public class ColumnRowPropertyManager {
 
     private Map<Integer, ColumnProperties> columnPropertiesMap = new HashMap<>();
     private Map<Integer, RowProperties> rowPropertiesMap = new HashMap<>();
+    int MaxRow = 0;
+    int MaxColumn= 0;
 
     public void setColumnProperties(Integer column, String alignment, int width) {
         ColumnProperties properties = new ColumnProperties(alignment, width);
@@ -77,5 +79,21 @@ public class ColumnRowPropertyManager {
     public void initAllProperties(Integer maxRow,Integer maxColumn,int height,int width){
         initColumnProperties(maxColumn, height, width);
         initRowProperties(maxRow, height);
+    }
+
+    public void setMaxRows(int maxRow){
+        MaxRow = maxRow;
+    }
+
+    public void setMaxColumns(int maxColumn){
+        MaxColumn = maxColumn;
+    }
+
+    public int getMaxRow(){
+        return MaxRow;
+    }
+
+    public int getMaxColumn(){
+        return MaxColumn;
     }
 }

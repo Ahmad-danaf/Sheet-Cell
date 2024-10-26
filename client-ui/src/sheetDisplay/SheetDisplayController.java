@@ -21,11 +21,18 @@ import org.jetbrains.annotations.NotNull;
 import sheetDisplay.sheet.SheetController;
 import utils.UIHelper;
 import utils.ValidationUtils;
+import utils.cell.CellRange;
 import utils.color.ColorUtils;
+import utils.dialogs.FilterDialog;
+import utils.dialogs.SortDialog;
 import utils.http.HttpClientUtil;
 import utils.http.RequestUtils;
+import utils.parameters.FilterParameters;
+import utils.parameters.SortParameters;
 import utils.parsing.ParsingUtils;
 import okhttp3.*;
+import utils.sheet.SheetPopupUtils;
+
 import java.io.IOException;
 import java.util.*;
 
@@ -291,20 +298,87 @@ public class SheetDisplayController {
 
     @FXML
     private void handleVersionSelection(int selectedVersion) {
-        System.out.println("IN HANDLE VERSION SELECTION");
-        //check if i in the latest version->so no popup & Update the sheet if latest version!=current one!!
-        //check if i in version smaller then latest version-> so popup
-        //currentVersion=selectedVersion;
+        if (!isSheetLoaded) {
+            UIHelper.showAlert("No sheet loaded", "Please load a spreadsheet file to view past versions.");
+            return;
+        }
+        if(selectedVersion==latestVersion && currentVersion!=latestVersion){
+            RequestUtils.fetchSheetDataFromServer(sheetNameField.getText(), this);
+            currentVersion=latestVersion;
+        }
+        if (selectedVersion > 0 && selectedVersion != currentVersion){
+            RequestUtils.displayVersionSheetData(sheetNameField.getText(), selectedVersion);
+        }
     }
 
     @FXML
-    public void handleSort() {
-        // Implementation here
+    private void handleSort(ActionEvent event) {
+        if (!isSheetLoaded) {
+            UIHelper.showAlert("No sheet loaded", "Please load a spreadsheet file to sort data.");
+            return;
+        }
+        // Display a dialog to collect sorting parameters
+        SortDialog sortDialogMaker = new SortDialog();
+        Dialog<SortParameters> dialog = sortDialogMaker.createSortDialog();
+        Optional<SortParameters> result = dialog.showAndWait();
+
+        if (result.isPresent()) {
+            SortParameters params = result.get();
+            String rangeInput = params.getRangeInput().trim().toUpperCase();
+            String columnsInput = params.getColumnsInput().trim().toUpperCase();
+
+            try {
+                ValidationUtils.validateSortInput(rangeInput, columnsInput, columnRowPropertyManager.getMaxRow(), columnRowPropertyManager.getMaxColumn());
+                // Parse the range and columns
+                CellRange range = ParsingUtils.parseRange(rangeInput);
+                List<Integer> sortColumns = ParsingUtils.parseColumns(columnsInput);
+
+                // Trigger sorting in SheetController
+                spreadsheetGridController.showSortedData(range, sortColumns);
+            } catch (Exception e) {
+                UIHelper.showError("Invalid input format.", e.getMessage());
+
+            }
+        }
     }
 
     @FXML
-    public void handleFilter() {
-        // Implementation here
+    private void handleFilter(ActionEvent event) {
+        if (!isSheetLoaded) {
+            UIHelper.showAlert("No sheet loaded", "Please load a spreadsheet file to apply filters.");
+            return;
+        }
+        FilterDialog filterDialogMaker = new FilterDialog(this.spreadsheetGridController,
+                columnRowPropertyManager.getMaxRow(), columnRowPropertyManager.getMaxColumn());
+        // Open the column selection dialog
+        Dialog<String> columnDialog = filterDialogMaker.createColumnSelectionDialog();
+        Optional<String> result = columnDialog.showAndWait();
+
+        if (result.isPresent()) {
+            String selectedColumn = result.get();
+            int filterColumnIndex = CoordinateFactory.convertColumnLabelToIndex(selectedColumn.trim().toUpperCase());
+
+            // Proceed to open the filter dialog with the selected column
+            Dialog<FilterParameters> filterDialog = filterDialogMaker.createFilterDialog(filterColumnIndex);
+            Optional<FilterParameters> filterResult = filterDialog.showAndWait();
+
+            if (filterResult.isPresent()) {
+                FilterParameters params = filterResult.get();
+                String rangeInput = params.getRangeInput().trim().toUpperCase();
+                List<String> selectedValues = params.getFilterValues();
+
+                try {
+                    ValidationUtils.validateFilterInput(rangeInput, selectedColumn, selectedValues, columnRowPropertyManager.getMaxRow(), columnRowPropertyManager.getMaxColumn());
+                    // Parse the range and column
+                    CellRange range = ParsingUtils.parseRange(rangeInput);
+
+                    // Trigger filtering in SheetController
+                    spreadsheetGridController.showFilteredData(range, filterColumnIndex, selectedValues);
+                } catch (Exception e) {
+                    UIHelper.showError("Invalid input format.", e.getMessage());
+                }
+            }
+        }
     }
 
 

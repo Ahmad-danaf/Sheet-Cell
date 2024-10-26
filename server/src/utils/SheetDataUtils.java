@@ -108,4 +108,39 @@ public class SheetDataUtils {
 
         return sheetData;
     }
+
+    public static Map<String,Object> getSheetDataVersion(SheetReadActions sheetReadActions,int currentVersion){
+        Map<String, Object> sheetData = new HashMap<>();
+        sheetData.put("maxRows", sheetReadActions.getMaxRows());
+        sheetData.put("maxColumns", sheetReadActions.getMaxColumns());
+
+
+        Map<String, Map<String, String>> cellData = new HashMap<>();
+        for (int row = 0; row < sheetReadActions.getMaxRows(); row++) {
+            for (int col = 0; col < sheetReadActions.getMaxColumns(); col++) {
+                Cell cell = sheetReadActions.getCell(row, col);
+                EffectiveValue effectiveValue = null;
+                String originalValue ="";
+                int version = 0;
+                if (cell != null) {
+                    effectiveValue = cell.getEffectiveValue();
+                    originalValue= cell.getOriginalValue() != null ? cell.getOriginalValue().toString() : "";
+                    version = cell.getVersion();
+                }
+                String effectiveValueRes = effectiveValue != null ? effectiveValue.toString() : "";
+
+
+                cellData.putIfAbsent(row + "," + col, new HashMap<>());
+                cellData.get(row + "," + col).put("originalValue", originalValue);
+                cellData.get(row + "," + col).put("effectiveValue", effectiveValueRes);
+                cellData.get(row + "," + col).put("version", String.valueOf(version));
+            }
+        }
+        sheetData.put("cellData", cellData);
+
+        // Add current version
+        sheetData.put("currentVersion", currentVersion);
+
+        return sheetData;
+    }
 }

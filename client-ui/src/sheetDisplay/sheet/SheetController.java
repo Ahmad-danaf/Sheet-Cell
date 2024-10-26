@@ -1,6 +1,4 @@
 package sheetDisplay.sheet;
-import com.sheetcell.engine.cell.Cell;
-import com.sheetcell.engine.cell.CellType;
 import com.sheetcell.engine.cell.EffectiveValue;
 import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.coordinate.CoordinateFactory;
@@ -17,7 +15,9 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.text.Text;
 import sheetDisplay.SheetDisplayController;
+import utils.cell.CellRange;
 import utils.cell.CellWrapper;
+import utils.sheet.SheetUtils;
 
 import java.util.*;
 
@@ -153,6 +153,8 @@ public class SheetController {
             Double height = rowProperties.get(key);
             columnRowPropertyManager.setRowProperties(rowIndex, height.intValue());
         }
+        columnRowPropertyManager.setMaxColumns(maxColumns);
+        columnRowPropertyManager.setMaxRows(maxRows);
         sheetDisplayController.setColumnRowPropertyManager(columnRowPropertyManager,maxColumns,maxRows);
     }
 
@@ -310,17 +312,26 @@ public class SheetController {
     }
 
     public List<String> getUniqueValuesInColumn(int columnIndex) {
-       List<String> uniqueValues = new ArrayList<>();
-//        for (ObservableList<CellWrapper> row : spreadsheetTableView.getItems()) {
-//            CellWrapper cellWrapper = row.get(columnIndex);
-//            if (cellWrapper != null) {
-//                String value = cellWrapper.getEffectiveValue();
-//                if (!uniqueValues.contains(value)) {
-//                    uniqueValues.add(value);
-//                }
-//            }
-//        }
-        return uniqueValues;
+        Set<String> uniqueValues = new HashSet<>();
+
+        ObservableList<ObservableList<CellWrapper>> data = spreadsheetTableView.getItems();
+
+        for (ObservableList<CellWrapper> row : data) {
+            if (columnIndex >= 0 && columnIndex < row.size()) {
+                CellWrapper cellWrapper = row.get(columnIndex);
+                if (cellWrapper != null && cellWrapper.getEffectiveValue() != null) {
+                    String effectiveValue = cellWrapper.getEffectiveValue();
+                    if (effectiveValue != null) {
+                        String value = effectiveValue;
+                        if (!value.isEmpty() && ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value))) {
+                            value=value.toUpperCase();
+                        }
+                        uniqueValues.add(value);
+                    }
+                }
+            }
+        }
+        return new ArrayList<>(uniqueValues);
     }
 
     private void configureCellFactory(TableColumn<ObservableList<CellWrapper>, CellWrapper> column) {
@@ -549,6 +560,20 @@ public class SheetController {
 
             // Refresh the table to show the updated highlights
             spreadsheetTableView.refresh();
+        });
+    }
+
+    public void showSortedData(CellRange range, List<Integer> sortColumns) {
+        Platform.runLater(() -> {
+            ObservableList<ObservableList<CellWrapper>> data = spreadsheetTableView.getItems();
+            SheetUtils.showSortedDataHalper(range, sortColumns, data);
+        });
+    }
+
+    public void showFilteredData(CellRange range, int filterColumnIndex, List<String> selectedValues) {
+        Platform.runLater(() -> {
+            ObservableList<ObservableList<CellWrapper>> data = spreadsheetTableView.getItems();
+            SheetUtils.showFilteredDataHalper(range, filterColumnIndex, selectedValues, data);
         });
     }
 

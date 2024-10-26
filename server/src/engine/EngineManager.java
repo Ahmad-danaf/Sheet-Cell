@@ -28,6 +28,16 @@ public class EngineManager {
        return userEngine.getSheetData(sheetName);
     }
 
+    public SheetReadActions getSheetData(String sheetName) {
+        for (UserSheetEngine userEngine : userEngines.values()) {
+            SheetReadActions sheetReadActions = userEngine.getSheetData(sheetName);
+            if (sheetReadActions != null) {
+                return sheetReadActions;
+            }
+        }
+        return null;
+    }
+
     public SheetReadActions getSheetDataVersion(String sheetName, int version) {
         for (UserSheetEngine userEngine : userEngines.values()) {
             SheetReadActions sheetReadActions = userEngine.getSheetDataVersion(sheetName,version);
