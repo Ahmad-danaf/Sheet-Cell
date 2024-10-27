@@ -143,4 +143,20 @@ public class SheetDataUtils {
 
         return sheetData;
     }
+
+    public static Map<String,Object> getVersions(Engine engine){
+        Map<String,Object> sheetData = new HashMap<>();
+        // Add sheet versions (Map<Integer, Integer> -> List<Map<String, Object>> for JSON)
+        Map<Integer, Integer> versionsMap = engine.getSheetVersions();
+        List<Map<String, Object>> versionsList = new ArrayList<>();
+        for (Map.Entry<Integer, Integer> entry : versionsMap.entrySet()) {
+            Map<String, Object> versionEntry = new HashMap<>();
+            versionEntry.put("version", entry.getKey());
+            versionEntry.put("cellChanges", entry.getValue());
+            versionsList.add(versionEntry);
+        }
+        sheetData.put("versions", versionsList);
+        sheetData.put("currentVersion", engine.getReadOnlySheet().getVersion());
+        return sheetData;
+    }
 }

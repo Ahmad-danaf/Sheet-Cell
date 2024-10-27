@@ -173,18 +173,16 @@ public class SheetPopupUtils {
 
 
     public static void displayVersionInPopup(Map<String, Object> sheetData) {
-        int versionNumber = ((Number) sheetData.get("currentVersion")).intValue();
-        Stage versionStage = new Stage();
-        versionStage.setTitle("Version " + versionNumber);
-
-        TableView<ObservableList<CellWrapper>> versionTableView = new TableView<>();
-        versionTableView.setEditable(false);
-        int maxRows = ((Double) sheetData.get("maxRows")).intValue();
-        int maxColumns = ((Double) sheetData.get("maxColumns")).intValue();
-        Map<String, Map<String, String>> cellDataVersion = (Map<String, Map<String, String>>) sheetData.get("cellData");
-        // Add columns and populate rows as in displaySheet method
-        // No styling, raw content only
         Platform.runLater(() -> {
+            int versionNumber = ((Number) sheetData.get("currentVersion")).intValue();
+            Stage versionStage = new Stage();
+            versionStage.setTitle("Version " + versionNumber);
+
+            TableView<ObservableList<CellWrapper>> versionTableView = new TableView<>();
+            versionTableView.setEditable(false);
+            int maxRows = ((Double) sheetData.get("maxRows")).intValue();
+            int maxColumns = ((Double) sheetData.get("maxColumns")).intValue();
+            Map<String, Map<String, String>> cellDataVersion = (Map<String, Map<String, String>>) sheetData.get("cellData");
 
             // Add row number column
             TableColumn<ObservableList<CellWrapper>, Number> rowNumberCol = new TableColumn<>("#");
@@ -219,7 +217,7 @@ public class SheetPopupUtils {
                     Map<String, String> cellValues = cellDataVersion.get(key);
                     String originalValue = cellValues.get("originalValue");
                     String effectiveValue = cellValues.get("effectiveValue");
-                    if(effectiveValue!=null &&(effectiveValue.equalsIgnoreCase("true") || effectiveValue.equalsIgnoreCase("false"))){
+                    if (effectiveValue != null && (effectiveValue.equalsIgnoreCase("true") || effectiveValue.equalsIgnoreCase("false"))) {
                         effectiveValue = effectiveValue.toUpperCase();
                     }
                     int version = Integer.parseInt(cellValues.get("version"));
@@ -229,12 +227,13 @@ public class SheetPopupUtils {
                 data.add(rowData);
             }
             versionTableView.setItems(data);
-        });
 
-        Scene versionScene = new Scene(new VBox(versionTableView));
-        versionStage.setScene(versionScene);
-        versionStage.show();
+            Scene versionScene = new Scene(new VBox(versionTableView));
+            versionStage.setScene(versionScene);
+            versionStage.show();
+        });
     }
+
 
 
 }

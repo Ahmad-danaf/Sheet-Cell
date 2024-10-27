@@ -17,6 +17,8 @@ import static utils.UIHelper.showError;
 public class RequestUtils {
 
     private static final Gson gson = new Gson();
+    private static final String BASE_URL = "http://localhost:8080/webapp";
+
 
     // Send a request to delete the selected range
     public static void deleteRange(String SheetName, String rangeName) {
@@ -196,5 +198,17 @@ public class RequestUtils {
                 }
             }
         });
+    }
+
+    public static Request updateCellValue(String sheetName,String userId, String cellAddress, String newValue) {
+        return new Request.Builder()
+                .url(BASE_URL + "/updateCellValue")
+                .post(new FormBody.Builder()
+                        .add("sheetName", sheetName)
+                        .add("cellAddress", cellAddress)
+                        .add("newValue", newValue)
+                        .add("username", userId)
+                        .build())
+                .build();
     }
 }

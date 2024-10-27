@@ -7,7 +7,10 @@ import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.utils.ColumnRowPropertyManager;
 import dashboard.DashboardController;
 import data.SheetUserData;
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
+import javafx.concurrent.ScheduledService;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -17,6 +20,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import org.jetbrains.annotations.NotNull;
 import sheetDisplay.sheet.SheetController;
 import utils.UIHelper;
@@ -40,7 +44,9 @@ import static utils.UIHelper.showError;
 
 public class SheetDisplayController {
 
-
+    private ScheduledService<Void> updateCheckerService;
+    @FXML
+    private Label newVersionNotificationLabel; // Green text label for notification
     // Top section components
 
     @FXML
@@ -96,7 +102,6 @@ public class SheetDisplayController {
             if (newValue != null && !newValue.isEmpty()) {
                 // Parse the selected version number
                 int selectedVersion = ParsingUtils.parseVersion(newValue);
-                //int currentVersion = engine.getReadOnlySheet() != null ? engine.getReadOnlySheet().getVersion() : 0;
 
                 // Only display the popup if a past version is selected
                 if (selectedVersion != currentVersion && selectedVersion > 0) {
@@ -111,16 +116,93 @@ public class SheetDisplayController {
                     int width = Integer.parseInt(newValue);
                     String selectedColumn = columnChoiceBox.getSelectionModel().getSelectedItem();
                     int column = CoordinateFactory.getColumnIndexFromLabel(selectedColumn);
-                    //engine.setColumnWidth(column, width);
+                    columnRowPropertyManager.setColumnWidth(column, width);
                     spreadsheetGridController.adjustAllColumnWidth();
                 }
             } else {
                 columnWidthField.setText(oldValue); // Revert to the old value if input is invalid
             }
         });
-
+        initializeVersionPolling();
+        newVersionNotificationLabel.setVisible(false);
+        newVersionNotificationLabel.setStyle("-fx-text-fill: green;");
+    }
+    private void initializeVersionPolling() {
+        // Setup polling service
+        updateCheckerService = new ScheduledService<>() {
+            @Override
+            protected Task<Void> createTask() {
+                return new Task<>() {
+                    @Override
+                    protected Void call() {
+                        if (isSheetLoaded) {
+                            checkForNewVersion();
+                        }
+                        return null;
+                    }
+                };
+            }
+        };
+        updateCheckerService.setDelay(Duration.seconds(2));  // Delay for first execution
+        updateCheckerService.setPeriod(Duration.seconds(2)); // Poll every 2 seconds
+        updateCheckerService.start();
     }
 
+    private void checkForNewVersion() {
+        Request request = new Request.Builder()
+                .url("http://localhost:8080/webapp/getSheetVersions?sheetName=" + sheetNameField.getText())
+                .get()
+                .build();
+
+        HttpClientUtil.runAsync(request, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                // Handle failure silently or log
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String responseBody = response.body() != null ? response.body().string() : "";
+                    Map<String, Object> sheetData = gson.fromJson(responseBody, new TypeToken<Map<String, Object>>(){}.getType());
+
+                    Platform.runLater(() -> {
+                        // Extract versions list and current/latest version
+                        List<Map<String, Object>> versionsList = (List<Map<String, Object>>) sheetData.get("versions");
+                        int latestVersionFromServer = ((Number) sheetData.get("currentVersion")).intValue();
+
+                        // Show notification only if there's a newer version
+                        if (latestVersionFromServer > latestVersion) {
+                            latestVersion = latestVersionFromServer;
+                            showNewVersionNotification();
+                        }
+                        fetchVersionSelector(versionsList,true);
+                    });
+                }
+                response.close();
+            }
+        });
+    }
+
+
+    private void showNewVersionNotification() {
+        newVersionNotificationLabel.setText("New version available!");
+        newVersionNotificationLabel.setVisible(true);
+        newVersionNotificationLabel.setStyle("-fx-text-fill: green;");
+        // Fade out effect after a few seconds
+        FadeTransition fade = new FadeTransition(Duration.seconds(3), newVersionNotificationLabel);
+        fade.setFromValue(1.0);
+        fade.setToValue(0.0);
+        fade.setOnFinished(event -> newVersionNotificationLabel.setVisible(false));
+        fade.play();
+    }
+
+    // Call stop() on this service when the sheet display controller is closed or user navigates away
+    public void stopUpdateChecker() {
+        if (updateCheckerService != null) {
+            updateCheckerService.cancel();
+        }
+    }
     public void populateTableView(Map<String, Object> sheetData){
         spreadsheetGridController.displaySheet(sheetData);
         initializeVersionSelector(sheetData);
@@ -188,10 +270,10 @@ public class SheetDisplayController {
         // Extract current version
         int currentVersion = ((Number) sheetData.get("currentVersion")).intValue();
         this.currentVersion = currentVersion;
-        populateVersionSelector(sheetVersions, currentVersion);
+        populateVersionSelector(sheetVersions, currentVersion,false);
     }
 
-    private void populateVersionSelector(Map<Integer, Integer> sheetVersions, int currentVersion) {
+    private void populateVersionSelector(Map<Integer, Integer> sheetVersions, int currentVersion,boolean fromPulling) {
         // Clear existing choices
         if (versionSelector != null && versionSelector.getItems() != null) {
             versionSelector.getItems().clear();
@@ -211,7 +293,9 @@ public class SheetDisplayController {
                 versionSelector.getItems().add("Version " + version + " (" + entry.getValue() + " changes)");
             }
         }
-        versionSelector.setValue(currentVersionString);
+        if (!fromPulling){
+            versionSelector.setValue(currentVersionString);
+        }
         this.latestVersion = tempMaxVersion;
     }
 
@@ -259,9 +343,77 @@ public class SheetDisplayController {
         lastUpdateCellVersion.clear();
     }
 
+    //need to check if he can update first!
     @FXML
     public void handleUpdateValue() {
-        // Implementation here
+        if (!ValidationUtils.canUpdateSpreadsheet(isSheetLoaded, currentVersion, latestVersion)) {
+            return; // Early exit if validation fails
+        }
+        String cellAddress = selectedCellId.getText();
+        String newValue = originalCellValue.getText();
+
+        if (cellAddress == null || cellAddress.isEmpty()) {
+            UIHelper.showAlert("No cell selected", "Please select a cell to update.");
+            return;
+        }
+
+        if (newValue == null) {
+            newValue = "";
+        }
+
+        Request request = RequestUtils.updateCellValue(sheetNameField.getText(),UserName, cellAddress, newValue);
+        HttpClientUtil.runAsync(request, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Platform.runLater(() -> showError("Failed to update cell value: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String responseBody = response.body() != null ? response.body().string() : "";
+
+                if (response.isSuccessful()) {
+                    // Parse the updated sheet data from the response
+                    Map<String, Object> updatedSheetData = gson.fromJson(responseBody, new TypeToken<Map<String, Object>>(){}.getType());
+                    Platform.runLater(() -> {
+                        updateSpreadsheetDisplay(updatedSheetData);  // Update UI with new sheet data
+                    });
+                } else {
+                    // Handle error by displaying error message from server
+                    String errorMessage = responseBody.isEmpty() ? "Unknown error" : gson.fromJson(responseBody, Map.class).get("error").toString();
+                    Platform.runLater(() -> showError("Failed to update cell value: " + errorMessage));
+                }
+                response.close();
+            }
+        });
+    }
+
+    public void updateSpreadsheetDisplay(Map<String, Object> updatedSheetData) {
+        // Check if the response contains a message indicating no action is needed
+        if (updatedSheetData.containsKey("message") && updatedSheetData.get("message").toString().startsWith("No action needed")) {
+            UIHelper.showAlert("No Action Needed", updatedSheetData.get("message").toString());
+        } else {
+            // Otherwise, refresh the spreadsheet display with the updated sheet data
+            String theUserThatMadeTheChange = (String) updatedSheetData.get("username");
+            if (UserName.equals(theUserThatMadeTheChange)){
+                populateTableView(updatedSheetData);
+            }
+            else{
+                List<Map<String, Object>> versions = (List<Map<String, Object>>) updatedSheetData.get("versions");
+                fetchVersionSelector(versions,false);
+            }
+        }
+    }
+
+
+    public void fetchVersionSelector(List<Map<String, Object>> versions,boolean fromPulling) {
+        Map<Integer,Integer> sheetVersions = new HashMap<>();
+        for (Map<String, Object> versionEntry : versions) {
+            int version = ((Number) versionEntry.get("version")).intValue();
+            int cellChanges = ((Number) versionEntry.get("cellChanges")).intValue();
+            sheetVersions.put(version,cellChanges);
+        }
+        populateVersionSelector(sheetVersions,currentVersion,fromPulling);
     }
 
     @FXML
@@ -406,7 +558,7 @@ public class SheetDisplayController {
         String alignment = alignmentChoiceBox.getValue();
         if (alignment != null && !alignment.isEmpty()) {
             try {
-                //engine.setColumnAlignment(column, alignment);
+                columnRowPropertyManager.setColumnAlignment(column, alignment);
                 spreadsheetGridController.adjustColumnAlignment(column);
             } catch (Exception e) {
                 showError("Error Applying Alignment", e.getMessage());
@@ -435,7 +587,7 @@ public class SheetDisplayController {
             int newRowHeight = Integer.parseInt(heightText);
             // Apply the new row height
             if (selectedRow != null && newRowHeight > 0) {
-                //engine.setRowHeight(selectedRow - 1, newRowHeight);
+                columnRowPropertyManager.setRowHeight(selectedRow - 1, newRowHeight);
                 spreadsheetGridController.adjustRowHeight(selectedRow - 1, newRowHeight);
             } else {
                 showError("Invalid Input", "Please enter a valid row height.");
@@ -601,12 +753,6 @@ public class SheetDisplayController {
 
         });
     }
-
-
-
-
-
-
 
 
 }

@@ -60,5 +60,13 @@ public class UserSheetEngine {
         return engine.getSheetVersion(version);
     }
 
+    public int getLatestSheetVersion(String sheetName) {
+        Engine engine = sheetEngines.get(sheetName);
+        if (engine == null) {
+            return -1;
+        }
+        return engine.getReadOnlySheet().getVersion();
+    }
+
         // Other sheet-related operations (e.g., save, edit, etc.)
 }

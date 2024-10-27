@@ -66,7 +66,14 @@ public class EngineManager {
         return null;
     }
 
+    public int getLatestSheetVersion(String sheetName) {
+        for (UserSheetEngine userEngine : userEngines.values()) {
+            int version = userEngine.getLatestSheetVersion(sheetName);
+            if (version != -1) {
+                return version;
+            }
+        }
+        return -1;
+    }
 
-
-    // Additional methods for sharing sheets, granting permissions, etc.
 }

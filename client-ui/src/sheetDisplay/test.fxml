@@ -70,6 +70,7 @@
                     </children>
                 </HBox>
 
+
                 <!-- Color picker and styling options -->
                 <HBox spacing="10" styleClass="color-picker">
                     <children>
