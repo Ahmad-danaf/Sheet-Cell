@@ -45,7 +45,7 @@ public class EngineImpl implements Engine, Serializable {
     }
 
     @Override
-    public void loadSheetFromContentXML(String fileContent) throws Exception {
+    public void loadSheetFromContentXML(String fileContent, String username) throws Exception {
         XMLSheetProcessor xmlSheetProcessor = new XMLSheetProcessor();
         xmlSheetProcessor.processSheetContent(fileContent);
         this.currentSheet = xmlSheetProcessor.getCurrentSheet();
@@ -56,6 +56,7 @@ public class EngineImpl implements Engine, Serializable {
         this.rangeValidator.setMaxCols(currentSheet.getMaxColumns());
         this.columnRowPropertyManager.clearAllProperties();
         this.columnRowPropertyManager.initAllProperties(currentSheet.getMaxRows(),currentSheet.getMaxColumns(), currentSheet.getRowHeight(), currentSheet.getColumnWidth());
+        this.currentSheet.assignUsernameToAllCells(username);
     }
 
 

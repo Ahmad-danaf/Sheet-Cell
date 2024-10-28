@@ -23,18 +23,29 @@ public class Cell implements Serializable {
     List<Cell> dependencies; // Cells that this cell depends on
     List<Cell> influencedCells; // Cells that depend on this cell
     private final SheetReadActions sheet;
+    private String user = "";
     //    private boolean isEvaluated;
     //    private boolean isDirty;
     //    private int row;
 
 
-    public Cell(int row, int column, String originalValue, int version, SheetReadActions sheet)  {
+    public Cell(int row, int column, String originalValue, int version, SheetReadActions sheet) {
         this.sheet = sheet;
         this.coordinate = CoordinateFactory.createCoordinate(row, column);
         this.originalValue = originalValue;
         this.version = version;
         this.dependencies = new LinkedList<>();
         this.influencedCells = new LinkedList<>();
+    }
+
+    public Cell(int row, int column, String originalValue, int version, SheetReadActions sheet, String user) {
+        this.sheet = sheet;
+        this.coordinate = CoordinateFactory.createCoordinate(row, column);
+        this.originalValue = originalValue;
+        this.version = version;
+        this.dependencies = new LinkedList<>();
+        this.influencedCells = new LinkedList<>();
+        this.user = user;
     }
 
     // Getters and Setters
@@ -50,6 +61,14 @@ public class Cell implements Serializable {
 
     public int getVersion() {
         return version;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
     }
 
     public void setVersion(int version) {

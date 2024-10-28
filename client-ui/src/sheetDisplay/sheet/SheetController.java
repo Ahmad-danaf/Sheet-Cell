@@ -69,10 +69,12 @@ public class SheetController {
                 String effectiveValue = "";
                 String originalValue = "";
                 int version = 0;
+                String user = "";
                 if (cellWrapper != null) {
                     effectiveValue = cellWrapper.getEffectiveValue();
                     originalValue= cellWrapper.getOriginalValue() != null ? cellWrapper.getOriginalValue() : "";
                     version = cellWrapper.getVersion();
+                    user = cellWrapper.getUser();
                 }
                 Object value = effectiveValue; //"" or null?
 
@@ -80,7 +82,7 @@ public class SheetController {
 
                 // Notify sheetDisplayController about the selected cell
                 if (sheetDisplayController != null) {
-                    sheetDisplayController.updateSelectedCell(cellAddress, originalValue, versionString);
+                    sheetDisplayController.updateSelectedCell(cellAddress, originalValue, versionString,user);
                 }
 
 
@@ -296,7 +298,8 @@ public class SheetController {
                 }
 
                 int version = Integer.parseInt(cellValues.get("version"));
-                CellWrapper cellWrapper = new CellWrapper(originalValue, effectiveValue, version, rowIndex, colIndex);
+                String user = cellValues.get("user");
+                CellWrapper cellWrapper = new CellWrapper(originalValue, effectiveValue, version, rowIndex, colIndex,user);
                 rowData.add(cellWrapper);
             }
             data.add(rowData);

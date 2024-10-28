@@ -26,14 +26,14 @@ public class UserSheetEngine {
         return sheetEngines.containsKey(sheetName);
     }
 
-    public void loadSheetFromContentXML(String fileContent,String sheetName) throws Exception {
+    public void loadSheetFromContentXML(String fileContent,String sheetName, String username) throws Exception {
         //if sheet exists, dont load the sheet
         if(sheetEngines.containsKey(sheetName)){
             throw new IllegalArgumentException("Sheet with this name already exists");
         }
         //load the sheet
         Engine engine = new EngineImpl();
-        engine.loadSheetFromContentXML(fileContent);
+        engine.loadSheetFromContentXML(fileContent,username);
         sheetEngines.put(sheetName, engine);
     }
 

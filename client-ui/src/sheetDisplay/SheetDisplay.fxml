@@ -49,6 +49,7 @@
                 <!-- Action line for cell updates and value handling -->
                 <HBox alignment="TOP_CENTER" spacing="10.0" styleClass="action-line">
                     <children>
+                        <TextField fx:id="cellUserTextField" editable="false" promptText="User who modified the cell"/>
                         <TextField fx:id="selectedCellId" editable="false" promptText="Selected Cell ID"/>
                         <TextField fx:id="originalCellValue" promptText="Original Cell value"/>
                         <Button fx:id="updateValueButton" mnemonicParsing="false" onAction="#handleUpdateValue" styleClass="update-button" text="Update value">

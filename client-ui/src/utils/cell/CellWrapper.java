@@ -10,6 +10,7 @@ public class CellWrapper {
     private String highlightStyle = "";
     private int height;
     private int version;
+    private String user;
 
 
     public CellWrapper(String originalValue, String effectiveValue,int version ,int row, int column) {
@@ -18,6 +19,16 @@ public class CellWrapper {
         this.originalRow  = row;
         this.column = column;
         this.version = version;
+        this.user = "";
+    }
+
+    public CellWrapper(String originalValue, String effectiveValue,int version ,int row, int column,String username) {
+        this.originalValue = originalValue;
+        this.effectiveValue = effectiveValue;
+        this.originalRow  = row;
+        this.column = column;
+        this.version = version;
+        this.user = username;
     }
 
     public void setHeight(int height) {
@@ -63,6 +74,14 @@ public class CellWrapper {
 
     public int getColumn() {
         return column;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
     }
 
     @Override

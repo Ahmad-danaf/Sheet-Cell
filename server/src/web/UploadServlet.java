@@ -44,10 +44,18 @@ public class UploadServlet extends HttpServlet {
             // Retrieve file parts from the request
             Part filePart = request.getPart("file"); // "file" should match the name attribute in Postman
             Part fileNamePart = request.getPart("fileName");
+            Part userNamePart = request.getPart("username");
 
             if (filePart == null || fileNamePart == null) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 jsonResponse.put("error", "File or file name is missing.");
+                response.getWriter().write(gson.toJson(jsonResponse));
+                return;
+            }
+
+            if (userNamePart == null) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                jsonResponse.put("error", "Username is missing.");
                 response.getWriter().write(gson.toJson(jsonResponse));
                 return;
             }
@@ -58,9 +66,8 @@ public class UploadServlet extends HttpServlet {
             // Read the file content
             String fileContent = new Scanner(filePart.getInputStream()).useDelimiter("\\A").next();
 
-            // Retrieve the user ID from the session
-            String userId = (String) request.getSession().getAttribute("username");
-            if (userId == null) {
+            String username = new Scanner(userNamePart.getInputStream()).nextLine();
+            if (username == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 jsonResponse.put("error", "User is not authenticated.");
                 response.getWriter().write(gson.toJson(jsonResponse));
@@ -68,7 +75,7 @@ public class UploadServlet extends HttpServlet {
             }
 
             // Get the user's sheet engine
-            UserSheetEngine userEngine = engineManager.getUserEngine(userId);
+            UserSheetEngine userEngine = engineManager.getUserEngine(username);
             // check if it xml file
             if (!fileName.endsWith(".xml")) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -87,7 +94,7 @@ public class UploadServlet extends HttpServlet {
 
             // Attempt to load the sheet using the user's engine
             try {
-                userEngine.loadSheetFromContentXML(fileContent, fileName); // If this method does not throw an exception, the sheet is valid
+                userEngine.loadSheetFromContentXML(fileContent, fileName,username); // If this method does not throw an exception, the sheet is valid
                 response.setStatus(HttpServletResponse.SC_OK);
                 //add too the json the max col and row
                 int[] maxColRow = userEngine.getMaxColRow(fileName);
@@ -97,8 +104,8 @@ public class UploadServlet extends HttpServlet {
                 jsonResponse.put("maxRows", maxRows);
                 // size is nXm where n is the number of columns and m is the number of rows
                 String size = maxColumns + "x" + maxRows;
-                SheetUserData sheetUserData = new SheetUserData(fileName, userId, size, PermissionType.OWNER);
-                userManager.addSheetToUser(userId, sheetUserData);
+                SheetUserData sheetUserData = new SheetUserData(fileName, username, size, PermissionType.OWNER);
+                userManager.addSheetToUser(username, sheetUserData);
                 jsonResponse.put("sheets", userManager.getAllSheets());
                 jsonResponse.put("message", "File uploaded and processed successfully.");
                 response.getWriter().write(gson.toJson(jsonResponse));

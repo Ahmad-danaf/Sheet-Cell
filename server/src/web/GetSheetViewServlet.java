@@ -24,7 +24,7 @@ public class GetSheetViewServlet extends HttpServlet {
 
         String sheetName = request.getParameter("sheetName");
         //String userId = (String) request.getSession().getAttribute("username");
-        //String userId = (String) request.getParameter("username");
+        String userId = (String) request.getParameter("username");
 
         if (sheetName == null || sheetName.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

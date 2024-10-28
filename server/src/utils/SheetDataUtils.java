@@ -24,10 +24,12 @@ public class SheetDataUtils {
                 EffectiveValue effectiveValue = null;
                 String originalValue ="";
                 int version = 0;
+                String user = "";
                 if (cell != null) {
                     effectiveValue = cell.getEffectiveValue();
                     originalValue= cell.getOriginalValue() != null ? cell.getOriginalValue().toString() : "";
                     version = cell.getVersion();
+                    user = cell.getUser();
                 }
                 String effectiveValueRes = effectiveValue != null ? effectiveValue.toString() : "";
 
@@ -36,15 +38,10 @@ public class SheetDataUtils {
                 cellData.get(row + "," + col).put("originalValue", originalValue);
                 cellData.get(row + "," + col).put("effectiveValue", effectiveValueRes);
                 cellData.get(row + "," + col).put("version", String.valueOf(version));
+                cellData.get(row + "," + col).put("user", user);
             }
         }
-        //print all cellData
-        for (Map.Entry<String, Map<String, String>> entry : cellData.entrySet()) {
-            System.out.println("Key: "+entry.getKey());
-            for (Map.Entry<String, String> entry2 : entry.getValue().entrySet()) {
-                System.out.println("Key: "+entry2.getKey()+" Value: "+entry2.getValue());
-            }
-        }
+
         sheetData.put("cellData", cellData);
         // Add column properties
         Map<String, Map<String, Object>> columnProperties = new HashMap<>();

@@ -62,6 +62,8 @@ public class SheetDisplayController {
     @FXML
     private TextField originalCellValue;
     @FXML
+    private TextField cellUserTextField;
+    @FXML
     private TextField lastUpdateCellVersion;
     @FXML
     private ChoiceBox<String> versionSelector;
@@ -370,10 +372,11 @@ public class SheetDisplayController {
             showError("Error", "Failed to load the dashboard. Please try again.");
         }
     }
-    public void updateSelectedCell(String cellAddress, String originalValue, String versionString) {
+    public void updateSelectedCell(String cellAddress, String originalValue, String versionString,String user) {
         selectedCellId.setText(cellAddress);
         originalCellValue.setText(originalValue);
         lastUpdateCellVersion.setText(versionString);
+        cellUserTextField.setText(user);
     }
 
     public void clearSelectedCell() {

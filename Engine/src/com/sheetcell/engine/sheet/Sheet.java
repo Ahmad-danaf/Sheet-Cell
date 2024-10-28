@@ -481,4 +481,12 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
     public void setOnload(boolean b) {
         isOnload = b;
     }
+
+    public void assignUsernameToAllCells(String username) {
+        for (Cell cell : activeCells.values()) {
+            cell.setUser(username);
+        }
+    }
+
+
 }

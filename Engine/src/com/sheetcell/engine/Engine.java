@@ -15,7 +15,7 @@ import java.util.Set;
 
 public interface Engine {
     void loadSheet(String filePath) throws Exception; // Loads sheet data from an XML file
-    void loadSheetFromContentXML(String fileContent) throws Exception;
+    void loadSheetFromContentXML(String fileContent, String username) throws Exception;
     void saveSheet(String filePath) throws IOException; // Saves the current sheet to a file
     SheetUpdateResult setCellValue(String cellId, String value); // Sets the value of a cell
     SheetReadActions getReadOnlySheet(); // Displays the current sheet

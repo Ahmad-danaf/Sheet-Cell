@@ -174,6 +174,7 @@ public class DashboardController {
             // Create a multipart request body
             MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
             builder.addFormDataPart("fileName", file.getName());
+            builder.addFormDataPart("username", currentUserId);
             builder.addFormDataPart("file", file.getName(),
                     RequestBody.create(file, MediaType.parse("application/xml")));
 
