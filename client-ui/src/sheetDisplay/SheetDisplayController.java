@@ -299,6 +299,45 @@ public class SheetDisplayController {
         this.latestVersion = tempMaxVersion;
     }
 
+    private void populateVersionSelectorForPulling(Map<Integer, Integer> sheetVersions, int currentVersion, boolean fromPulling) {
+        // Get the currently displayed versions in the versionSelector
+        Set<String> currentItems = new HashSet<>(versionSelector.getItems());
+
+        int tempMaxVersion = currentVersion;
+        String currentVersionString = "Version " + currentVersion + " (" + sheetVersions.get(currentVersion) + " changes)";
+
+        // Add the current version if it’s not already displayed
+        if (!currentItems.contains(currentVersionString)) {
+            versionSelector.getItems().add(currentVersionString);
+        }
+
+        // Sort the versions and check each version to add only new ones
+        TreeMap<Integer, Integer> sortedVersions = new TreeMap<>(sheetVersions);
+        for (Map.Entry<Integer, Integer> entry : sortedVersions.entrySet()) {
+            int version = entry.getKey();
+            if (version > tempMaxVersion) {
+                tempMaxVersion = version;
+            }
+
+            // Create the version display string
+            String versionString = "Version " + version + " (" + entry.getValue() + " changes)";
+
+            // Add the version only if it’s not already in the selector and is not the current version
+            if (!currentItems.contains(versionString) && version != currentVersion) {
+                versionSelector.getItems().add(versionString);
+            }
+        }
+
+        // Set the version selector to the current version if it's not a pull-based update
+        if (!fromPulling) {
+            versionSelector.setValue(currentVersionString);
+        }
+
+        // Update the latest version
+        this.latestVersion = tempMaxVersion;
+    }
+
+
     private void loadSheetIntoGrid(SheetUserData sheetData) {
         // Assuming SheetUserData has a method to get the sheet's data
         // Pass the data to the spreadsheetGridController
@@ -413,7 +452,12 @@ public class SheetDisplayController {
             int cellChanges = ((Number) versionEntry.get("cellChanges")).intValue();
             sheetVersions.put(version,cellChanges);
         }
-        populateVersionSelector(sheetVersions,currentVersion,fromPulling);
+        if (fromPulling){
+            populateVersionSelectorForPulling(sheetVersions,currentVersion, true);
+        }
+        else {
+            populateVersionSelector(sheetVersions, currentVersion, false);
+        }
     }
 
     @FXML
