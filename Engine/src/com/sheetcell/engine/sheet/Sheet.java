@@ -238,6 +238,100 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
     }
 
     @Override
+    public SheetUpdateResult setCell(int row, int column, String value,String username) {
+        Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
+        Cell doesOldCellExist = activeCells.get(coordinate);
+        if (doesOldCellExist!=null && doesOldCellExist.getOriginalValue()!= null &&
+                doesOldCellExist.getOriginalValue().equals(value)){
+            return new SheetUpdateResult(this,
+                    "The cell at " + CoordinateFactory.convertIndexToCellCord(row, column) +
+                            " already has the value " + value + ". No action was taken.", true);
+        }
+        Set<String> backupActiveRangesSet = new HashSet<>(activeRanges);
+        activeRanges.clear();
+        Map<Coordinate, Set<Coordinate>> dependenciesBackup = new HashMap<>();
+        Map<Coordinate, Set<Coordinate>> influencedBackup = new HashMap<>();
+        for (Map.Entry<Coordinate, Set<Coordinate>> entry : dependenciesMap.entrySet()) {
+            dependenciesBackup.put(entry.getKey(), new HashSet<>(entry.getValue()));
+        }
+        for (Map.Entry<Coordinate, Set<Coordinate>> entry : influencedMap.entrySet()) {
+            influencedBackup.put(entry.getKey(), new HashSet<>(entry.getValue()));
+        }
+        dependenciesMap.clear();
+        influencedMap.clear();
+
+        Sheet newSheetVersion = copySheet();
+        newSheetVersion.resetCellChangeCount();
+
+        // Get the old cell that is about to be replaced (if it exists)
+        Cell oldCell = newSheetVersion.activeCells.get(coordinate);
+        // Backup the old cell's dependencies and influenced cells
+        Map<Cell, Set<Cell>> oldDependenciesBackup = new HashMap<>();
+        Map<Cell, Set<Cell>> oldInfluencedCellsBackup = new HashMap<>();
+
+        if (oldCell != null) {
+            for (Cell cell : newSheetVersion.activeCells.values()) {
+                if (cell.getDependencies().contains(oldCell)) {
+                    oldDependenciesBackup.put(cell, new HashSet<>(cell.getDependencies()));
+                    cell.removeDependency(oldCell);
+                }
+                if (cell.getInfluencedCells().contains(oldCell)) {
+                    oldInfluencedCellsBackup.put(cell, new HashSet<>(cell.getInfluencedCells()));
+                    cell.getInfluencedCells().remove(oldCell);
+                }
+            }
+
+        }
+
+        Cell newCell = new Cell(row, column, value, newSheetVersion.getVersion() +1 , newSheetVersion,username);
+        newSheetVersion.activeCells.put(coordinate, newCell);
+        Map<Coordinate, Cell> newActiveSheetVersion=newSheetVersion.getActiveCells();
+        try{
+            newCell.setOriginalValue(value);
+            for (Cell cell : newActiveSheetVersion.values()) {
+                newSheetVersion.updateDependencies(cell, newActiveSheetVersion);
+            }
+
+            // Topologically sort cells and recalculate effective values
+            List<Cell> sortedCells = CellGraphManager.topologicalSort(newActiveSheetVersion);
+
+            for (Cell cell : sortedCells) {
+                boolean updated = cell.calculateEffectiveValue();
+                if (updated) {
+                    cell.setVersion(newSheetVersion.getVersion()+1);
+                    newSheetVersion.incrementCellChangeCount();
+                    cell.setUser(username);
+                }
+            }
+            newSheetVersion.incrementVersion();
+            return new SheetUpdateResult(newSheetVersion, null);
+        }
+        catch (Exception e) {
+            // Restore the old cell's dependencies and influenced cells
+            if (oldCell != null) {
+                for (Map.Entry<Cell, Set<Cell>> entry : oldDependenciesBackup.entrySet()) {
+                    Cell cell = entry.getKey();
+                    cell.getDependencies().clear();
+                    cell.getDependencies().addAll(entry.getValue());
+                }
+                for (Map.Entry<Cell, Set<Cell>> entry : oldInfluencedCellsBackup.entrySet()) {
+                    Cell cell = entry.getKey();
+                    cell.getInfluencedCells().clear();
+                    cell.getInfluencedCells().addAll(entry.getValue());
+                }
+            }
+            activeRanges.clear();
+            activeRanges.addAll(backupActiveRangesSet);
+            dependenciesMap.clear();
+            dependenciesMap.putAll(dependenciesBackup);
+
+            influencedMap.clear();
+            influencedMap.putAll(influencedBackup);
+            return new SheetUpdateResult(this, e.getMessage());
+        }
+    }
+
+    @Override
     public SheetUpdateResult deleteCell(int row, int column) {
         Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
         if (!activeCells.containsKey(coordinate)) {
@@ -280,6 +374,68 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
                 if (updated) {
                     cell.setVersion(newSheetVersion.getVersion());
                     newSheetVersion.incrementCellChangeCount();
+                }
+            }
+
+            newSheetVersion.incrementVersion();
+            return new SheetUpdateResult(newSheetVersion, null);
+        } catch (Exception e) {
+            // Return the current sheet with the error message
+            activeCells.clear();
+            activeRanges.addAll(backupActiveRangesSet);
+            dependenciesMap.clear();
+            dependenciesMap.putAll(dependenciesBackup);
+
+            influencedMap.clear();
+            influencedMap.putAll(influencedBackup);
+            return new SheetUpdateResult(this, e.getMessage());
+        }
+    }
+
+    @Override
+    public SheetUpdateResult deleteCell(int row, int column,String username) {
+        Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
+        if (!activeCells.containsKey(coordinate)) {
+            return new SheetUpdateResult(this, "The cell at " + CoordinateFactory.convertIndexToCellCord(row, column) + " is already empty or does not exist. No action was taken.", true);
+        }
+        Set<String> backupActiveRangesSet = new HashSet<>(activeRanges);
+        activeRanges.clear();
+        Map<Coordinate, Set<Coordinate>> dependenciesBackup = new HashMap<>();
+        Map<Coordinate, Set<Coordinate>> influencedBackup = new HashMap<>();
+        for (Map.Entry<Coordinate, Set<Coordinate>> entry : dependenciesMap.entrySet()) {
+            dependenciesBackup.put(entry.getKey(), new HashSet<>(entry.getValue()));
+        }
+        for (Map.Entry<Coordinate, Set<Coordinate>> entry : influencedMap.entrySet()) {
+            influencedBackup.put(entry.getKey(), new HashSet<>(entry.getValue()));
+        }
+        dependenciesMap.clear();
+        influencedMap.clear();
+        // Create a new version of the sheet
+        Sheet newSheetVersion = copySheet();
+        newSheetVersion.resetCellChangeCount();
+        newSheetVersion.setCellChangeCount(1);
+        Cell cellToDelete = newSheetVersion.activeCells.remove(coordinate);
+        Map<Coordinate, Cell> newActiveSheetVersion = newSheetVersion.getActiveCells();
+        // Remove the deleted cell from the dependencies of other cells
+        for (Cell cell : newActiveSheetVersion.values()) {
+            cell.removeDependency(cellToDelete);
+            cell.getInfluencedCells().remove(cellToDelete);
+        }
+        try {
+            // Recalculate dependencies and effective values
+            for (Cell cell : newActiveSheetVersion.values()) {
+                newSheetVersion.updateDependencies(cell, newActiveSheetVersion);
+            }
+
+            // Topologically sort cells and recalculate effective values
+            List<Cell> sortedCells = CellGraphManager.topologicalSort(newActiveSheetVersion);
+
+            for (Cell cell : sortedCells) {
+                boolean updated = cell.calculateEffectiveValue();
+                if (updated) {
+                    cell.setVersion(newSheetVersion.getVersion());
+                    newSheetVersion.incrementCellChangeCount();
+                    cell.setUser(username);
                 }
             }
 

@@ -18,6 +18,7 @@ public interface Engine {
     void loadSheetFromContentXML(String fileContent, String username) throws Exception;
     void saveSheet(String filePath) throws IOException; // Saves the current sheet to a file
     SheetUpdateResult setCellValue(String cellId, String value); // Sets the value of a cell
+    SheetUpdateResult setCellValue(String cellId, String value,String username); // Sets the value of a cell
     SheetReadActions getReadOnlySheet(); // Displays the current sheet
     Cell getCell(String cellId); // Retrieves a cell by its ID
     Map<Integer, Integer> getSheetVersions();

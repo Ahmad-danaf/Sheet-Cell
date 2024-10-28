@@ -108,6 +108,33 @@ public class EngineImpl implements Engine, Serializable {
         return result;
     }
 
+    @Override
+    public SheetUpdateResult setCellValue(String cellId, String value,String username) {
+        doesCellIdVaild(cellId);
+
+        int[] coords = CoordinateFactory.convertCellIdToIndex(cellId);
+        int row = coords[0];
+        int col = coords[1];
+
+        SheetUpdateResult result;
+
+        if (value.isEmpty()) {
+            // Delete the cell if the value is an empty string
+            doesCellIdVaildAndExist(cellId);
+            result = currentSheet.deleteCell(row, col,username);
+        } else {
+            // Set the cell value if it's not empty
+            result = currentSheet.setCell(row, col, value,username);
+        }
+
+        if (!result.hasError()) {
+            Sheet tempSheet = result.getSheet();
+            this.sheetVersions.put(tempSheet.getVersion(), tempSheet);
+            currentSheet = tempSheet;
+        }
+        return result;
+    }
+
 
     @Override
     public SheetReadActions getReadOnlySheet() {

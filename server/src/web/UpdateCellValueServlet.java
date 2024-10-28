@@ -66,7 +66,7 @@ public class UpdateCellValueServlet extends HttpServlet {
 
         try {
             // Validate and update cell value
-            SheetUpdateResult result = engine.setCellValue(cellAddress, newValue);
+            SheetUpdateResult result = engine.setCellValue(cellAddress, newValue,userId);
 
             if (result.isNoActionNeeded()) {
                 response.setStatus(HttpServletResponse.SC_OK);
