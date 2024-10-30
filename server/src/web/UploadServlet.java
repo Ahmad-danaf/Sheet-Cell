@@ -42,7 +42,7 @@ public class UploadServlet extends HttpServlet {
                 return;
             }
             // Retrieve file parts from the request
-            Part filePart = request.getPart("file"); // "file" should match the name attribute in Postman
+            Part filePart = request.getPart("file");
             Part fileNamePart = request.getPart("fileName");
             Part userNamePart = request.getPart("username");
 
@@ -84,27 +84,21 @@ public class UploadServlet extends HttpServlet {
                 return;
             }
 
-            // Check if a sheet with the same name already exists
-            if (userManager.isSheetExists(fileName)) {
-                response.setStatus(HttpServletResponse.SC_CONFLICT);
-                jsonResponse.put("error", "A sheet with this name already exists.");
-                response.getWriter().write(gson.toJson(jsonResponse));
-                return;
-            }
+            Set<String> allSheetNames = userManager.getAllSheetNames();
 
             // Attempt to load the sheet using the user's engine
             try {
-                userEngine.loadSheetFromContentXML(fileContent, fileName,username); // If this method does not throw an exception, the sheet is valid
+                String sheetName=userEngine.loadSheetFromContentXML(fileContent,allSheetNames,username); // If this method does not throw an exception, the sheet is valid
                 response.setStatus(HttpServletResponse.SC_OK);
                 //add too the json the max col and row
-                int[] maxColRow = userEngine.getMaxColRow(fileName);
+                int[] maxColRow = userEngine.getMaxColRow(sheetName);
                 String maxColumns = String.valueOf(maxColRow[0]);
                 String maxRows = String.valueOf(maxColRow[1]);
                 jsonResponse.put("maxColumns", maxColumns);
                 jsonResponse.put("maxRows", maxRows);
                 // size is nXm where n is the number of columns and m is the number of rows
                 String size = maxColumns + "x" + maxRows;
-                SheetUserData sheetUserData = new SheetUserData(fileName, username, size, PermissionType.OWNER);
+                SheetUserData sheetUserData = new SheetUserData(sheetName, username, size, PermissionType.OWNER);
                 userManager.addSheetToUser(username, sheetUserData);
                 jsonResponse.put("sheets", userManager.getAllSheets());
                 jsonResponse.put("message", "File uploaded and processed successfully.");
@@ -112,13 +106,13 @@ public class UploadServlet extends HttpServlet {
             } catch (Exception e) {
                 // If an exception is thrown, the sheet is invalid
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                jsonResponse.put("error", "The uploaded sheet is invalid: " + e.getMessage());
+                jsonResponse.put("error", e.getMessage());
                 response.getWriter().write(gson.toJson(jsonResponse));
             }
 
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            jsonResponse.put("error", "An unexpected error occurred: " + e.getMessage());
+            jsonResponse.put("error", "The uploaded sheet is invalid");
             response.getWriter().write(gson.toJson(jsonResponse));
         }
     }

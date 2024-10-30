@@ -200,7 +200,13 @@ public class DashboardController {
                 public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                     try (ResponseBody responseBody = response.body()) {  // Automatically close response body
                         if (responseBody == null || !response.isSuccessful()) {
-                            Platform.runLater(() -> showError("File upload failed."));
+                            String errorBody = responseBody != null ? responseBody.string() : "";
+
+                            // Parse the JSON error response
+                            Map<String, String> errorResponse = gson.fromJson(errorBody, Map.class);
+                            String errorMessage = errorResponse.getOrDefault("error", "error uploading file");
+
+                            Platform.runLater(() -> UIHelper.showError("Error uploading file: ", errorMessage));
                             return;
                         }
 
@@ -346,152 +352,164 @@ public class DashboardController {
 
     @FXML
     private void handleRequestPermission(ActionEvent event) {
-        if (selectedSheet != null) {
-            if (selectedSheet.getOwner().equals(currentUserId)) {
-                showError("You are the owner of this sheet.");
-                return;
-            }
-            // Allow the user to choose the requested permission (e.g., READER or WRITER)
-            ChoiceDialog<PermissionType> permissionDialog = new ChoiceDialog<>(PermissionType.READER,
-                    EnumSet.of(PermissionType.READER, PermissionType.WRITER));
-            permissionDialog.setTitle("Request Permission");
-            permissionDialog.setHeaderText("Choose the permission you want to request:");
-            Optional<PermissionType> result = permissionDialog.showAndWait();
-
-            result.ifPresent(requestedPermission -> {
-                // Send the permission request to the server
-                Request request = new Request.Builder()
-                        .url("http://localhost:8080/webapp/requestPermission")
-                        .post(new FormBody.Builder()
-                                .add("sheetName", selectedSheet.getSheetName())
-                                .add("requester", currentUserId)
-                                .add("requestedPermission", requestedPermission.name())
-                                .build())
-                        .build();
-
-                HttpClientUtil.runAsync(request, new Callback() {
-                    @Override
-                    public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                        Platform.runLater(() -> showError("Failed to request permission: " + e.getMessage()));
-                    }
-
-                    @Override
-                    public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                        try (ResponseBody responseBody = response.body()) {  // Ensure response body is closed
-                            if (responseBody == null || !response.isSuccessful()) {
-                                Platform.runLater(() -> showError("Failed to request permission."));
-                                return;
-                            }
-
-                            Platform.runLater(() -> showSuccess("Permission request sent."));
-                        } catch (Exception e) {
-                            Platform.runLater(() -> showError("Error processing permission request: " + e.getMessage()));
-                        }
-                    }
-                });
-            });
+        if (selectedSheet == null) {
+            showError("No sheet selected. Please select a sheet to request permission.");
+            return;
         }
+        if (selectedSheet.getOwner().equals(currentUserId)) {
+            showError("You are the owner of this sheet.");
+            return;
+        }
+        // Allow the user to choose the requested permission (e.g., READER or WRITER)
+        ChoiceDialog<PermissionType> permissionDialog = new ChoiceDialog<>(PermissionType.READER,
+                EnumSet.of(PermissionType.READER, PermissionType.WRITER));
+        permissionDialog.setTitle("Request Permission");
+        permissionDialog.setHeaderText("Choose the permission you want to request:");
+        Optional<PermissionType> result = permissionDialog.showAndWait();
+
+        result.ifPresent(requestedPermission -> {
+            // Send the permission request to the server
+            Request request = new Request.Builder()
+                    .url("http://localhost:8080/webapp/requestPermission")
+                    .post(new FormBody.Builder()
+                            .add("sheetName", selectedSheet.getSheetName())
+                            .add("requester", currentUserId)
+                            .add("requestedPermission", requestedPermission.name())
+                            .build())
+                    .build();
+
+            HttpClientUtil.runAsync(request, new Callback() {
+                @Override
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                    Platform.runLater(() -> showError("Failed to request permission: " + e.getMessage()));
+                }
+
+                @Override
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    try (ResponseBody responseBody = response.body()) {  // Ensure response body is closed
+                        if (responseBody == null || !response.isSuccessful()) {
+                            Platform.runLater(() -> showError("Failed to request permission."));
+                            return;
+                        }
+
+                        Platform.runLater(() -> showSuccess("Permission request sent."));
+                    } catch (Exception e) {
+                        Platform.runLater(() -> showError("Error processing permission request: " + e.getMessage()));
+                    }
+                }
+            });
+        });
     }
 
 
 
     @FXML
     private void handleAcknowledgeDenyPermission(ActionEvent event) {
-        if (selectedSheet != null && currentUserId.equals(selectedSheet.getOwner())) {
+        if (selectedSheet==null){
+            showError("No sheet selected. Please select a sheet to view.");
+            return;
+        }
+        if (!currentUserId.equals(selectedSheet.getOwner())) {
+            showError("You are not the owner of this sheet.");
+            return;
+        }
+        if (currentUserId.equals(selectedSheet.getOwner())) {
             PermissionUserData selectedPermission = permissionsTable.getSelectionModel().getSelectedItem();
-            if (selectedPermission != null) {
-                // for only pending permissions
-                if (selectedPermission.getStatus() != PermissionStatus.PENDING) {
-                    showError("Permission is not pending.");
-                    return;
-                }
-                // Allow the owner to choose to acknowledge (approve) or deny the request
-                Alert decisionAlert = new Alert(Alert.AlertType.CONFIRMATION);
-                decisionAlert.setTitle("Acknowledge or Deny Permission");
-                decisionAlert.setHeaderText("Acknowledge or deny the permission request for user: " + selectedPermission.getUsername());
-                decisionAlert.setContentText("Choose your action:");
+            if (selectedPermission == null) {
+                showError("No permission selected. Please select a permission to acknowledge or deny.");
+                return;
+            }
+            // for only pending permissions
+            if (selectedPermission.getStatus() != PermissionStatus.PENDING) {
+                showError("Permission is not pending.");
+                return;
+            }
+            // Allow the owner to choose to acknowledge (approve) or deny the request
+            Alert decisionAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            decisionAlert.setTitle("Acknowledge or Deny Permission");
+            decisionAlert.setHeaderText("Acknowledge or deny the permission request for user: " + selectedPermission.getUsername());
+            decisionAlert.setContentText("Choose your action:");
 
-                ButtonType acknowledgeButton = new ButtonType("Acknowledge");
-                ButtonType denyButton = new ButtonType("Deny", ButtonBar.ButtonData.CANCEL_CLOSE);
+            ButtonType acknowledgeButton = new ButtonType("Acknowledge");
+            ButtonType denyButton = new ButtonType("Deny", ButtonBar.ButtonData.CANCEL_CLOSE);
 
-                decisionAlert.getButtonTypes().setAll(acknowledgeButton, denyButton);
+            decisionAlert.getButtonTypes().setAll(acknowledgeButton, denyButton);
 
-                Optional<ButtonType> result = decisionAlert.showAndWait();
-                if (result.isPresent() && result.get() == acknowledgeButton) {
-                    // The owner acknowledged the request. Allow the owner to choose the permission type to grant.
-                    ChoiceDialog<PermissionType> permissionDialog = new ChoiceDialog<>(PermissionType.READER, PermissionType.WRITER);
-                    permissionDialog.setTitle("Grant Permission");
-                    permissionDialog.setHeaderText("Choose the permission type to grant:");
-                    Optional<PermissionType> permissionResult = permissionDialog.showAndWait();
+            Optional<ButtonType> result = decisionAlert.showAndWait();
+            if (result.isPresent() && result.get() == acknowledgeButton) {
+                // The owner acknowledged the request. Allow the owner to choose the permission type to grant.
+                ChoiceDialog<PermissionType> permissionDialog = new ChoiceDialog<>(PermissionType.READER, PermissionType.WRITER);
+                permissionDialog.setTitle("Grant Permission");
+                permissionDialog.setHeaderText("Choose the permission type to grant:");
+                Optional<PermissionType> permissionResult = permissionDialog.showAndWait();
 
-                    permissionResult.ifPresent(grantedPermission -> {
-                        // Send the acknowledge request to the server
-                        Request request = new Request.Builder()
-                                .url("http://localhost:8080/webapp/acknowledgePermission")
-                                .post(new FormBody.Builder()
-                                        .add("sheetName", selectedSheet.getSheetName())
-                                        .add("targetUser", selectedPermission.getUsername())
-                                        .add("permission", grantedPermission.name())
-                                        .add("status", "ACKNOWLEDGED")
-                                        .build())
-                                .build();
-
-                        HttpClientUtil.runAsync(request, new Callback() {
-                            @Override
-                            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                                Platform.runLater(() -> showError("Failed to update permission: " + e.getMessage()));
-                            }
-
-                            @Override
-                            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                                try (ResponseBody responseBody = response.body()) {  // Ensure response body is closed
-                                    if (responseBody == null || !response.isSuccessful()) {
-                                        Platform.runLater(() -> showError("Failed to update permission."));
-                                        return;
-                                    }
-
-                                    Platform.runLater(() -> showSuccess("Permission updated."));
-                                    fetchPermissionsForSelectedSheet(selectedSheet.getSheetName());
-                                } catch (Exception e) {
-                                    Platform.runLater(() -> showError("Error updating permission: " + e.getMessage()));
-                                }
-                            }
-                        });
-                    });
-                } else if (result.isPresent() && result.get() == denyButton) {
-                    // The owner denied the request, send denial to the server
+                permissionResult.ifPresent(grantedPermission -> {
+                    // Send the acknowledge request to the server
                     Request request = new Request.Builder()
                             .url("http://localhost:8080/webapp/acknowledgePermission")
                             .post(new FormBody.Builder()
                                     .add("sheetName", selectedSheet.getSheetName())
                                     .add("targetUser", selectedPermission.getUsername())
-                                    .add("permission", PermissionType.NONE.name()) // Set permission to NONE for denial
-                                    .add("status", "DENIED") // Explicitly mark as denied
+                                    .add("permission", grantedPermission.name())
+                                    .add("status", "ACKNOWLEDGED")
                                     .build())
                             .build();
 
                     HttpClientUtil.runAsync(request, new Callback() {
                         @Override
                         public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                            Platform.runLater(() -> showError("Failed to deny permission: " + e.getMessage()));
+                            Platform.runLater(() -> showError("Failed to update permission: " + e.getMessage()));
                         }
 
                         @Override
                         public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                             try (ResponseBody responseBody = response.body()) {  // Ensure response body is closed
                                 if (responseBody == null || !response.isSuccessful()) {
-                                    Platform.runLater(() -> showError("Failed to deny permission."));
+                                    Platform.runLater(() -> showError("Failed to update permission."));
                                     return;
                                 }
 
-                                Platform.runLater(() -> showSuccess("Permission request denied."));
+                                Platform.runLater(() -> showSuccess("Permission updated."));
                                 fetchPermissionsForSelectedSheet(selectedSheet.getSheetName());
                             } catch (Exception e) {
-                                Platform.runLater(() -> showError("Error denying permission: " + e.getMessage()));
+                                Platform.runLater(() -> showError("Error updating permission: " + e.getMessage()));
                             }
                         }
                     });
-                }
+                });
+            } else if (result.isPresent() && result.get() == denyButton) {
+                // The owner denied the request, send denial to the server
+                Request request = new Request.Builder()
+                        .url("http://localhost:8080/webapp/acknowledgePermission")
+                        .post(new FormBody.Builder()
+                                .add("sheetName", selectedSheet.getSheetName())
+                                .add("targetUser", selectedPermission.getUsername())
+                                .add("permission", PermissionType.NONE.name()) // Set permission to NONE for denial
+                                .add("status", "DENIED") // Explicitly mark as denied
+                                .build())
+                        .build();
+
+                HttpClientUtil.runAsync(request, new Callback() {
+                    @Override
+                    public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                        Platform.runLater(() -> showError("Failed to deny permission: " + e.getMessage()));
+                    }
+
+                    @Override
+                    public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                        try (ResponseBody responseBody = response.body()) {  // Ensure response body is closed
+                            if (responseBody == null || !response.isSuccessful()) {
+                                Platform.runLater(() -> showError("Failed to deny permission."));
+                                return;
+                            }
+
+                            Platform.runLater(() -> showSuccess("Permission request denied."));
+                            fetchPermissionsForSelectedSheet(selectedSheet.getSheetName());
+                        } catch (Exception e) {
+                            Platform.runLater(() -> showError("Error denying permission: " + e.getMessage()));
+                        }
+                    }
+                });
             }
         }
     }
@@ -504,6 +522,12 @@ public class DashboardController {
             return;
         }
 
+        PermissionType permissionType = getPermissionType(selectedSheet);
+        if (permissionType == PermissionType.NONE) {
+            showError("You do not have permission to view this sheet.");
+            return;
+        }
+
         try {
             // Load the FXML for the sheet display view
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetDisplay/sheetDisplay.fxml"));
@@ -512,7 +536,7 @@ public class DashboardController {
             // Get the controller for the sheet display and initialize it with the selected sheet data
             SheetDisplayController sheetDisplayController = loader.getController();
             fetchSheetDataFromServer(selectedSheet.getSheetName(), sheetDisplayController);
-            sheetDisplayController.initializeSheetView(selectedSheet,currentUserId); // Passing the selected sheet to the next controller
+            sheetDisplayController.initializeSheetView(selectedSheet,currentUserId,permissionType); // Passing the selected sheet to the next controller
 
             // Set up the new scene
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -565,6 +589,22 @@ public class DashboardController {
                 }
             }
         });
+    }
+
+
+    PermissionType getPermissionType(SheetUserData sheetData){
+        PermissionUserData permissionData = sheetData.getPermissionForUser(currentUserId);
+        if (permissionData != null) {
+            if (permissionData.getStatus() == PermissionStatus.ACKNOWLEDGED) {
+                return permissionData.getPermissionType();
+            } else{
+                // Show the previous acknowledged permission if a request is pending or deny
+                return permissionData.getPrevAcknowledgedPermission();
+            }
+
+        }
+        // Default to NONE if no permission is found
+        return PermissionType.NONE;
     }
 
 

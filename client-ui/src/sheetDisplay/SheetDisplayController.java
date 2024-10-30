@@ -6,6 +6,7 @@ import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.coordinate.CoordinateFactory;
 import com.sheetcell.engine.utils.ColumnRowPropertyManager;
 import dashboard.DashboardController;
+import data.PermissionType;
 import data.SheetUserData;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
@@ -85,14 +86,21 @@ public class SheetDisplayController {
     @FXML
     private VBox rowControls;
     private ColumnRowPropertyManager columnRowPropertyManager;
-
+    //editing
+    @FXML
+    private Button addRangeButton;
+    @FXML
+    private Button deleteRangeButton;
+    @FXML
+    private Button updateValueButton;
 
     private final Gson gson = new Gson();
     private Stage stage;
-    boolean isSheetLoaded = false;
-    String UserName;
-    int currentVersion;
-    int latestVersion;
+    private boolean isSheetLoaded = false;
+    private String UserName;
+    private PermissionType permissionType;
+    private int currentVersion;
+    private int latestVersion;
     @FXML
     private void initialize() {
         if (spreadsheetGridController != null) {
@@ -240,8 +248,14 @@ public class SheetDisplayController {
         rowControls.setVisible(false);  // Hide the controls until a row is selected
     }
 
-    public void initializeSheetView(SheetUserData sheetData, String username) {
-        System.out.println("SheetDisplayController initializeSheetView");
+    public void initializeSheetView(SheetUserData sheetData, String username, PermissionType permissionType) {
+        this.permissionType = permissionType;
+        if (permissionType == PermissionType.READER) {
+            // Disable editing controls for readers
+            addRangeButton.setDisable(true);
+            deleteRangeButton.setDisable(true);
+            updateValueButton.setDisable(true);
+        }
         // Set the sheet name
         sheetNameField.setText(sheetData.getSheetName());
         UserName = username;
@@ -251,12 +265,8 @@ public class SheetDisplayController {
         // Initialize cell styles
         //initializeCellStyling();
 
-        // Load the sheet data into the spreadsheet grid
-        loadSheetIntoGrid(sheetData);
-
         // Mark the sheet as loaded
         isSheetLoaded = true;
-        System.out.println("SheetDisplayController initializeSheetView DONE");
     }
 
     public void initializeVersionSelector(Map<String, Object> sheetData){
@@ -339,12 +349,6 @@ public class SheetDisplayController {
         this.latestVersion = tempMaxVersion;
     }
 
-
-    private void loadSheetIntoGrid(SheetUserData sheetData) {
-        // Assuming SheetUserData has a method to get the sheet's data
-        // Pass the data to the spreadsheetGridController
-       // spreadsheetGridController.loadSheetData(sheetData);
-    }
 
     public void setSpreadsheetGridController(SheetController spreadsheetGridController) {
         this.spreadsheetGridController = spreadsheetGridController;

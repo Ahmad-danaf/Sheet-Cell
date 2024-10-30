@@ -5,10 +5,7 @@ import com.sheetcell.engine.EngineImpl;
 import com.sheetcell.engine.sheet.Sheet;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class UserSheetEngine {
 
@@ -26,15 +23,23 @@ public class UserSheetEngine {
         return sheetEngines.containsKey(sheetName);
     }
 
-    public void loadSheetFromContentXML(String fileContent,String sheetName, String username) throws Exception {
-        //if sheet exists, dont load the sheet
-        if(sheetEngines.containsKey(sheetName)){
-            throw new IllegalArgumentException("Sheet with this name already exists");
-        }
+    public String loadSheetFromContentXML(String fileContent, Set<String> allSheetNames, String username) throws Exception {
+        String sheetName = "";
         //load the sheet
         Engine engine = new EngineImpl();
         engine.loadSheetFromContentXML(fileContent,username);
+        sheetName = engine.getReadOnlySheet().getSheetName();
+        if (sheetName == null || sheetName.isEmpty()) {
+            throw new Exception("Sheet name is empty");
+        }
+        if(sheetEngines.containsKey(sheetName)){
+            throw new IllegalArgumentException("Sheet with this name already exists");
+        }
+        if(allSheetNames.contains(sheetName)){
+            throw new IllegalArgumentException("Sheet with this name already exists");
+        }
         sheetEngines.put(sheetName, engine);
+        return sheetName;
     }
 
     //return max col and row

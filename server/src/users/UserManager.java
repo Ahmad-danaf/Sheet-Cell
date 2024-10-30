@@ -26,6 +26,17 @@ public class UserManager {
         usersSet.remove(username);
     }
 
+
+    // get all sheets names
+    public Set<String> getAllSheetNames() {
+        Set<String> sheetNames = new HashSet<>();
+        for (Set<SheetUserData> sheets : userToSheetData.values()) {
+            for (SheetUserData sheetData : sheets) {
+                sheetNames.add(sheetData.getSheetName());
+            }
+        }
+        return sheetNames;
+    }
     public boolean isUserExists(String username) {
         return usersSet.contains(username);
     }

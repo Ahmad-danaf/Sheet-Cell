@@ -2,13 +2,13 @@ package responses;
 
 public class UploadFileResponse {
     private String status;
-    private String fileName;
+    private String sheetName;
     private String fileContent;
 
     // Constructor
     public UploadFileResponse(String status, String fileName, String fileContent) {
         this.status = status;
-        this.fileName = fileName;
+        this.sheetName = fileName;
         this.fileContent = fileContent;
     }
 
@@ -22,11 +22,11 @@ public class UploadFileResponse {
     }
 
     public String getFileName() {
-        return fileName;
+        return sheetName;
     }
 
     public void setFileName(String fileName) {
-        this.fileName = fileName;
+        this.sheetName = fileName;
     }
 
     public String getFileContent() {
