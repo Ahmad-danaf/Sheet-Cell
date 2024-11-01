@@ -5,6 +5,7 @@ import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.sheet.Sheet;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.utils.ColumnProperties;
+import com.sheetcell.engine.utils.DynamicAnalysisResult;
 import com.sheetcell.engine.utils.RowProperties;
 import com.sheetcell.engine.utils.SheetUpdateResult;
 
@@ -38,6 +39,7 @@ public interface Engine {
     void setRowProperties(Integer row, int height);
     void setRowHeight(Integer row, int height);
     RowProperties getRowProperties(Integer row);
+    DynamicAnalysisResult performDynamicAnalysis(int row, int column, double minValue, double maxValue, double step);
 
 
 

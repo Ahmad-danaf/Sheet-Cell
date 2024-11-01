@@ -336,4 +336,30 @@ public class EngineImpl implements Engine, Serializable {
         }
         return columnRowPropertyManager.getRowProperties(row);
     }
+
+    @Override
+    public DynamicAnalysisResult performDynamicAnalysis(int row, int column, double minValue, double maxValue, double step) {
+        DynamicAnalysisResult analysisResult = new DynamicAnalysisResult(currentSheet.getMaxRows(), currentSheet.getMaxColumns());
+        Coordinate targetCoord = CoordinateFactory.createCoordinate(row, column);
+        Cell originalCell = currentSheet.getCell(row, column);
+
+        // Ensure the cell is numeric and not a formula
+        if (originalCell == null || !originalCell.isNumeric() || originalCell.isFormula()) {
+            throw new IllegalArgumentException("Selected cell must be a numeric cell and not a formula.");
+        }
+        // Iterate over the range, updating the cell's value temporarily
+        Sheet tempSheet = currentSheet.copySheetForDynamicAnalysis();
+        if (tempSheet == null) {
+            throw new IllegalArgumentException("Failed to create a temporary sheet for dynamic analysis. Please try again.");
+        }
+        for (double value = minValue; value <= maxValue; value += step) {
+            // Create a temporary sheet snapshot for analysis
+            SheetReadActions res=tempSheet.setCellForDynamicAnalysis(row, column, Double.toString(value));
+
+            // Generate a ReadOnlySheetActions view and store it in the result map
+            analysisResult.addResult(value, res);
+        }
+
+        return analysisResult;
+    }
 }

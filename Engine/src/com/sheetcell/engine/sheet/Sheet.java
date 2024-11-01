@@ -237,6 +237,75 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         }
     }
 
+    public SheetReadActions setCellForDynamicAnalysis(int row,int column,String value){
+        Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
+        Cell doesOldCellExist = activeCells.get(coordinate);
+        if (doesOldCellExist!=null && doesOldCellExist.getOriginalValue()!= null &&
+                doesOldCellExist.getOriginalValue().equals(value)){
+            return this;
+        }
+        Sheet newSheetVersion = copySheet();
+        newSheetVersion.resetCellChangeCount();
+
+        Cell oldCell = newSheetVersion.activeCells.get(coordinate);
+        // Backup the old cell's dependencies and influenced cells
+        Map<Cell, Set<Cell>> oldDependenciesBackup = new HashMap<>();
+        Map<Cell, Set<Cell>> oldInfluencedCellsBackup = new HashMap<>();
+
+        if (oldCell != null) {
+            for (Cell cell : newSheetVersion.activeCells.values()) {
+                if (cell.getDependencies().contains(oldCell)) {
+                    oldDependenciesBackup.put(cell, new HashSet<>(cell.getDependencies()));
+                    cell.removeDependency(oldCell);
+                }
+                if (cell.getInfluencedCells().contains(oldCell)) {
+                    oldInfluencedCellsBackup.put(cell, new HashSet<>(cell.getInfluencedCells()));
+                    cell.getInfluencedCells().remove(oldCell);
+                }
+            }
+
+        }
+
+        Cell newCell = new Cell(row, column, value, newSheetVersion.getVersion() +1 , newSheetVersion);
+        newSheetVersion.activeCells.put(coordinate, newCell);
+        Map<Coordinate, Cell> newActiveSheetVersion=newSheetVersion.getActiveCells();
+        try{
+            newCell.setOriginalValue(value);
+            for (Cell cell : newActiveSheetVersion.values()) {
+                newSheetVersion.updateDependencies(cell, newActiveSheetVersion);
+            }
+
+            // Topologically sort cells and recalculate effective values
+            List<Cell> sortedCells = CellGraphManager.topologicalSort(newActiveSheetVersion);
+
+            for (Cell cell : sortedCells) {
+                boolean updated = cell.calculateEffectiveValue();
+                if (updated) {
+                    cell.setVersion(newSheetVersion.getVersion()+1);
+                    newSheetVersion.incrementCellChangeCount();
+
+                }
+            }
+            newSheetVersion.incrementVersion();
+            return newSheetVersion;
+        }
+        catch (Exception e) {
+            if (oldCell != null) {
+                for (Map.Entry<Cell, Set<Cell>> entry : oldDependenciesBackup.entrySet()) {
+                    Cell cell = entry.getKey();
+                    cell.getDependencies().clear();
+                    cell.getDependencies().addAll(entry.getValue());
+                }
+                for (Map.Entry<Cell, Set<Cell>> entry : oldInfluencedCellsBackup.entrySet()) {
+                    Cell cell = entry.getKey();
+                    cell.getInfluencedCells().clear();
+                    cell.getInfluencedCells().addAll(entry.getValue());
+                }
+            }
+            return this;
+        }
+    }
+
     @Override
     public SheetUpdateResult setCell(int row, int column, String value,String username) {
         Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
@@ -562,6 +631,25 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
         }
     }
 
+    public Sheet copySheetForDynamicAnalysis() {
+        // lots of options here:
+        // 1. implement clone all the way (yac... !)
+        // 2. implement copy constructor for CellImpl and SheetImp
+        // how about serialization:
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            oos.writeObject(this);
+            oos.close();
+
+            ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
+            return (Sheet) ois.readObject();
+        } catch (Exception e) {
+            // deal with the runtime error that was discovered as part of invocation
+            return null;
+        }
+    }
+
     public void addRange(String rangeName, Coordinate from, Coordinate to) {
         if (!isCoordinateWithinBounds(from) || !isCoordinateWithinBounds(to)) {
             throw new IllegalArgumentException("Error in"+ rangeName +": Range coordinates are outside the boundaries of the sheet.");
@@ -643,6 +731,8 @@ public class Sheet implements SheetReadActions, SheetUpdateActions, Serializable
             cell.setUser(username);
         }
     }
+
+
 
 
 }

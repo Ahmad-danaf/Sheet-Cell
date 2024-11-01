@@ -150,6 +150,22 @@ public class Cell implements Serializable {
                 '}';
     }
 
+    public boolean isNumeric() {
+        if (effectiveValue == null) {
+            return false;
+        }
+        CellType cellType = effectiveValue.getCellType();
+        return cellType == CellType.NUMERIC;
+    }
+
+
+    public boolean isFormula() {
+        if (originalValue == null) {
+            return false;
+        }
+        return originalValue.startsWith("{") && originalValue.endsWith("}");
+    }
+
 //    @Override
 //    public boolean equals(Object obj) {
 //        if (this == obj) return true;
