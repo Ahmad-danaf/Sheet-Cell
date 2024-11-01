@@ -10,15 +10,13 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import utils.cell.CellRange;
 import utils.cell.CellWrapper;
+import utils.parameters.DynamicAnalysisParameters;
 
 import java.util.List;
 import java.util.Map;
@@ -231,6 +229,105 @@ public class SheetPopupUtils {
             Scene versionScene = new Scene(new VBox(versionTableView));
             versionStage.setScene(versionScene);
             versionStage.show();
+        });
+    }
+
+    public static void displayDynamicAnalysisInPopup(Map<Double, Map<String, Map<String, String>>> analysisData,
+                                                     DynamicAnalysisParameters parameters) {
+        Platform.runLater(() -> {
+            // Create a new TableView for the analysis data
+            TableView<ObservableList<CellWrapper>> analysisTableView = new TableView<>();
+            analysisTableView.setEditable(false);
+
+            // Add a row number column
+            TableColumn<ObservableList<CellWrapper>, Number> rowNumberCol = new TableColumn<>("#");
+            rowNumberCol.setCellValueFactory(cellData -> {
+                int index = analysisTableView.getItems().indexOf(cellData.getValue());
+                return new ReadOnlyObjectWrapper<>(index + 1);
+            });
+            rowNumberCol.setSortable(false);
+            rowNumberCol.setPrefWidth(50);
+            analysisTableView.getColumns().add(rowNumberCol);
+
+            // Dynamically create columns based on the number of columns in the first analysis step
+            double firstKey = analysisData.keySet().iterator().next();
+            Map<String, Map<String, String>> firstStepData = analysisData.get(firstKey);
+
+
+            for (int colIndex = 0; colIndex < parameters.getMaxColumns(); colIndex++) {
+                String columnName = CoordinateFactory.convertIndexToColumnLabel(colIndex);
+                TableColumn<ObservableList<CellWrapper>, CellWrapper> column = new TableColumn<>(columnName);
+                final int col = colIndex;
+                column.setCellValueFactory(cellData -> {
+                    ObservableList<CellWrapper> row = cellData.getValue();
+                    CellWrapper cellWrapper = row.get(col);
+                    return new ReadOnlyObjectWrapper<>(cellWrapper);
+                });
+                configureCellFactoryForPopup(column); // Apply cell factory
+                column.setSortable(false);
+                analysisTableView.getColumns().add(column);
+            }
+
+            // Create a slider to control the analysis steps
+            Slider analysisSlider = new Slider(parameters.getMinValue(), parameters.getMaxValue(),
+                    parameters.getMinValue());
+            analysisSlider.setShowTickLabels(true);
+            analysisSlider.setShowTickMarks(true);
+            analysisSlider.setMajorTickUnit(parameters.getStepSize());
+            analysisSlider.setMinorTickCount(0);
+            analysisSlider.setSnapToTicks(true);
+
+            // Display the current slider value
+            Label sliderValueLabel = new Label(String.format("Cell ID: %s, Current Value: %.2f", parameters.getCellId()
+                    , parameters.getMinValue()));
+
+
+            // Set the listener to update the table view based on slider value
+            analysisSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+                double selectedValue = newVal.doubleValue();
+                sliderValueLabel.setText(String.format("Cell ID: %s, Current Value: %.2f", parameters.getCellId(),
+                        selectedValue));
+
+
+                Map<String, Map<String, String>> cellData = analysisData.get(selectedValue);
+                if (cellData != null) {
+                    ObservableList<ObservableList<CellWrapper>> data = FXCollections.observableArrayList();
+                    for (int rowIndex = 0; rowIndex < parameters.getMaxRows(); rowIndex++) {
+                        ObservableList<CellWrapper> rowData = FXCollections.observableArrayList();
+                        for (int colIndex = 0; colIndex < parameters.getMaxColumns(); colIndex++) {
+                            String key = rowIndex + "," + colIndex;
+                            Map<String, String> cellValues = cellData.getOrDefault(key, Map.of());
+                            String effectiveValue = cellValues.get("effectiveValue");
+                            effectiveValue = effectiveValue != null && (effectiveValue.equalsIgnoreCase("true") || effectiveValue.equalsIgnoreCase("false"))
+                                    ? effectiveValue.toUpperCase()
+                                    : effectiveValue;
+                            CellWrapper cellWrapper = new CellWrapper(null, effectiveValue, 0, rowIndex, colIndex);
+                            rowData.add(cellWrapper);
+                        }
+                        data.add(rowData);
+                    }
+                    analysisTableView.setItems(data); // Set new data for the TableView
+                    analysisTableView.refresh();
+                }
+            });
+
+            // Initialize data for the first slider value
+            analysisSlider.setValue(parameters.getMinValue());
+
+            // Create a new stage for the analysis popup
+            Stage popupStage = new Stage();
+            popupStage.setTitle("Dynamic Analysis");
+            popupStage.initModality(Modality.APPLICATION_MODAL);
+
+            // Close button for the popup
+            Button closeButton = new Button("Close");
+            closeButton.setOnAction(e -> popupStage.close());
+
+            // Layout the components in a VBox
+            VBox vbox = new VBox(10, sliderValueLabel, analysisSlider, analysisTableView, closeButton);
+            Scene scene = new Scene(vbox);
+            popupStage.setScene(scene);
+            popupStage.show();
         });
     }
 

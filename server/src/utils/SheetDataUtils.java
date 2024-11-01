@@ -6,6 +6,7 @@ import com.sheetcell.engine.cell.EffectiveValue;
 import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.sheet.api.SheetReadActions;
 import com.sheetcell.engine.utils.ColumnProperties;
+import com.sheetcell.engine.utils.DynamicAnalysisResult;
 
 import java.util.*;
 
@@ -156,4 +157,42 @@ public class SheetDataUtils {
         sheetData.put("currentVersion", engine.getReadOnlySheet().getVersion());
         return sheetData;
     }
+
+
+    public static Map<Double, Map<String, Map<String, String>>> getDynamicAnalysisData(DynamicAnalysisResult analysisRes) {
+        // Map to hold each analysis step result, keyed by the analysis value
+        Map<Double, Map<String, Map<String, String>>> analysisData = new HashMap<>();
+
+        // Iterate over each entry in the DynamicAnalysisResult
+        for (Map.Entry<Double, SheetReadActions> entry : analysisRes.getResults().entrySet()) {
+            double analysisValue = entry.getKey();
+            SheetReadActions sheetReadActions = entry.getValue();
+
+            // Collect effective values for the current sheet
+            Map<String, Map<String, String>> cellData = new HashMap<>();
+
+            for (int row = 0; row < sheetReadActions.getMaxRows(); row++) {
+                for (int col = 0; col < sheetReadActions.getMaxColumns(); col++) {
+                    Cell cell = sheetReadActions.getCell(row, col);
+
+                    if (cell != null) {
+                        EffectiveValue effectiveValue = cell.getEffectiveValue();
+                        String effectiveValueStr = effectiveValue != null ? effectiveValue.toString() : "";
+
+                        // Use cell coordinates as keys and store only effectiveValue
+                        String cellKey = row + "," + col;
+                        cellData.putIfAbsent(cellKey, new HashMap<>());
+                        cellData.get(cellKey).put("effectiveValue", effectiveValueStr);
+                    }
+                }
+            }
+
+            // Map the analysis value to its corresponding cell data
+            analysisData.put(analysisValue, cellData);
+        }
+
+        return analysisData;
+    }
+
+
 }

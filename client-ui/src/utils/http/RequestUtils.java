@@ -214,4 +214,17 @@ public class RequestUtils {
                         .build())
                 .build();
     }
+
+    public static Request createDynamicAnalysisRequest(String sheetName, String cellAddress, double minValue, double maxValue, double stepSize) {
+        // Build the request URL with the appropriate endpoint and parameters for dynamic analysis
+        String url = String.format("http://localhost:8080/webapp/performDynamicAnalysis?sheetName=%s&cellAddress=%s&minValue=%s&maxValue=%s&stepSize=%s",
+                sheetName, cellAddress, minValue, maxValue, stepSize);
+
+        // Build and return the GET request
+        return new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+    }
+
 }

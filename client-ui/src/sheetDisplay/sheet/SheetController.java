@@ -581,4 +581,9 @@ public class SheetController {
         });
     }
 
+
+    public CellWrapper getCellWrapper(int row, int column) {
+        ObservableList<CellWrapper> rowData = spreadsheetTableView.getItems().get(row);
+        return rowData.get(column);
+    }
 }

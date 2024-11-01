@@ -10,7 +10,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import utils.parameters.FilterParameters;
-import utils.parameters.MultiColFilterParameters;
 
 import java.util.ArrayList;
 import java.util.HashMap;

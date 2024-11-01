@@ -119,6 +119,11 @@
                                     <Tooltip text="Filter table data" />
                                 </tooltip>
                             </Button>
+                            <Button fx:id="DynamicAnalysisButton" mnemonicParsing="false" onAction="#handleDynamicAnalysis" text="Dynamic Analysis">
+                                <tooltip>
+                                    <Tooltip text="Dynamic Analysis Button" />
+                                </tooltip>
+                            </Button>
                         </children>
                     </VBox>
                 </TitledPane>

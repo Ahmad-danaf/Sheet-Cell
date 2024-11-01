@@ -1,6 +1,7 @@
 package sheetDisplay;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.sheetcell.engine.coordinate.Coordinate;
 import com.sheetcell.engine.coordinate.CoordinateFactory;
@@ -27,11 +28,13 @@ import sheetDisplay.sheet.SheetController;
 import utils.UIHelper;
 import utils.ValidationUtils;
 import utils.cell.CellRange;
+import utils.cell.CellWrapper;
 import utils.color.ColorUtils;
 import utils.dialogs.FilterDialog;
 import utils.dialogs.SortDialog;
 import utils.http.HttpClientUtil;
 import utils.http.RequestUtils;
+import utils.parameters.DynamicAnalysisParameters;
 import utils.parameters.FilterParameters;
 import utils.parameters.SortParameters;
 import utils.parsing.ParsingUtils;
@@ -805,6 +808,122 @@ public class SheetDisplayController {
         });
     }
 
+    @FXML
+    public void handleDynamicAnalysis() {
+        if (!isSheetLoaded) {
+            UIHelper.showAlert("No sheet loaded", "Please load a spreadsheet file to perform dynamic analysis.");
+            return;
+        }
+
+        // Get the selected cell ID
+        String cellAddress = selectedCellId.getText();
+        if (cellAddress == null || cellAddress.isEmpty()) {
+            UIHelper.showAlert("No cell selected", "Please select a cell to perform dynamic analysis.");
+            return;
+        }
+
+        // Check if the selected cell contains a numeric value and is not a formula
+        CellWrapper selectedCell = getSelectedCellWrapper();
+        if (selectedCell == null || !isNumeric(selectedCell.getOriginalValue()) || isFormula(selectedCell.getOriginalValue())) {
+            UIHelper.showAlert("Invalid Cell", "Please select a cell with a numeric value that is not a formula.");
+            return;
+        }
+
+        // Get input from the user: min, max, and step values
+        TextInputDialog minDialog = new TextInputDialog();
+        minDialog.setTitle("Dynamic Analysis - Minimum Value");
+        minDialog.setHeaderText("Enter the minimum value for dynamic analysis:");
+        Optional<String> minResult = minDialog.showAndWait();
+
+        TextInputDialog maxDialog = new TextInputDialog();
+        maxDialog.setTitle("Dynamic Analysis - Maximum Value");
+        maxDialog.setHeaderText("Enter the maximum value for dynamic analysis:");
+        Optional<String> maxResult = maxDialog.showAndWait();
+
+        TextInputDialog stepDialog = new TextInputDialog();
+        stepDialog.setTitle("Dynamic Analysis - Step Value");
+        stepDialog.setHeaderText("Enter the step size for dynamic analysis:");
+        Optional<String> stepResult = stepDialog.showAndWait();
+
+        // Validate inputs
+        if (minResult.isEmpty() || maxResult.isEmpty() || stepResult.isEmpty()) {
+            UIHelper.showAlert("Input Error", "All fields (min, max, and step) must be filled.");
+            return;
+        }
+
+        double minValue, maxValue, stepSize;
+        try {
+            minValue = Double.parseDouble(minResult.get());
+            maxValue = Double.parseDouble(maxResult.get());
+            stepSize = Double.parseDouble(stepResult.get());
+        } catch (NumberFormatException e) {
+            UIHelper.showAlert("Invalid Input", "Min, max, and step values must be numeric.");
+            return;
+        }
+
+        // Ensure min < max and step > 0
+        if (minValue >= maxValue || stepSize <= 0) {
+            UIHelper.showAlert("Input Error", "Ensure that min < max and step > 0.");
+            return;
+        }
+
+        // Pass the parameters to the server for dynamic analysis
+        Request request = RequestUtils.createDynamicAnalysisRequest(sheetNameField.getText(), cellAddress, minValue, maxValue, stepSize);
+        HttpClientUtil.runAsync(request, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Platform.runLater(() -> showError("Failed to perform dynamic analysis: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String responseBody = response.body() != null ? response.body().string() : "";
+                if (response.isSuccessful()) {
+                    Map<Double, Map<String, Map<String, String>>> analysisData = gson.fromJson(responseBody, new TypeToken<Map<Double, Map<String, Map<String, String>>>>(){}.getType());
+                    DynamicAnalysisParameters parameters = new DynamicAnalysisParameters(cellAddress, minValue, maxValue, stepSize,
+                            columnRowPropertyManager.getMaxRow(), columnRowPropertyManager.getMaxColumn());
+                    Platform.runLater(() -> SheetPopupUtils.displayDynamicAnalysisInPopup(analysisData, parameters));
+                } else {
+                    String errorMessage ="";
+                    try {
+                        // Attempt to parse the response as JSON
+                        Map<String, Object> jsonResponse = gson.fromJson(responseBody, Map.class);
+                        errorMessage = jsonResponse.get("error") != null ? jsonResponse.get("error").toString() : "Unknown error";
+                    } catch (JsonSyntaxException e) {
+                        // If parsing fails, assume the response is a plain string error message
+                        errorMessage = responseBody.isEmpty() ? "Unknown error" : responseBody;
+                    }
+                    String finalErrorMessage = errorMessage;
+                    Platform.runLater(() -> showError("Failed to update cell value: " + finalErrorMessage));
+
+
+                }
+                response.close();
+            }
+        });
+    }
+
+// Helper methods
+
+    private boolean isNumeric(String value) {
+        if (value == null || value.isEmpty()) return false;
+        try {
+            Double.parseDouble(value);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private boolean isFormula(String value) {
+        return value.startsWith("{") && value.endsWith("}");
+    }
+
+    private CellWrapper getSelectedCellWrapper() {
+        int row = CoordinateFactory.getRowIndex(selectedCellId.getText());
+        int column = CoordinateFactory.getColumnIndex(selectedCellId.getText());
+        return spreadsheetGridController.getCellWrapper(row, column);
+    }
 
 }
 
