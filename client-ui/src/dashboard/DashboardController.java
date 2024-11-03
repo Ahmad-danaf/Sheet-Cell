@@ -530,7 +530,7 @@ public class DashboardController {
 
         try {
             // Load the FXML for the sheet display view
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetDisplay/sheetDisplay.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetDisplay/SheetDisplay.fxml"));
             Parent sheetDisplayParent = loader.load();
 
             // Get the controller for the sheet display and initialize it with the selected sheet data

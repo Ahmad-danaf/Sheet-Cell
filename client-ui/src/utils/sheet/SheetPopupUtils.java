@@ -249,11 +249,7 @@ public class SheetPopupUtils {
             rowNumberCol.setPrefWidth(50);
             analysisTableView.getColumns().add(rowNumberCol);
 
-            // Dynamically create columns based on the number of columns in the first analysis step
-            double firstKey = analysisData.keySet().iterator().next();
-            Map<String, Map<String, String>> firstStepData = analysisData.get(firstKey);
-
-
+            // Dynamically create columns based on maxColumns from parameters
             for (int colIndex = 0; colIndex < parameters.getMaxColumns(); colIndex++) {
                 String columnName = CoordinateFactory.convertIndexToColumnLabel(colIndex);
                 TableColumn<ObservableList<CellWrapper>, CellWrapper> column = new TableColumn<>(columnName);
@@ -269,8 +265,7 @@ public class SheetPopupUtils {
             }
 
             // Create a slider to control the analysis steps
-            Slider analysisSlider = new Slider(parameters.getMinValue(), parameters.getMaxValue(),
-                    parameters.getMinValue());
+            Slider analysisSlider = new Slider(parameters.getMinValue(), parameters.getMaxValue(), parameters.getMinValue());
             analysisSlider.setShowTickLabels(true);
             analysisSlider.setShowTickMarks(true);
             analysisSlider.setMajorTickUnit(parameters.getStepSize());
@@ -278,16 +273,34 @@ public class SheetPopupUtils {
             analysisSlider.setSnapToTicks(true);
 
             // Display the current slider value
-            Label sliderValueLabel = new Label(String.format("Cell ID: %s, Current Value: %.2f", parameters.getCellId()
-                    , parameters.getMinValue()));
+            Label sliderValueLabel = new Label(String.format("Cell ID: %s, Current Value: %.2f", parameters.getCellId(), parameters.getMinValue()));
 
+            // Initialize the table with data for the minimum slider value
+            double initialSliderValue = parameters.getMinValue();
+            Map<String, Map<String, String>> initialCellData = analysisData.get(initialSliderValue);
+            if (initialCellData != null) {
+                ObservableList<ObservableList<CellWrapper>> initialData = FXCollections.observableArrayList();
+                for (int rowIndex = 0; rowIndex < parameters.getMaxRows(); rowIndex++) {
+                    ObservableList<CellWrapper> rowData = FXCollections.observableArrayList();
+                    for (int colIndex = 0; colIndex < parameters.getMaxColumns(); colIndex++) {
+                        String key = rowIndex + "," + colIndex;
+                        Map<String, String> cellValues = initialCellData.getOrDefault(key, Map.of());
+                        String effectiveValue = cellValues.get("effectiveValue");
+                        effectiveValue = effectiveValue != null && (effectiveValue.equalsIgnoreCase("true") || effectiveValue.equalsIgnoreCase("false"))
+                                ? effectiveValue.toUpperCase()
+                                : effectiveValue;
+                        CellWrapper cellWrapper = new CellWrapper(null, effectiveValue, 0, rowIndex, colIndex);
+                        rowData.add(cellWrapper);
+                    }
+                    initialData.add(rowData);
+                }
+                analysisTableView.setItems(initialData); // Set initial data for the TableView
+            }
 
             // Set the listener to update the table view based on slider value
             analysisSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
                 double selectedValue = newVal.doubleValue();
-                sliderValueLabel.setText(String.format("Cell ID: %s, Current Value: %.2f", parameters.getCellId(),
-                        selectedValue));
-
+                sliderValueLabel.setText(String.format("Cell ID: %s, Current Value: %.2f", parameters.getCellId(), selectedValue));
 
                 Map<String, Map<String, String>> cellData = analysisData.get(selectedValue);
                 if (cellData != null) {
@@ -311,9 +324,6 @@ public class SheetPopupUtils {
                 }
             });
 
-            // Initialize data for the first slider value
-            analysisSlider.setValue(parameters.getMinValue());
-
             // Create a new stage for the analysis popup
             Stage popupStage = new Stage();
             popupStage.setTitle("Dynamic Analysis");
@@ -330,6 +340,7 @@ public class SheetPopupUtils {
             popupStage.show();
         });
     }
+
 
 
 

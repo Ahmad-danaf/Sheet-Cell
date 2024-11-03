@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Main-Class: ClientApp
+Class-Path: engine.jar lib/angus-activation.jar lib/annotations-13.0.jar
+  lib/gson-2.1.jar lib/jakarta.activation-api.jar lib/jakarta.xml.bind-a
+ pi.jar lib/jaxb-core.jar lib/jaxb-impl.jar lib/jaxb-jxc.jar lib/jaxb-xj
+ c.jar lib/javafx.base.jar lib/javafx.controls.jar lib/javafx.fxml.jar l
+ ib/javafx.graphics.jar lib/javafx.media.jar lib/javafx.properties lib/j
+ avafx.swing.jar lib/javafx.web.jar lib/javafx-swt.jar lib/kotlin-stdlib
+ -1.4.10.jar lib/kotlin-stdlib-common-1.4.10.jar lib/okhttp-4.9.1.jar li
+ b/okio-2.8.0.jar
+
