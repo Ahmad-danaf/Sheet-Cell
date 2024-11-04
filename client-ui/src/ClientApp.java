@@ -8,7 +8,6 @@ public class ClientApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            System.out.println("Starting the application...");
 
             // Load the FXML file for the login screen
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/login/login.fxml"));

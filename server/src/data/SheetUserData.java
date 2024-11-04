@@ -49,19 +49,12 @@ public class SheetUserData {
 
     // Add or update a permission for a user, including status (ACKNOWLEDGED, PENDING, etc.)
     public void addPermissionForUser(String userId, PermissionType permissionType, PermissionStatus status) {
-        System.out.println("addPermissionForUser");
-        System.out.println("################################################################");
         PermissionUserData permissionData = getPermissionForUser(userId);
         if (permissionData == null) {
-            System.out.println("permissionData is null");
             permissionData = new PermissionUserData(userId, permissionType, status);
             userPermissions.add(permissionData);
         } else {
-            System.out.println("permissionData is not null");
-            System.out.println("permissionData: " + permissionData);
-            System.out.println("permissionType: " + permissionData.getPermissionType());
-            System.out.println("prev permissionType: " + permissionData.getPrevAcknowledgedPermission());
-            System.out.println("status: " + permissionData.getStatus());
+
 
             // If a request is acknowledged, update the prevAcknowledgedPermission
             if (permissionData.getStatus() == PermissionStatus.ACKNOWLEDGED) {
@@ -69,9 +62,7 @@ public class SheetUserData {
             }
             permissionData.setPermissionType(permissionType);
             permissionData.setStatus(status);
-            System.out.println("new permissionType: " + permissionData.getPermissionType());
-            System.out.println("new prev permissionType: " + permissionData.getPrevAcknowledgedPermission());
-            System.out.println("new status: " + permissionData.getStatus());
+
         }
     }
 

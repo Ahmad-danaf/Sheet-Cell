@@ -24,7 +24,6 @@ public class EngineManager {
         if (userEngine == null) {
             return null;
         }
-        System.out.println("User engine is not null");
        return userEngine.getSheetData(sheetName);
     }
 
