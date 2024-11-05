@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetDisplay.SheetDisplayController" stylesheets="@sheetDisplay.css">
+    <BorderPane fx:id="mainPane" styleClass="root">
+        <top>
+            <!-- Main container for the top section -->
+            <VBox alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
+                <!-- First HBox for title, theme selector, and animation toggle -->
+                <HBox alignment="CENTER" spacing="20">
+                    <!-- Center: Application title -->
+                    <Label fx:id="applicationTitle" styleClass="title-label" text="ShtiCell">
+                        <font>
+                            <Font name="System Bold" size="18.0"/>
+                        </font>
+                    </Label>
+
+
+                </HBox>
+
+                <!-- Existing file load section -->
+                <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="top-bar">
+                    <Label fx:id="usernameLabel" styleClass="header-label" text="Welcome, [Username]" />
+                    <TextField fx:id="sheetNameField" editable="false" prefWidth="150.0" styleClass="file-name" HBox.hgrow="ALWAYS"/>
+
+                    <!-- Go Back to Dashboard Button -->
+                    <Button fx:id="backToDashboardButton" text="Back to Dashboard" onAction="#handleBackToDashboard" styleClass="back-button">
+                        <tooltip>
+                            <Tooltip text="Go back to the dashboard"/>
+                        </tooltip>
+                    </Button>
+                </HBox>
+
+
+                <!-- Action line for cell updates and value handling -->
+                <HBox alignment="TOP_CENTER" spacing="10.0" styleClass="action-line">
+                    <children>
+                        <TextField fx:id="selectedCellId" editable="false" promptText="Selected Cell ID"/>
+                        <TextField fx:id="originalCellValue" promptText="Original Cell value"/>
+                        <Button fx:id="updateValueButton" mnemonicParsing="false" onAction="#handleUpdateValue" styleClass="update-button" text="Update value">
+                            <tooltip>
+                                <Tooltip text="Update the selected cell value"/>
+                            </tooltip>
+                        </Button>
+                        <TextField fx:id="lastUpdateCellVersion" editable="false" promptText="Last update cell version"/>
+
+                        <!-- Version Selector ChoiceBox -->
+                        <VBox alignment="CENTER">
+                            <children>
+                                <ChoiceBox fx:id="versionSelector" accessibleHelp="version selection" accessibleText="version selection" prefWidth="150.0" styleClass="version-selector"/>
+
+                                <!-- New version notification Label -->
+                                <Label fx:id="newVersionNotificationLabel" text="" styleClass="version-notification" visible="false"/>
+                            </children>
+                        </VBox>
+                    </children>
+                </HBox>
+
+
+                <!-- Color picker and styling options -->
+                <HBox spacing="10" styleClass="color-picker">
+                    <children>
+                        <ColorPicker fx:id="backgroundColorPicker">
+                            <tooltip>
+                                <Tooltip text="Select background color"/>
+                            </tooltip>
+                        </ColorPicker>
+                        <ColorPicker fx:id="textColorPicker">
+                            <tooltip>
+                                <Tooltip text="Select text color"/>
+                            </tooltip>
+                        </ColorPicker>
+                        <Button fx:id="applyStyleButton" onAction="#handleApplyStyle" styleClass="color-picker" text="Apply Style">
+                            <tooltip>
+                                <Tooltip text="Apply selected style to the cell"/>
+                            </tooltip>
+                        </Button>
+                        <Button fx:id="resetStyleButton" onAction="#handleResetStyle" styleClass="color-picker" text="Reset Style">
+                            <tooltip>
+                                <Tooltip text="Reset cell style to default"/>
+                            </tooltip>
+                        </Button>
+                    </children>
+                </HBox>
+            </VBox>
+        </top>
+
+        <center>
+            <fx:include fx:id="spreadsheetGrid" source="sheet/sheet.fxml" />
+        </center>
+
+        <left>
+            <VBox spacing="10.0" BorderPane.alignment="CENTER">
+                <!-- Table Commands Section -->
+                <TitledPane expanded="false" text="Table Commands" styleClass="title">
+                    <VBox fx:id="commandsSection" spacing="5.0" styleClass="section-container">
+                        <children>
+                            <Button fx:id="sortButton" onAction="#handleSort" text="Sort">
+                                <tooltip>
+                                    <Tooltip text="Sort the table data" />
+                                </tooltip>
+                            </Button>
+                            <Button fx:id="filterButton" mnemonicParsing="false" onAction="#handleFilter" text="Filter">
+                                <tooltip>
+                                    <Tooltip text="Filter table data" />
+                                </tooltip>
+                            </Button>
+                        </children>
+                    </VBox>
+                </TitledPane>
+
+                <!-- Table Settings Section -->
+                <TitledPane expanded="false" text="Table Settings" styleClass="title">
+                    <VBox fx:id="tableSettingsSection" spacing="5.0" styleClass="section-container">
+                        <children>
+                            <!-- Select Column -->
+                            <HBox spacing="5">
+                                <Label text="Select Column:" />
+                                <ChoiceBox fx:id="columnChoiceBox" onAction="#handleColumnSelection">
+                                    <tooltip>
+                                        <Tooltip text="Select a column to adjust settings" />
+                                    </tooltip>
+                                </ChoiceBox>
+                            </HBox>
+
+                            <!-- Column Controls (now in VBox) -->
+                            <VBox fx:id="columnControls" spacing="10" visible="false">
+                                <children>
+                                    <!-- Column Width Controls -->
+                                    <HBox spacing="5">
+                                        <Label text="Column Width:" />
+                                        <TextField fx:id="columnWidthField" prefWidth="60" text="100">
+                                            <tooltip>
+                                                <Tooltip text="Enter the width for the selected column" />
+                                            </tooltip>
+                                        </TextField>
+                                        <Label fx:id="columnWidthLabel" text="px" />
+                                    </HBox>
+
+                                    <!-- Column Alignment Controls -->
+                                    <HBox spacing="5">
+                                        <Label text="Column Alignment:" />
+                                        <ChoiceBox fx:id="alignmentChoiceBox">
+                                            <items>
+                                                <FXCollections fx:factory="observableArrayList">
+                                                    <String fx:value="Left" />
+                                                    <String fx:value="Center" />
+                                                    <String fx:value="Right" />
+                                                </FXCollections>
+                                            </items>
+                                        </ChoiceBox>
+                                    </HBox>
+                                    <Button fx:id="applyAlignmentButton" onAction="#handleApplyAlignment" text="Apply Alignment">
+                                        <tooltip>
+                                            <Tooltip text="Apply selected alignment to column" />
+                                        </tooltip>
+                                    </Button>
+                                </children>
+                            </VBox>
+
+                            <HBox spacing="5">
+                                <Label text="Select Row:" />
+                                <ChoiceBox fx:id="rowChoiceBox" onAction="#handleRowSelection">
+                                    <tooltip>
+                                        <Tooltip text="Select a row to adjust settings" />
+                                    </tooltip>
+                                </ChoiceBox>
+                            </HBox>
+
+                            <VBox fx:id="rowControls" spacing="10" visible="false">
+                                <children>
+                                    <!-- Row Height Controls -->
+                                    <HBox spacing="5">
+                                        <Label text="Row Height:" />
+                                        <TextField fx:id="rowHeightField" prefWidth="60" text="50">
+                                            <tooltip>
+                                                <Tooltip text="Enter the height for the selected row" />
+                                            </tooltip>
+                                        </TextField>
+                                        <Label fx:id="rowHeightLabel" text="px" />
+                                    </HBox>
+
+                                    <!-- Apply Row Height Button -->
+                                    <Button fx:id="applyRowHeightButton" onAction="#handleApplyRowHeight" text="Apply Row Height">
+                                        <tooltip>
+                                            <Tooltip text="Apply the specified row height" />
+                                        </tooltip>
+                                    </Button>
+                                </children>
+                            </VBox>
+                        </children>
+                    </VBox>
+                </TitledPane>
+
+
+                <!-- Range Actions Section -->
+                <TitledPane expanded="false" text="Range Actions" styleClass="title">
+                    <VBox fx:id="rangesSection" spacing="5.0" styleClass="section-container">
+                        <children>
+                            <Button fx:id="addRangeButton" mnemonicParsing="false" onAction="#handleAddRange" text="Add Range">
+                                <tooltip>
+                                    <Tooltip text="Add a new range" />
+                                </tooltip>
+                            </Button>
+                            <Button fx:id="deleteRangeButton" mnemonicParsing="false" onAction="#handleDeleteRange" text="Delete Range">
+                                <tooltip>
+                                    <Tooltip text="Delete the selected range" />
+                                </tooltip>
+                            </Button>
+                            <Button fx:id="ViewRanges" mnemonicParsing="false" onAction="#handleViewRange" text="View Ranges">
+                                <tooltip>
+                                    <Tooltip text="View all defined ranges" />
+                                </tooltip>
+                            </Button>
+                        </children>
+                    </VBox>
+                </TitledPane>
+            </VBox>
+        </left>
+    </BorderPane>
+</ScrollPane>
