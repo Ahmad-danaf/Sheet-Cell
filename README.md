@@ -32,6 +32,7 @@ The system was implemented across three progressive phases:
 - Version number increases on each cell update
 - Each cell tracks the version it was last modified
 - Users can view the sheet in previous versions (without overwriting current state)
+- Visual notifications prompt users when viewing an outdated version
 
 ### 🎨 JavaFX Graphical Interface
 - Editable grid-based UI with scroll and zoom support
@@ -42,13 +43,16 @@ The system was implemented across three progressive phases:
 ### 🧮 Data Tools
 - Sorting: by one or multiple columns
 - Filtering: by value (single or multi-column)
-- What-if analysis: dynamic value changes and sheet-wide recalculations
+- What-if analysis with dynamic sliders and popup previews
+- Analysis tools allow exploring how changes propagate across the sheet without affecting actual state
 
 ### 🌐 Client-Server Architecture
-- Multi-user login system
-- Upload and share XML-based sheets
-- Permission requests (View / Edit) with approval system
-- Real-time sync of changes across clients
+- Multi-user login system with individual user sessions
+- Upload and manage XML-based sheets on the server
+- Per-user permissions (View / Edit) with approval workflow
+- Real-time synchronization of changes across all connected clients
+- RESTful communication using JSON over HTTP
+- Server-driven architecture handles sheet state, users, and access control centrally
 
 ---
 
@@ -73,9 +77,6 @@ These features were implemented beyond the core project requirements:
 
 - 🎯 **Dynamic Cell Highlighting**  
   When editing a formula, highlights referenced cells and visually traces dependencies.
-
-- 🔐 **Permission Requests System**  
-  Client-server mode includes per-user access control and permission approval workflows (View/Edit).
 
 ---
 
